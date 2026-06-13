@@ -1,0 +1,23 @@
+# VS Code
+.vscode/
+
+# Project run data
+run/embeddings/
+run/log_v3_topn100/
+run/resource/
+run/test_log_v3/
+run/documents/
+
+# Credentials (IMPORTANT)
+bigquery_credentials/
+snowflake_credential/
+
+# System files
+_MACOSX
+
+# Python cache
+__pycache__/
+*.pyc
+
+evaluation_suite
+linking_results
