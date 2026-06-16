@@ -24,13 +24,15 @@ class ModelManager:
     def load_model(self, model_path: str = None, device: str = "cuda:0"):
         if model_path is None:
             model_path = "BAAI/bge-large-en-v1.5"
+            
+        if device.startswith("cuda") and not torch.cuda.is_available():
+            device = "cpu"
                     
         with self.model_lock:
             if self.model is None or self.device != device:
                 print(f"Loading model from {model_path} to {device}")
-                if device.startswith("cuda") and not torch.cuda.is_available():
-                    device = "cpu"
-                    print("CUDA not available, falling back to CPU")
+                if device == "cpu":
+                    print("CUDA not available, using CPU")
                 
                 self.model = SentenceTransformer(model_path, device=device)
                 self.device = device

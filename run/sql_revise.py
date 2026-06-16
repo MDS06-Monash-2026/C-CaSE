@@ -16,7 +16,9 @@ from google.cloud import bigquery
 import snowflake.connector
 
 from config import *
+from dotenv import load_dotenv
 
+load_dotenv()
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
 credential_usage_count = {}
@@ -208,20 +210,67 @@ class SQLReviser:
 
         messages = [{"role": "user", "content": prompt}]
 
+        from mcp_tools import TOOLS_SCHEMA, execute_tool_call
+        import json
+
         for attempt in range(Config.REVISE_NUM_ATTEMPTS):
-            while True:
-                try:
-                    response = self.client.chat.completions.create(
-                        model=self.model,
-                        messages=messages,
-                    )
-                    reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
-                    model_output = response.choices[0].message.content
-                    if model_output:
-                        break
-                except Exception as e:
-                    print(f"empty output: {e}  ID: {instance_id}")
+            max_turns = 10
+            turn_count = 0
+            model_output = ""
             
+            while turn_count < max_turns:
+                turn_count += 1
+                while True:
+                    try:
+                        kwargs = {
+                            "model": self.model,
+                            "messages": messages,
+                        }
+                        if os.environ.get("USE_GRAPH_NAV") == "TRUE":
+                            kwargs["tools"] = TOOLS_SCHEMA
+                            
+                        response = self.client.chat.completions.create(**kwargs)
+                        
+                        reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
+                        message = response.choices[0].message
+                        break
+                    except Exception as e:
+                        print(f"empty output or API error: {e}  ID: {instance_id}")
+                        time.sleep(1)
+                
+                if message.tool_calls:
+                    messages.append(message)
+                    for tool_call in message.tool_calls:
+                        function_name = tool_call.function.name
+                        arguments = json.loads(tool_call.function.arguments)
+                        print(f"\n[{instance_id}] Invoking MCP Tool (Revise): {function_name} {arguments}")
+                        try:
+                            result_str = execute_tool_call(function_name, arguments)
+                        except Exception as e:
+                            result_str = f"Error executing {function_name}: {str(e)}"
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": function_name,
+                            "content": result_str
+                        })
+                    continue
+                else:
+                    model_output = message.content
+                    if model_output:
+                        break # Break out of tool loop
+            
+            if turn_count >= max_turns or not model_output:
+                print(f"[{instance_id}] Warning: Revise hit max turns. Falling back to zero-shot.")
+                try:
+                    fallback_response = self.client.chat.completions.create(
+                        model=self.model,
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    model_output = fallback_response.choices[0].message.content
+                except Exception as e:
+                    model_output = f"Error: Fallback failed. {e}"
+                        
             messages.append({"role": "assistant", "content": model_output})
             sql_end = model_output.rfind("```")
             sql_start = model_output.rfind("```sql", 0, sql_end)

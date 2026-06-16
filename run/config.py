@@ -366,7 +366,15 @@ Database Schema and External Knowledge:
 2. Decompose the question into well-defined sub-problems.
 3. Explicitly list out all operations required: aggregation, filtering, sorting, joins, date manipulations, ranking, window functions, etc.
 
-**Step 2: Identify Relevant Tables and Columns**
+**Step 2: Utilize MCP Analytical Tools**
+If you encounter domain-specific terms, date format ambiguities, structural uncertainties, or complex topological graph paths, YOU MUST call the appropriate function tools provided to you:
+- Use `lookup_business_term` for industry/domain-specific magic strings (e.g. 'breast cancer', 'purchase action').
+- Use `profile_column_values` whenever encountering date or string-matching ambiguities.
+- Use `get_shortest_join_path` if you are unsure how to connect two distant tables.
+- Use `dry_run_query` to validate structurally uncertain SQL queries *before* writing your final answer.
+CRITICAL: Do not use the Dry-Run or Profiler tools more than twice for the same table. Limit `profile_column_values` to a maximum of 3 uses per session. If you are stuck, make your best logical assumption and generate the final SQL.
+
+**Step 3: Identify Relevant Tables and Columns**
 1. Precisely identify relevant tables and columns required to answer the question based on clear evidence.
 2. Clearly specify any explicit constraints from the question (dates, numerical thresholds, text patterns).
 3. Highlight any implicit constraints or potential ambiguities that need verification.
@@ -390,9 +398,8 @@ Clearly outline the planned SQL structure:
 When writing the SQL query, consider the following optimization strategies:
 {SQL_DIALECT_OPTIMIZATION}
 
-- Execution result content:
-    - When asked something without stating name or id, return both of them. e.g. Which products ...? The answer should include product_name and product_id.\n"
-    - Make sure that the query content of the sql definitely includes what needs to be involved in the question, the execution result can be more than what is required by the question, but it must not be less.
+- STRICT OUTPUT RULE:
+    - You MUST ONLY return the exact columns explicitly asked for in the user's question. Do not return internal IDs, grouping keys, or metadata unless specifically requested. If the user asks for "the top selling product", return exactly 1 column.
 
 📤 Output Format
 In addition to outputting other information, you also need to return the generated SQL query in the following format:
@@ -415,6 +422,14 @@ Question:
 
 SQL Query:
 {SQL}
+
+**Utilize MCP Analytical Tools**
+If you encounter domain-specific terms, date format ambiguities, structural uncertainties, or complex topological graph paths, YOU MUST call the appropriate function tools provided to you:
+- Use `lookup_business_term` for industry/domain-specific magic strings (e.g. 'breast cancer', 'purchase action').
+- Use `profile_column_values` whenever encountering date or string-matching ambiguities.
+- Use `get_shortest_join_path` if you are unsure how to connect two distant tables.
+- Use `dry_run_query` to validate structurally uncertain SQL queries *before* outputting your final revised SQL.
+CRITICAL: Do not use the Dry-Run or Profiler tools more than twice for the same table. Limit `profile_column_values` to a maximum of 3 uses per session. If you are stuck, make your best logical assumption and generate the final SQL.
 
 ❌ The SQL you generated encountered an error during execution.
 

@@ -8,6 +8,9 @@ from typing import Dict, List, Tuple
 from openai import OpenAI
 from config import *
 from tqdm import tqdm
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     INITIAL_RETRY_DELAY = 1
@@ -61,32 +64,78 @@ class SQLGenerator:
             {"role": "user", "content": prompt}
         ]
         
-        attempt = 0
-        while True:
-            try:
-                response = self.client.chat.completions.create(
-                    model= self.model,
-                    messages=messages
-                )
-                reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
-                model_output = response.choices[0].message.content
+        from mcp_tools import TOOLS_SCHEMA, execute_tool_call
+        import json
+        
+        max_turns = 10
+        turn_count = 0
+        final_think = ""
+        
+        while turn_count < max_turns:
+            turn_count += 1
+            attempt = 0
+            while True:
+                try:
+                    kwargs = {
+                        "model": self.model,
+                        "messages": messages,
+                    }
+                    if os.environ.get("USE_GRAPH_NAV") == "TRUE":
+                        kwargs["tools"] = TOOLS_SCHEMA
+                        
+                    response = self.client.chat.completions.create(**kwargs)
+                    
+                    reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
+                    if reasoning_content:
+                        final_think += reasoning_content + "\n"
+                        
+                    message = response.choices[0].message
+                    break
 
+                except Exception as e:
+                    attempt += 1
+                    delay = min(Config.INITIAL_RETRY_DELAY * (2 ** (attempt - 1)), Config.MAX_RETRY_DELAY)
+                    print(f"[Retry {attempt}] API call failed for {instance_id}. ERROR: {str(e)} \nRetrying in {delay}s")
+                    time.sleep(delay)
+                    
+            if message.tool_calls:
+                messages.append(message)
+                for tool_call in message.tool_calls:
+                    function_name = tool_call.function.name
+                    arguments = json.loads(tool_call.function.arguments)
+                    print(f"\n[{instance_id}] Invoking MCP Tool: {function_name} {arguments}")
+                    try:
+                        result_str = execute_tool_call(function_name, arguments)
+                    except Exception as e:
+                        result_str = f"Error executing {function_name}: {str(e)}"
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": function_name,
+                        "content": result_str
+                    })
+                continue
+            else:
                 return {
-                    "output": model_output,
-                    "think": reasoning_content
+                    "output": message.content,
+                    "think": final_think
                 }
-
-            except Exception as e:
-                attempt += 1
-                delay = min(
-                    Config.INITIAL_RETRY_DELAY * (2 ** (attempt - 1)),
-                    Config.MAX_RETRY_DELAY
-                )
-                print(
-                    f"[Retry {attempt}] API call failed for {instance_id}. "
-                    f"ERROR REASON: {str(e)} \nRetrying in {delay}s"
-                )
-                time.sleep(delay)
+                
+        print(f"[{instance_id}] Warning: Hit max turns. Falling back to zero-shot.")
+        try:
+            fallback_response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return {
+                "output": fallback_response.choices[0].message.content,
+                "think": final_think + "\n[FALLBACK ZERO-SHOT INVOKED]"
+            }
+        except Exception as e:
+            return {
+                "output": "Error: Exceeded max turns for tool calling and fallback failed. " + str(e),
+                "think": final_think
+            }
 
 def collect_tasks(schema_dir: str, log_path: str, task: str, num_candidates: int) -> List[Tuple[str, int]]:
     instance_ids = [f[:-4] for f in os.listdir(schema_dir) if f.endswith(".txt")]

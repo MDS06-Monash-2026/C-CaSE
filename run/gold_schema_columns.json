@@ -1,0 +1,1628 @@
+{
+    "bq001": {
+        "tables": [
+            "ga_sessions_*",
+            "visits_transactions",
+            "device_transactions",
+            "visit",
+            "transactions"
+        ],
+        "columns": [
+            "fullvisitorid",
+            "_table_suffix",
+            "transactionid",
+            "date_transactions",
+            "hits",
+            "start_date",
+            "devicecategory",
+            "end_date",
+            "device_transaction",
+            "date",
+            "date_first_visit"
+        ]
+    },
+    "bq002": {
+        "tables": [
+            "monthly_revenue",
+            "daily_revenue",
+            "ga_sessions_*",
+            "weekly_revenue",
+            "max_revenues",
+            "top_source"
+        ],
+        "columns": [
+            "productrevenue",
+            "revenue",
+            "hits",
+            "max_revenue",
+            "total_revenue",
+            "week",
+            "end_date",
+            "start_date",
+            "month",
+            "date",
+            "_table_suffix",
+            "source",
+            "product"
+        ]
+    },
+    "bq003": {
+        "tables": [
+            "cte1",
+            "cte2",
+            "ga_sessions_2017*"
+        ],
+        "columns": [
+            "productrevenue",
+            "fullvisitorid",
+            "avg_pageviews_purchase",
+            "pageviews",
+            "hits",
+            "transactions",
+            "avg_pageviews_non_purchase",
+            "month",
+            "date",
+            "_table_suffix",
+            "product"
+        ]
+    },
+    "bq004": {
+        "tables": [
+            "product_and_quatity",
+            "ga_sessions_2017*"
+        ],
+        "columns": [
+            "quatity",
+            "fullvisitorid",
+            "other_purchased_products",
+            "v2productname",
+            "productquantity",
+            "hits",
+            "_table_suffix",
+            "product"
+        ]
+    },
+    "bq006": {
+        "tables": [
+            "incidents_2016",
+            "daily_z_scores",
+            "incident_stats",
+            "average_and_stddev"
+        ],
+        "columns": [
+            "descript",
+            "stddev",
+            "date",
+            "total_pub_intox",
+            "z_score",
+            "avg"
+        ]
+    },
+    "bq008": {
+        "tables": [
+            "max_page_duration",
+            "ga_sessions_*",
+            "most_common_next_page",
+            "page_visit_sequence"
+        ],
+        "columns": [
+            "fullvisitorid",
+            "max_duration",
+            "hits",
+            "pagepath",
+            "type",
+            "page_count",
+            "page_duration",
+            "visitstarttime",
+            "visitid",
+            "timestamp",
+            "step_number",
+            "time",
+            "campaign",
+            "next_page",
+            "_table_suffix"
+        ]
+    },
+    "bq009": {
+        "tables": [
+            "monthly_revenue",
+            "revenue_diff",
+            "source_monthly_revenue",
+            "top_source",
+            "yearly_revenue",
+            "ga_sessions_2017*"
+        ],
+        "columns": [
+            "revenue",
+            "total_revenue",
+            "diff_revenue",
+            "totaltransactionrevenue",
+            "month",
+            "date",
+            "source"
+        ]
+    },
+    "bq010": {
+        "tables": [
+            "get_cus_id",
+            "ga_sessions_201707*"
+        ],
+        "columns": [
+            "fullvisitorid",
+            "productrevenue",
+            "v2productname",
+            "productquantity",
+            "hits",
+            "henley_customer_id",
+            "product"
+        ]
+    },
+    "bq011": {
+        "tables": [
+            "events_*"
+        ],
+        "columns": [
+            "event_timestamp",
+            "int_value",
+            "user_pseudo_id",
+            "key",
+            "event_params",
+            "_table_suffix"
+        ]
+    },
+    "bq018": {
+        "tables": [
+            "covid19_open_data",
+            "us_previous_day_comparison",
+            "us_cases_by_date"
+        ],
+        "columns": [
+            "percentage_increase",
+            "country_name",
+            "cases",
+            "cumulative_confirmed",
+            "date"
+        ]
+    },
+    "bq019": {
+        "tables": [],
+        "columns": []
+    },
+    "bq021": {
+        "tables": [
+            "top20route",
+            "citibike_trips",
+            "tlc_yellow_trips_2016"
+        ],
+        "columns": [
+            "pickup_datetime",
+            "end_station_longitude",
+            "avg_bike_duration",
+            "ss_long",
+            "pickup_longitude",
+            "dropoff_datetime",
+            "start_station_latitude",
+            "starttime",
+            "do_long",
+            "start_station_name",
+            "pu_long",
+            "pu_lat",
+            "end_station_name",
+            "bike_trips",
+            "dropoff_latitude",
+            "es_long",
+            "end_station_latitude",
+            "ss_lat",
+            "do_lat",
+            "es_lat",
+            "pickup_latitude",
+            "tripduration",
+            "dropoff_longitude",
+            "avg_taxi_duration",
+            "start_station_longitude"
+        ]
+    },
+    "bq022": {
+        "tables": [
+            "taxi_trips"
+        ],
+        "columns": [
+            "fare",
+            "quantile",
+            "max_minutes",
+            "trip_seconds",
+            "min_minutes"
+        ]
+    },
+    "bq023": {
+        "tables": [],
+        "columns": []
+    },
+    "bq024": {
+        "tables": [],
+        "columns": []
+    },
+    "bq025": {
+        "tables": [
+            "midyear_population_agespecific",
+            "midyear_population"
+        ],
+        "columns": [
+            "midyear_population",
+            "country_name",
+            "age",
+            "year",
+            "country_code",
+            "population"
+        ]
+    },
+    "bq030": {
+        "tables": [],
+        "columns": []
+    },
+    "bq031": {
+        "tables": [
+            "moving_avg",
+            "lag_moving_avg",
+            "gsod*",
+            "transrate",
+            "stations"
+        ],
+        "columns": [
+            "lag7_prcp_moving_avg",
+            "observation_date",
+            "usaf",
+            "prcp_cm",
+            "lag4_wdsp_moving_avg",
+            "stn",
+            "lag3_wdsp_moving_avg",
+            "lag2_temp_moving_avg",
+            "lag8_temp_moving_avg",
+            "lag5_prcp_moving_avg",
+            "prcp_moving_avg",
+            "lag4_prcp_moving_avg",
+            "lag7_temp_moving_avg",
+            "mo",
+            "wdsp",
+            "name",
+            "temp",
+            "lag5_temp_moving_avg",
+            "lag3_prcp_moving_avg",
+            "temp_mean_c",
+            "lag1_wdsp_moving_avg",
+            "lag2_prcp_moving_avg",
+            "lag4_temp_moving_avg",
+            "lag5_wdsp_moving_avg",
+            "lag6_prcp_moving_avg",
+            "lag8_wdsp_moving_avg",
+            "lag8_prcp_moving_avg",
+            "lag1_temp_moving_avg",
+            "lag1_prcp_moving_avg",
+            "wdsp_ms",
+            "prcp",
+            "lag6_temp_moving_avg",
+            "wdsp_moving_avg",
+            "_table_suffix",
+            "lag2_wdsp_moving_avg",
+            "lag6_wdsp_moving_avg",
+            "da",
+            "temp_moving_avg",
+            "lag3_temp_moving_avg",
+            "year",
+            "lag7_wdsp_moving_avg"
+        ]
+    },
+    "bq032": {
+        "tables": [
+            "dist_between_points",
+            "total_distances",
+            "ranked_hurricanes",
+            "hurricane_geometry",
+            "hurricanes"
+        ],
+        "columns": [
+            "geom",
+            "name",
+            "max_wnd_speed",
+            "usa_wind",
+            "latitude",
+            "total_dist",
+            "season",
+            "longitude",
+            "sid",
+            "iso_time",
+            "basin",
+            "dist",
+            "cumulative_distance",
+            "dense_rank"
+        ]
+    },
+    "bq034": {
+        "tables": [
+            "distance_from_center",
+            "ghcnd_stations",
+            "params",
+            "nearest_nstations",
+            "nearest_stations"
+        ],
+        "columns": [
+            "name",
+            "latitude",
+            "center",
+            "id",
+            "longitude",
+            "dist_meters",
+            "state",
+            "maxdist_km",
+            "*"
+        ]
+    },
+    "bq035": {
+        "tables": [
+            "bikeshare_trips",
+            "bikeshare_stations"
+        ],
+        "columns": [
+            "trip_id",
+            "latitude",
+            "end_lon",
+            "station_id",
+            "end_station_id",
+            "bike_number",
+            "dist_in_m",
+            "longitude",
+            "end_lat",
+            "start_station_id",
+            "start_lon",
+            "total_dist_m",
+            "start_lat"
+        ]
+    },
+    "bq038": {
+        "tables": [],
+        "columns": []
+    },
+    "bq039": {
+        "tables": [
+            "taxi_zone_geom",
+            "tlc_yellow_trips_2016"
+        ],
+        "columns": [
+            "pickup_datetime",
+            "tolls_amount",
+            "driving_speed_miles_per_hour",
+            "dropoff_location_id",
+            "tip_rate",
+            "total_amount",
+            "pickup_location_id",
+            "tip_amount",
+            "zone_name",
+            "mta_tax",
+            "dropoff_datetime",
+            "passenger_count",
+            "trip_distance",
+            "time_duration_in_secs",
+            "fare_amount",
+            "zone_id"
+        ]
+    },
+    "bq040": {
+        "tables": [],
+        "columns": []
+    },
+    "bq041": {
+        "tables": [],
+        "columns": []
+    },
+    "bq042": {
+        "tables": [
+            "gsod20*"
+        ],
+        "columns": [
+            "temp",
+            "timestamp",
+            "da",
+            "prcp",
+            "stn",
+            "mo",
+            "year",
+            "wdsp"
+        ]
+    },
+    "bq045": {
+        "tables": [
+            "gsod2022",
+            "gsod2023",
+            "prcp2023",
+            "prcp2022",
+            "washingtonstations2022",
+            "washingtonstations2023",
+            "stations"
+        ],
+        "columns": [
+            "usaf",
+            "station_id",
+            "rainy_days",
+            "prcp",
+            "stn",
+            "state",
+            "name"
+        ]
+    },
+    "bq046": {
+        "tables": [],
+        "columns": []
+    },
+    "bq047": {
+        "tables": [],
+        "columns": []
+    },
+    "bq048": {
+        "tables": [],
+        "columns": []
+    },
+    "bq049": {
+        "tables": [
+            "dubuque_population_cte",
+            "month_info",
+            "sales",
+            "zip_code_sales",
+            "population_by_zip_2010",
+            "ranked_zip_codes",
+            "dubuque_liquor_cte"
+        ],
+        "columns": [
+            "dollars_per_capita",
+            "county",
+            "total_sale_dollars_sum",
+            "minimum_age",
+            "category_group",
+            "zip_code",
+            "sale_dollars_sum",
+            "zipcode",
+            "population_sum",
+            "category_name",
+            "rank",
+            "month",
+            "date",
+            "sale_dollars",
+            "population"
+        ]
+    },
+    "bq051": {
+        "tables": [],
+        "columns": []
+    },
+    "bq053": {
+        "tables": [
+            "tree_species",
+            "tree_census_1995",
+            "tree_census_2015"
+        ],
+        "columns": [
+            "latin",
+            "count_growth",
+            "status",
+            "upper_latin",
+            "spc_latin",
+            "count_1995",
+            "species_scientific_name",
+            "spc_common",
+            "count_2015",
+            "change",
+            "fall_color"
+        ]
+    },
+    "bq054": {
+        "tables": [],
+        "columns": []
+    },
+    "bq055": {
+        "tables": [],
+        "columns": []
+    },
+    "bq059": {
+        "tables": [
+            "bikeshare_regions",
+            "meta_data",
+            "bikeshare_trips",
+            "bikeshare_station_info",
+            "stations"
+        ],
+        "columns": [
+            "name",
+            "duration_sec",
+            "end_station_latitude",
+            "end_station_longitude",
+            "station_id",
+            "end_station_geom",
+            "end_station_id",
+            "velocidade_media",
+            "start_station_longitude",
+            "start_station_geom",
+            "start_station_latitude",
+            "start_station_id",
+            "region_id"
+        ]
+    },
+    "bq060": {
+        "tables": [
+            "country_names_area",
+            "birth_death_growth_rates",
+            "results"
+        ],
+        "columns": [
+            "net_migration",
+            "country_name",
+            "country_area",
+            "year",
+            "country_code"
+        ]
+    },
+    "bq061": {
+        "tables": [
+            "max_geo_id",
+            "acs_2015",
+            "acs_diff",
+            "censustract_2018_5yr",
+            "acs_2018",
+            "censustract_2015_5yr",
+            "census_tracts_california"
+        ],
+        "columns": [
+            "geo_id",
+            "median_income_2015",
+            "tract_ce",
+            "median_income_diff",
+            "median_income",
+            "median_income_2018"
+        ]
+    },
+    "bq064": {
+        "tables": [
+            "zip_codes",
+            "us_census_tracts_national",
+            "sums",
+            "censustract_2017_5yr",
+            "zip_tract_join",
+            "census_totals",
+            "joined",
+            "all_zip_tract_join",
+            "zip_pop_income",
+            "zipcodes_within_distance"
+        ],
+        "columns": [
+            "zip_pop",
+            "zip_income",
+            "geo_id",
+            "zip_total_inc",
+            "income_per_capita",
+            "state_code",
+            "tract_geo_id",
+            "tract_ce",
+            "zip_code",
+            "tract_pct_in_zip_code",
+            "total_income",
+            "functional_status",
+            "zip_code_geom",
+            "total_pop",
+            "average_income",
+            "tract_geom"
+        ]
+    },
+    "bq066": {
+        "tables": [
+            "county_natality_by_maternal_morbidity",
+            "poverty_and_natality",
+            "county_2016_5yr",
+            "county_2015_5yr",
+            "county_2017_5yr"
+        ],
+        "columns": [
+            "county_of_residence_fips",
+            "maternal_morbidity_yn",
+            "data_year",
+            "geo_id",
+            "poverty",
+            "pop_determined_poverty_status",
+            "poverty_rate",
+            "total_births",
+            "births",
+            "births_without_morbidity",
+            "year"
+        ]
+    },
+    "bq067": {
+        "tables": [],
+        "columns": []
+    },
+    "bq074": {
+        "tables": [
+            "acs_2015",
+            "corr_tbl",
+            "duals_jan_2015",
+            "unemployed_change",
+            "duals_change",
+            "dual_eligible_enrollment_by_county_and_program",
+            "county_2018_5yr",
+            "acs_2018",
+            "county_2015_5yr",
+            "duals_jan_2018"
+        ],
+        "columns": [
+            "duals_2015",
+            "geo_id",
+            "total_duals_diff",
+            "unemployed_2015",
+            "duals_2018",
+            "public_total",
+            "u_change",
+            "date",
+            "unemployed_2018",
+            "fips",
+            "county_name",
+            "unemployed_pop"
+        ]
+    },
+    "bq075": {
+        "tables": [],
+        "columns": []
+    },
+    "bq076": {
+        "tables": [
+            "crime"
+        ],
+        "columns": [
+            "incidents",
+            "ranking",
+            "primary_type",
+            "month",
+            "date",
+            "year"
+        ]
+    },
+    "bq077": {
+        "tables": [
+            "crime"
+        ],
+        "columns": [
+            "incidents",
+            "ranking",
+            "primary_type",
+            "month",
+            "date",
+            "year"
+        ]
+    },
+    "bq079": {
+        "tables": [],
+        "columns": []
+    },
+    "bq081": {
+        "tables": [
+            "bikeshare_trips",
+            "bikeshare_station_info",
+            "bikeshare_regions"
+        ],
+        "columns": [
+            "trip_id",
+            "duration_sec",
+            "name",
+            "member_gender",
+            "start_station_name",
+            "station_id",
+            "regionname",
+            "region_id",
+            "start_date",
+            "start_station_id",
+            "tripstartdate",
+            "*"
+        ]
+    },
+    "bq085": {
+        "tables": [
+            "summary",
+            "indicators_data"
+        ],
+        "columns": [
+            "cases_per_100k",
+            "year",
+            "indicator_code",
+            "country_name",
+            "country_region",
+            "confirmed",
+            "total_confirmed_cases",
+            "value",
+            "country",
+            "date",
+            "population"
+        ]
+    },
+    "bq086": {
+        "tables": [
+            "covid19_open_data",
+            "country_pop",
+            "population_by_country"
+        ],
+        "columns": [
+            "aggregation_level",
+            "population_2018",
+            "country_name",
+            "case_percent",
+            "cumulative_confirmed",
+            "year_2018",
+            "date",
+            "country_code"
+        ]
+    },
+    "bq087": {
+        "tables": [
+            "symptom_search_sub_region_2_weekly"
+        ],
+        "columns": [
+            "sub_region_2",
+            "sub_region_1",
+            "symptom_anosmia",
+            "date",
+            "avg_symptom_anosmia_2019",
+            "avg_symptom_anosmia_2020"
+        ]
+    },
+    "bq088": {
+        "tables": [
+            "symptom_search_country_weekly"
+        ],
+        "columns": [
+            "avg_symptom_depression_2020",
+            "avg_symptom_depression_2019",
+            "avg_symptom_anxiety_2019",
+            "country_region_code",
+            "symptom_anxiety",
+            "avg_symptom_anxiety_2020",
+            "date",
+            "symptom_depression"
+        ]
+    },
+    "bq089": {
+        "tables": [
+            "total_population_per_county",
+            "facility_boundary_us_all",
+            "censustract_2018_5yr",
+            "num_vaccine_sites_per_county"
+        ],
+        "columns": [
+            "geo_id",
+            "sites_per_1k_ppl",
+            "facility_place_id",
+            "facility_sub_region_2",
+            "us_county_fips",
+            "facility_sub_region_2_code",
+            "num_vaccine_sites",
+            "facility_sub_region_1",
+            "total_pop",
+            "total_population"
+        ]
+    },
+    "bq090": {
+        "tables": [
+            "feelingluckytrades",
+            "trade_capture_report",
+            "momentumtrades"
+        ],
+        "columns": [
+            "pricedifference",
+            "targetcompid",
+            "strikeprice",
+            "sides",
+            "lastpx",
+            "side"
+        ]
+    },
+    "bq094": {
+        "tables": [],
+        "columns": []
+    },
+    "bq096": {
+        "tables": [
+            "occurrences",
+            "tenplus"
+        ],
+        "columns": [
+            "species",
+            "dayofyear",
+            "decimallatitude",
+            "month",
+            "year",
+            "eventdate"
+        ]
+    },
+    "bq097": {
+        "tables": [
+            "bea_2012",
+            "bea_2017",
+            "earnings_diff",
+            "fips"
+        ],
+        "columns": [
+            "geoname",
+            "geofips",
+            "earnings_2012",
+            "earnings_2017",
+            "earnings_per_job_avg",
+            "year",
+            "earnings_change"
+        ]
+    },
+    "bq098": {
+        "tables": [
+            "taxi_zone_geom",
+            "t3",
+            "tlc_yellow_trips_2016",
+            "t2"
+        ],
+        "columns": [
+            "borough",
+            "pickup_datetime",
+            "tolls_amount",
+            "tip_rate",
+            "pickup_location_id",
+            "tip_amount",
+            "pickup_borough",
+            "no_of_trips",
+            "fare_amount",
+            "mta_tax",
+            "dropoff_datetime",
+            "passenger_count",
+            "trip_distance",
+            "tip_category",
+            "total_amount",
+            "zone_id",
+            "*"
+        ]
+    },
+    "bq102": {
+        "tables": [
+            "v2_1_1_genomes__chr17",
+            "gene_region"
+        ],
+        "columns": [
+            "start_position",
+            "reference_bases",
+            "alternate_bases",
+            "symbol",
+            "alt",
+            "end_pos",
+            "vep",
+            "end_position",
+            "consequence",
+            "start_pos"
+        ]
+    },
+    "bq103": {
+        "tables": [
+            "summary_stats",
+            "v3_genomes__chr1"
+        ],
+        "columns": [
+            "start_position",
+            "symbol",
+            "alternate_bases",
+            "an",
+            "vep",
+            "num_variants",
+            "ac"
+        ]
+    },
+    "bq105": {
+        "tables": [
+            "distract_2015",
+            "accident_2015",
+            "accident_2016",
+            "population_by_zip_2010",
+            "distract_2016",
+            "zipcode_area"
+        ],
+        "columns": [
+            "state_name",
+            "state_pop",
+            "zipcode",
+            "state",
+            "driver_distracted_by_name",
+            "rate_per_100000",
+            "consecutive_number",
+            "population"
+        ]
+    },
+    "bq108": {
+        "tables": [],
+        "columns": []
+    },
+    "bq109": {
+        "tables": [
+            "studies",
+            "variant_disease_coloc",
+            "coloc_stats",
+            "max_value"
+        ],
+        "columns": [
+            "max_log2_h4_h3",
+            "left_study",
+            "qtl_source",
+            "study_id",
+            "coloc_h4",
+            "coloc_log2_h4_h3",
+            "right_bio_feature",
+            "left_chrom",
+            "left_pos",
+            "left_alt",
+            "trait_reported",
+            "coloc_h3",
+            "right_gene_id",
+            "left_ref",
+            "right_study"
+        ]
+    },
+    "bq110": {
+        "tables": [
+            "hud_pit_by_coc",
+            "homeless_2012",
+            "homeless_2018",
+            "veterans_change"
+        ],
+        "columns": [
+            "vet12",
+            "vetchange",
+            "coc_name",
+            "coc_number",
+            "count_year",
+            "vet18",
+            "homeless_veterans"
+        ]
+    },
+    "bq111": {
+        "tables": [],
+        "columns": []
+    },
+    "bq112": {
+        "tables": [
+            "avg_wage_1998",
+            "geo",
+            "avg_cpi_1998",
+            "1998*",
+            "2017*",
+            "avg_cpi_2017",
+            "avg_wage_2017",
+            "cpi_u",
+            "counties"
+        ],
+        "columns": [
+            "wages_2017",
+            "geo_id",
+            "cpi_2017",
+            "area_code",
+            "avg_wkly_wage_10_total_all_industries",
+            "item_code",
+            "wages_1998",
+            "item_name",
+            "value",
+            "county_name",
+            "area_name",
+            "year",
+            "geoid",
+            "cpi_1998"
+        ]
+    },
+    "bq113": {
+        "tables": [
+            "2018_*",
+            "e2018",
+            "e2000",
+            "states",
+            "counties",
+            "2000_*",
+            "utah_code"
+        ],
+        "columns": [
+            "geo_id",
+            "construction_employees_2018",
+            "county_name",
+            "state_name",
+            "construction_employees_2000",
+            "increase_rate",
+            "state_fips_code",
+            "month3_emplvl_23_construction",
+            "geoid"
+        ]
+    },
+    "bq114": {
+        "tables": [
+            "global_air_quality",
+            "air_quality_annual_summary"
+        ],
+        "columns": [
+            "units_of_measure",
+            "latitude",
+            "pollutant",
+            "parameter_name",
+            "timestamp",
+            "longitude",
+            "value",
+            "city",
+            "arithmetic_mean",
+            "year"
+        ]
+    },
+    "bq115": {
+        "tables": [
+            "midyear_population_agespecific",
+            "midyear_population"
+        ],
+        "columns": [
+            "midyear_population",
+            "country_name",
+            "age",
+            "year",
+            "country_code",
+            "population"
+        ]
+    },
+    "bq116": {
+        "tables": [],
+        "columns": []
+    },
+    "bq119": {
+        "tables": [
+            "dist_between_points",
+            "total_distances",
+            "ranked_hurricanes",
+            "hurricane_geometry",
+            "hurricanes"
+        ],
+        "columns": [
+            "geom",
+            "name",
+            "usa_wind",
+            "latitude",
+            "total_dist",
+            "season",
+            "longitude",
+            "sid",
+            "iso_time",
+            "basin",
+            "dist",
+            "cumulative_distance",
+            "dense_rank"
+        ]
+    },
+    "bq120": {
+        "tables": [
+            "acs_2017",
+            "snap_2017_jan",
+            "snap_enrollment",
+            "county_2017_5yr"
+        ],
+        "columns": [
+            "income_15000_19999",
+            "geo_id",
+            "i10",
+            "snap_all_participation_households",
+            "snap_total",
+            "i15",
+            "income_less_10000",
+            "income_10000_14999",
+            "i20",
+            "fips",
+            "date"
+        ]
+    },
+    "bq123": {
+        "tables": [
+            "posts_questions",
+            "posts_answers",
+            "first_answers"
+        ],
+        "columns": [
+            "parent_id",
+            "creation_date",
+            "question_id",
+            "id",
+            "first_answer_date",
+            "percent_questions",
+            "question_day"
+        ]
+    },
+    "bq124": {
+        "tables": [
+            "medication_request",
+            "patient",
+            "condition",
+            "info"
+        ],
+        "columns": [
+            "first_name",
+            "last_name",
+            "deceased_datetime",
+            "datetime",
+            "id",
+            "coding",
+            "condition_desc",
+            "patientid",
+            "condition_code",
+            "med_count",
+            "codes",
+            "conditions",
+            "status",
+            "name"
+        ]
+    },
+    "bq126": {
+        "tables": [
+            "images",
+            "objects"
+        ],
+        "columns": [
+            "medium",
+            "original_image_url",
+            "artist_display_name",
+            "object_name",
+            "title",
+            "department",
+            "object_id",
+            "object_end_date"
+        ]
+    },
+    "bq130": {
+        "tables": [
+            "statecases",
+            "us_states",
+            "countycases",
+            "fourthstate",
+            "rankedcountiesperday",
+            "topcounties",
+            "topstates",
+            "us_counties",
+            "rankedstatesperday"
+        ],
+        "columns": [
+            "county_fips_code",
+            "date_shift",
+            "confirmed_cases",
+            "county",
+            "daily_new_cases",
+            "state_fips_code",
+            "state_name",
+            "rank",
+            "date",
+            "appearance_count"
+        ]
+    },
+    "bq137": {
+        "tables": [],
+        "columns": []
+    },
+    "bq143": {
+        "tables": [
+            "rnaseq_hg38_gdc_current",
+            "pval",
+            "correlation",
+            "aliquot_to_case_mapping_current",
+            "quant",
+            "quant_proteome_cptac_ccrcc_discovery_study_pdc_current",
+            "gexp"
+        ],
+        "columns": [
+            "corr",
+            "sample_barcode",
+            "case_id",
+            "aliquot_id",
+            "sample_submitter_id",
+            "sample_type",
+            "gene_name",
+            "fpkm_unstranded",
+            "htseq__fpkm",
+            "n",
+            "gene_symbol",
+            "protein_abundance_log2ratio"
+        ]
+    },
+    "bq144": {
+        "tables": [
+            "feature_engineering",
+            "2018_tournament_results",
+            "mbb_historical_tournament_games",
+            "outcomes"
+        ],
+        "columns": [
+            "label",
+            "season",
+            "pts_100poss",
+            "efficiency_rank",
+            "win_seed",
+            "pace_rank",
+            "efficiency_rating",
+            "team",
+            "school_ncaa",
+            "seed",
+            "pace_rating",
+            "win_school_ncaa",
+            "poss_40min",
+            "lose_seed",
+            "opponent_school_ncaa",
+            "opponent_seed",
+            "lose_school_ncaa"
+        ]
+    },
+    "bq151": {
+        "tables": [
+            "barcodes",
+            "filtered_clinical_pancan_patient_with_followup",
+            "filtered_mc3_maf_v5_one_per_tumor_sample",
+            "table1",
+            "table2",
+            "summ_table",
+            "contingency_table"
+        ],
+        "columns": [
+            "study",
+            "bcr_patient_barcode",
+            "col2_total",
+            "participantbarcode",
+            "a",
+            "b",
+            "col1_total",
+            "data",
+            "grand_total",
+            "hugo_symbol",
+            "filter",
+            "data2",
+            "row2_total",
+            "row1_total",
+            "d",
+            "c",
+            "acronym",
+            "data1",
+            "nij"
+        ]
+    },
+    "bq161": {
+        "tables": [
+            "barcodes",
+            "filtered_clinical_pancan_patient_with_followup",
+            "filtered_mc3_maf_v5_one_per_tumor_sample",
+            "info",
+            "table1",
+            "table2"
+        ],
+        "columns": [
+            "study",
+            "data",
+            "bcr_patient_barcode",
+            "filter",
+            "participantbarcode",
+            "hugo_symbol",
+            "acronym",
+            "data1",
+            "nij",
+            "data2"
+        ]
+    },
+    "bq162": {
+        "tables": [],
+        "columns": []
+    },
+    "bq165": {
+        "tables": [],
+        "columns": []
+    },
+    "bq169": {
+        "tables": [],
+        "columns": []
+    },
+    "bq172": {
+        "tables": [
+            "ny_top_drug",
+            "top_5_states",
+            "part_d_prescriber_2014"
+        ],
+        "columns": [
+            "nppes_provider_state",
+            "total_claim_count",
+            "drug_name",
+            "total_drug_cost",
+            "state"
+        ]
+    },
+    "bq177": {
+        "tables": [],
+        "columns": []
+    },
+    "bq181": {
+        "tables": [],
+        "columns": []
+    },
+    "bq185": {
+        "tables": [
+            "taxi_zone_geom",
+            "tlc_yellow_trips_2016"
+        ],
+        "columns": [
+            "borough",
+            "pickup_datetime",
+            "dropoff_location_id",
+            "pickup_location_id",
+            "dropoff_datetime",
+            "passenger_count",
+            "trip_distance",
+            "zone_id"
+        ]
+    },
+    "bq186": {
+        "tables": [],
+        "columns": []
+    },
+    "bq198": {
+        "tables": [
+            "mbb_historical_teams_seasons"
+        ],
+        "columns": [
+            "team_name",
+            "wins",
+            "market",
+            "season",
+            "top_performer_count",
+            "a",
+            "win_max"
+        ]
+    },
+    "bq199": {
+        "tables": [
+            "price_2020",
+            "price_2021",
+            "sales",
+            "price_2019"
+        ],
+        "columns": [
+            "state_bottle_retail",
+            "avg_price_liter_2020",
+            "avg_price_liter_2021",
+            "category",
+            "bottle_volume_ml",
+            "category_name",
+            "date",
+            "avg_price_liter_2019"
+        ]
+    },
+    "bq200": {
+        "tables": [],
+        "columns": []
+    },
+    "bq202": {
+        "tables": [],
+        "columns": []
+    },
+    "bq203": {
+        "tables": [
+            "stations_n_entrances",
+            "stations",
+            "station_entrances"
+        ],
+        "columns": [
+            "ada_compliant",
+            "borough_name",
+            "entry",
+            "station_name"
+        ]
+    },
+    "bq204": {
+        "tables": [
+            "photos_v_0_3",
+            "photos_v_0_1",
+            "photos_v_0_2"
+        ],
+        "columns": [
+            "user",
+            "mycount"
+        ]
+    },
+    "bq208": {
+        "tables": [],
+        "columns": []
+    },
+    "bq218": {
+        "tables": [
+            "total_info",
+            "yoygrowth",
+            "sales",
+            "annualsales"
+        ],
+        "columns": [
+            "prev_year_sales_revenue",
+            "unique_purchases",
+            "total_sales_revenue",
+            "date",
+            "sale_dollars",
+            "item_description",
+            "invoice_and_item_number",
+            "year",
+            "yoy_growth_percentage"
+        ]
+    },
+    "bq220": {
+        "tables": [],
+        "columns": []
+    },
+    "bq227": {
+        "tables": [
+            "top5_categories",
+            "top5_crimes_per_year",
+            "crime_by_lsoa",
+            "total_crimes_per_year"
+        ],
+        "columns": [
+            "total_crimes_year",
+            "minor_category",
+            "value",
+            "total_crimes_category_year",
+            "year"
+        ]
+    },
+    "bq228": {
+        "tables": [
+            "ranked_crimes",
+            "crime_by_lsoa"
+        ],
+        "columns": [
+            "borough",
+            "rank_per_borough",
+            "major_category",
+            "value",
+            "no_of_incidents"
+        ]
+    },
+    "bq229": {
+        "tables": [],
+        "columns": []
+    },
+    "bq230": {
+        "tables": [],
+        "columns": []
+    },
+    "bq232": {
+        "tables": [
+            "borough_data",
+            "crime_by_lsoa"
+        ],
+        "columns": [
+            "total",
+            "borough",
+            "minor_category",
+            "major_division",
+            "major_category",
+            "value",
+            "month",
+            "year",
+            "minor_division"
+        ]
+    },
+    "bq234": {
+        "tables": [
+            "part_d_prescriber_2014"
+        ],
+        "columns": [
+            "total_claim_count",
+            "nppes_provider_state",
+            "generic_name",
+            "drug_name",
+            "total_day_supply",
+            "total_drug_cost",
+            "state",
+            "max_total_claim_count"
+        ]
+    },
+    "bq235": {
+        "tables": [
+            "inpatient_charges_2014",
+            "outpatient_charges_2014"
+        ],
+        "columns": [
+            "total_discharges",
+            "provider_id",
+            "combined_average_cost",
+            "average_total_payments",
+            "average_op_cost",
+            "average_medicare_payments",
+            "provider_state",
+            "provider_name",
+            "outpatient_services",
+            "provider_city",
+            "average_ip_cost"
+        ]
+    },
+    "bq268": {
+        "tables": [
+            "device_visit",
+            "ga_sessions_*",
+            "visits_transactions",
+            "device_transactions",
+            "visit",
+            "transactions",
+            "mortality_table"
+        ],
+        "columns": [
+            "date_event",
+            "fullvisitorid",
+            "transactionid",
+            "date_transactions",
+            "device",
+            "hits",
+            "device_last_visit",
+            "transaction",
+            "devicecategory",
+            "device_transaction",
+            "date_last_visit",
+            "date",
+            "date_first_visit"
+        ]
+    },
+    "bq269": {
+        "tables": [
+            "visitor_pageviews",
+            "ga_sessions_*",
+            "avg_pageviews"
+        ],
+        "columns": [
+            "fullvisitorid",
+            "pageviews",
+            "avg_pageviews_per_visitor",
+            "total_pageviews",
+            "transactions",
+            "purchase_status",
+            "month",
+            "date",
+            "_table_suffix"
+        ]
+    },
+    "bq270": {
+        "tables": [
+            "cte1",
+            "cte2",
+            "cte3",
+            "ga_sessions_2017*"
+        ],
+        "columns": [
+            "productrevenue",
+            "_table_suffix",
+            "hits",
+            "num_product_view",
+            "num_purchase",
+            "num_addtocart",
+            "month",
+            "date",
+            "action_type",
+            "product"
+        ]
+    },
+    "bq275": {
+        "tables": [
+            "ga_sessions_*",
+            "visits_transactions",
+            "device_transactions",
+            "visit",
+            "transactions"
+        ],
+        "columns": [
+            "fullvisitorid",
+            "transactionid",
+            "date_transactions",
+            "hits",
+            "devicecategory",
+            "device_transaction",
+            "date",
+            "date_first_visit"
+        ]
+    },
+    "bq277": {
+        "tables": [],
+        "columns": []
+    }
+}

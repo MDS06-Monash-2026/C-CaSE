@@ -6,6 +6,9 @@ import math
 from openai import OpenAI
 import itertools
 from config import *
+from dotenv import load_dotenv
+
+load_dotenv()
 from tqdm import tqdm
 import concurrent.futures
 import threading
@@ -184,7 +187,7 @@ def model_vote(instance_id, tied_clusters, args, schema, question):
             messages=[{"role": "user", "content": prompt}]
         )
 
-        out = resp.choices[0].message.content.lower()
+        out = (resp.choices[0].message.content or "").lower()
         if "sql1" in out:
             scores[a["cid"]] += 1
         elif "sql2" in out:
@@ -198,7 +201,7 @@ def dump_final_selection(instance_id, selected, args):
     os.makedirs(base_dir, exist_ok=True)
 
     with open(os.path.join(base_dir, "selected.sql"), "w", encoding="utf-8") as f:
-        f.write(selected["sql"])
+        f.write(selected.get("sql") or "")
 
     if selected["status"] == "success" and selected["df"] is not None:
         selected["df"].to_csv(
@@ -208,7 +211,8 @@ def dump_final_selection(instance_id, selected, args):
         )
     else:
         with open(os.path.join(base_dir, "error.txt"), "w", encoding="utf-8") as f:
-            f.write(selected.get("error", "Unknown execution error"))
+            error_msg = selected.get("error")
+            f.write(str(error_msg) if error_msg else "Unknown execution error")
 
 def process_instance(name, args, lock):
     instance_id = name.replace(".txt", "")

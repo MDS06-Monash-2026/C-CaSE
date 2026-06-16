@@ -36,7 +36,7 @@ def parse_model_output(output: str):
     full_lines = []
     tool_calls = []
     
-    call_types = ["@schema_retrieval", "@sql_execution", "@sql_draft", "@sql_exploration", "@stop()", "@add_schema"]
+    call_types = ["@schema_retrieval", "@sql_execution", "@sql_draft", "@sql_exploration", "@stop()", "@add_schema", "@prune_schema", "@counterfactual_simulate"]
     
     lines = output.splitlines()
     lines = [line.strip() for line in lines]
@@ -114,7 +114,17 @@ def parse_model_output(output: str):
                         "column": column_match.group(1) if column_match else ""
                     })
                 
-                elif call_type == "@sql_execution" or call_type == "@sql_draft":
+                elif call_type == "@prune_schema":
+                    table_match = re.search(r'table\s*[:=]\s*["\']([^"\']*)["\']', block)
+                    column_match = re.search(r'column\s*[:=]\s*["\']([^"\']*)["\']', block)
+                    
+                    tool_calls.append({
+                        "tool": "prune_schema",
+                        "table": table_match.group(1) if table_match else "",
+                        "column": column_match.group(1) if column_match else ""
+                    })
+                
+                elif call_type == "@sql_execution" or call_type == "@sql_draft" or call_type == "@counterfactual_simulate":
                     tool_type = call_type[1:]  
                     
                     query_match = re.search(r'query\s*[:=]\s*"""(.*?)"""', block, re.DOTALL)

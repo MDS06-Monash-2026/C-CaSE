@@ -7,6 +7,84 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from utils import *
 import argparse
+import networkx as nx
+import math
+
+# Global tuning constants
+ALPHA = 1.0
+BETA = 0.5
+
+import threading
+_GRAPH_CACHE = {}
+_GRAPH_LOCK = threading.Lock()
+
+def get_or_build_schema_graph(db_name, embed_path):
+    """
+    Builds an undirected schema graph G where nodes are tables and edges are 
+    formal or inferred primary-foreign key relationships.
+    """
+    with _GRAPH_LOCK:
+        cache_key = f"{db_name}"
+        if cache_key in _GRAPH_CACHE:
+            return _GRAPH_CACHE[cache_key]
+            
+        import re
+        G = nx.Graph()
+        metadata_path = os.path.join(embed_path, db_name, "metadata.json")
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadata_mapping = json.load(f)
+            
+        # Step 1: Register all unique tables as graph vertices
+        # Sanitize wildcard tables (e.g., ga_sessions_20170701 -> ga_sessions_*)
+        tables = set(re.sub(r'_\d+$', '_*', meta["table"]) for meta in metadata_mapping)
+        for t in tables:
+            G.add_node(t)
+            
+        # Step 2: Build inferred and explicit structural relationships
+        table_columns = {}
+        for meta in metadata_mapping:
+            t = re.sub(r'_\d+$', '_*', meta["table"])
+            c = meta["column"].lower()
+            if t not in table_columns:
+                table_columns[t] = set()
+            table_columns[t].add(c)
+            
+        # Find overlapping columns with structural implications across tables
+        table_list = list(tables)
+        for i in range(len(table_list)):
+            for j in range(i + 1, len(table_list)):
+                t1, t2 = table_list[i], table_list[j]
+                shared_cols = table_columns[t1].intersection(table_columns[t2])
+                # Connect if they share index, identification, or key codes
+                if any("id" in col or "name" in col or "code" in col for col in shared_cols):
+                    G.add_edge(t1, t2)
+                    
+        _GRAPH_CACHE[cache_key] = G
+        return G
+
+def compute_graph_penalized_score(sim_score, candidate_table, active_tables, G):
+    """
+    Applies Dijkstra shortest-path penalties to the raw semantic similarity score.
+    """
+    if not active_tables:
+        return sim_score
+        
+    min_hop = float('inf')
+    for active_t in active_tables:
+        try:
+            hop_distance = nx.shortest_path_length(G, source=candidate_table, target=active_t)
+            if hop_distance < min_hop:
+                min_hop = hop_distance
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            continue
+            
+    if min_hop == float('inf'):
+        # Assign an unreachable topological penalty boundary
+        return -100.0 
+        
+    # Score(c) = alpha * Sim(q,c) - beta * min Dijkstra(tc, t)
+    return (ALPHA * sim_score) - (BETA * min_hop)
+
 
 def sliding_window_table_match(metadata_table: str, target_table: str) -> bool:
     metadata_parts = metadata_table.lower().split('.')
@@ -73,7 +151,7 @@ def find_with_name(column_name: str, table_name: str, db_name: str, embed_path: 
         return result
 
 def _retrieve_with_device_filtered(question: str, db_name: str, embed_path: str, 
-                                 excluded_indices: set, top_k: int = 5, device: str = "cuda:0"):
+                                 excluded_indices: set, top_k: int = 5, device: str = "cuda:0", active_tables=None):
     from model_manager import model_manager
     index_path = os.path.join(embed_path, db_name, "index.faiss")
     index = faiss.read_index(index_path)
@@ -85,17 +163,34 @@ def _retrieve_with_device_filtered(question: str, db_name: str, embed_path: str,
     distances, indices = index.search(question_embedding.reshape(1, -1), len(metadata_mapping))
     filtered_results = []
     
+    use_graph_nav = os.environ.get("USE_GRAPH_NAV") == "TRUE"
+    if use_graph_nav and active_tables:
+        G = get_or_build_schema_graph(db_name, embed_path)
+    
+    all_candidates = []
     for i in range(len(indices[0])):
         idx = int(indices[0][i])
         if 0 <= idx < len(metadata_mapping) and idx not in excluded_indices:
             metadata = metadata_mapping[idx]
-            filtered_results.append({
+            sim_score = float(distances[0][i])
+            
+            if use_graph_nav and active_tables:
+                final_score = compute_graph_penalized_score(sim_score, metadata["table"], active_tables, G)
+            else:
+                final_score = sim_score
+                
+            all_candidates.append({
                 "index": idx,
-                "distance": float(distances[0][i]),
+                "distance": final_score,
                 "metadata": metadata
             })
-            if len(filtered_results) >= top_k:
-                break
+            
+    if use_graph_nav and active_tables:
+        # Sort descending because score = alpha * sim - beta * penalty implies higher is better.
+        all_candidates.sort(key=lambda x: x["distance"], reverse=True)
+        filtered_results = all_candidates[:top_k]
+    else:
+        filtered_results = all_candidates[:top_k]
     
     return filtered_results, len(metadata_mapping)
 
@@ -149,7 +244,7 @@ def save_instance_status(instance_id: str, status_dir: str, status_data: dict):
 
 
 def get_next_k_results(instance_id: str, question: str, db_name: str, embed_path: str, 
-                      top_k: int, cache_dir: str, status_dir: str, device: str):
+                      top_k: int, cache_dir: str, status_dir: str, device: str, active_tables=None):
     cache = load_instance_cache(instance_id, cache_dir)
     status = load_instance_status(instance_id, status_dir)
     
@@ -165,7 +260,8 @@ def get_next_k_results(instance_id: str, question: str, db_name: str, embed_path
         embed_path=embed_path,
         excluded_indices=used_indices,
         top_k=top_k,
-        device=device
+        device=device,
+        active_tables=active_tables
     )
     
     if status.get("total_available", 0) == 0:
@@ -221,7 +317,11 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
     
     device = f"cuda:{device_id}"
     
-    for instance_id, item in tqdm(batch_items.items(), desc=f"GPU {device_id} - 进程 {os.getpid()}"):
+    import time
+    pbar = tqdm(batch_items.items(), desc=f"GPU {device_id}")
+    for instance_id, item in pbar:
+        tqdm.write(f"[{time.strftime('%H:%M:%S')}] [PID {os.getpid()}] Processing instance {instance_id}...")
+        pbar.set_description(f"GPU {device_id} - {instance_id}")
         question = item["question"]
         db_name = item["db_name"]
 
