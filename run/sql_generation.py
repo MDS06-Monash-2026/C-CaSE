@@ -55,97 +55,56 @@ class SQLGenerator:
             sql_type = ""
             dialect = "Unknown"
 
-        prompt = SQL_GENERATION.replace("{PROMPT}", schema)
-        prompt = prompt.replace("{QUESTION}", question)
-        prompt = prompt.replace("{SQL_DIALECT_OPTIMIZATION}", sql_type)
-        prompt = prompt.replace("{SQL_TYPE}", dialect)
+        # USE SINGLE_PASS_SQL_GENERATION
+        prompt = SINGLE_PASS_SQL_GENERATION.replace("{tscg_distilled_steiner_tree_schema}", schema)
+        prompt = prompt.replace("{user_question}", question)
+        prompt = prompt.replace("{SQL_DIALECT}", dialect)
+        
+        # Append Structured JSON instructions
+        prompt += "\n\n[STRICT JSON OUTPUT FORMAT]\nYou must output valid JSON containing exactly one key 'sql'.\n{\n  \"sql\": \"SELECT ...\"\n}"
 
-        messages = [
-            {"role": "user", "content": prompt}
-        ]
+        messages = [{"role": "user", "content": prompt}]
         
-        from mcp_tools import TOOLS_SCHEMA, execute_tool_call
-        import json
-        
-        max_turns = 10
-        turn_count = 0
-        final_think = ""
-        
-        while turn_count < max_turns:
-            turn_count += 1
-            attempt = 0
-            while True:
-                try:
-                    kwargs = {
-                        "model": self.model,
-                        "messages": messages,
-                    }
-                    if os.environ.get("USE_GRAPH_NAV") == "TRUE":
-                        kwargs["tools"] = TOOLS_SCHEMA
-                        
-                    response = self.client.chat.completions.create(**kwargs)
-                    
-                    reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
-                    if reasoning_content:
-                        final_think += reasoning_content + "\n"
-                        
-                    message = response.choices[0].message
-                    break
-
-                except Exception as e:
-                    attempt += 1
-                    delay = min(Config.INITIAL_RETRY_DELAY * (2 ** (attempt - 1)), Config.MAX_RETRY_DELAY)
-                    print(f"[Retry {attempt}] API call failed for {instance_id}. ERROR: {str(e)} \nRetrying in {delay}s")
-                    time.sleep(delay)
-                    
-            if message.tool_calls:
-                messages.append(message)
-                for tool_call in message.tool_calls:
-                    function_name = tool_call.function.name
-                    arguments = json.loads(tool_call.function.arguments)
-                    print(f"\n[{instance_id}] Invoking MCP Tool: {function_name} {arguments}")
-                    try:
-                        result_str = execute_tool_call(function_name, arguments)
-                    except Exception as e:
-                        result_str = f"Error executing {function_name}: {str(e)}"
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "name": function_name,
-                        "content": result_str
-                    })
-                continue
-            else:
-                return {
-                    "output": message.content,
-                    "think": final_think
-                }
+        attempt = 0
+        while True:
+            try:
+                # SlayQL 2.0 Single-Shot Drafter (No Agentic Loop)
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=0.0 # Deterministic drafting
+                )
                 
-        print(f"[{instance_id}] Warning: Hit max turns. Falling back to zero-shot.")
-        try:
-            fallback_response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return {
-                "output": fallback_response.choices[0].message.content,
-                "think": final_think + "\n[FALLBACK ZERO-SHOT INVOKED]"
-            }
-        except Exception as e:
-            return {
-                "output": "Error: Exceeded max turns for tool calling and fallback failed. " + str(e),
-                "think": final_think
-            }
+                content = response.choices[0].message.content
+                parsed = json.loads(content)
+                sql = parsed.get("sql", "")
+                
+                return {
+                    "output": sql,
+                    "think": "SlayQL 2.0 Deterministic Drafter"
+                }
 
-def collect_tasks(schema_dir: str, log_path: str, task: str, num_candidates: int) -> List[Tuple[str, int]]:
+            except Exception as e:
+                attempt += 1
+                delay = min(Config.INITIAL_RETRY_DELAY * (2 ** (attempt - 1)), Config.MAX_RETRY_DELAY)
+                print(f"[Retry {attempt}] API call failed for {instance_id}. ERROR: {str(e)} \nRetrying in {delay}s")
+                time.sleep(delay)
+                if attempt > 3:
+                    return {
+                        "output": "SELECT 1;",
+                        "think": "Failed API"
+                    }
+
+def collect_tasks(schema_dir: str, log_path: str, task: str) -> List[Tuple[str]]:
     instance_ids = [f[:-4] for f in os.listdir(schema_dir) if f.endswith(".txt")]
 
     tasks = []
-    for cid in range(num_candidates):
-        for iid in instance_ids:
-            out_file = f"{log_path}/sql_gen/{task}_sql_generation_{cid}/{iid}.txt"
-            if not os.path.exists(out_file):
-                tasks.append((iid, cid))
+    # Only 1 candidate for Drafter
+    for iid in instance_ids:
+        out_file = f"{log_path}/sql_gen/{task}_sql_generation_0/{iid}.txt"
+        if not os.path.exists(out_file):
+            tasks.append((iid,))
     return tasks
 
 def run_task(
@@ -154,8 +113,7 @@ def run_task(
     schema_dir: str,
     log_path: str,
     task: str,
-    instance_id: str,
-    candidate_idx: int
+    instance_id: str
 ):
     schema_path = f"{schema_dir}/{instance_id}.txt"
     with open(schema_path, "r", encoding="utf-8") as f:
@@ -163,18 +121,18 @@ def run_task(
 
     result = generator.generate(instance_id, data[instance_id], schema)
 
-    os.makedirs(f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}", exist_ok=True)
-    os.makedirs(f"{log_path}/sql_gen/{task}_reasoning_{candidate_idx}", exist_ok=True)
+    os.makedirs(f"{log_path}/sql_gen/{task}_sql_generation_0", exist_ok=True)
+    os.makedirs(f"{log_path}/sql_gen/{task}_reasoning_0", exist_ok=True)
 
-    with open(f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}/{instance_id}.txt", "w", encoding="utf-8") as f:
+    with open(f"{log_path}/sql_gen/{task}_sql_generation_0/{instance_id}.txt", "w", encoding="utf-8") as f:
         f.write(result["output"])
 
-    with open(f"{log_path}/sql_gen/{task}_reasoning_{candidate_idx}/{instance_id}.txt", "w", encoding="utf-8") as f:
+    with open(f"{log_path}/sql_gen/{task}_reasoning_0/{instance_id}.txt", "w", encoding="utf-8") as f:
         f.write(result["think"])
 
-def sql_clean(log_path: str, task: str, candidate_idx: int):
-    in_dir = f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}"
-    out_dir = f"{log_path}/sql_gen/{task}_sql_{candidate_idx}"
+def sql_clean(log_path: str, task: str):
+    in_dir = f"{log_path}/sql_gen/{task}_sql_generation_0"
+    out_dir = f"{log_path}/sql_gen/{task}_sql_0"
     
     os.makedirs(out_dir, exist_ok=True)
 
@@ -184,69 +142,45 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
         iid = name[:-4]
         with open(f"{in_dir}/{name}", "r", encoding="utf-8") as f:
             content = f.read()
-        end = content.rfind("```")
-        start = content.rfind("```sql", 0, end)
-        if start != -1 and end != -1 and end > start:
-            sql = content[start + 6:end].strip()
-        else:
-            sql = content.strip()
+        
+        # Output is already pure SQL from JSON but clean it just in case
+        sql = content.strip()
         with open(f"{out_dir}/{iid}.sql", "w", encoding="utf-8") as f:
             f.write(sql)
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--num_candidates", type=int, default=5)
+    parser.add_argument("--num_candidates", type=int, default=1) # SlayQL 2.0 uses 1 draft
     parser.add_argument("--data_file", type=str, required=True)
     parser.add_argument("--schema_dir", type=str, required=True)
     parser.add_argument("--log_path", type=str, required=True)
-    parser.add_argument("--task", type=str, default="r1_lite")
     args = parser.parse_args()
 
-    os.makedirs(args.log_path, exist_ok=True)
+    # Load Data
+    DataLoader().load(args.data_file)
+    data = DataLoader().data
 
-    loader = DataLoader()
-    data = loader.load(args.data_file)
-
+    # We only run the Drafter (0th candidate)
+    task_name = "test"
     generator = SQLGenerator()
-    tasks = collect_tasks(args.schema_dir, args.log_path, args.task, args.num_candidates)
+    tasks = collect_tasks(args.schema_dir, args.log_path, task_name)
 
-    print(f"Total pending tasks: {len(tasks)}")
+    if tasks:
+        print(f"Total pending SlayQL 2.0 Drafter tasks: {len(tasks)}")
+        with ThreadPoolExecutor(max_workers=args.num_workers) as executor:
+            futures = [
+                executor.submit(run_task, generator, data, args.schema_dir, args.log_path, task_name, iid)
+                for (iid,) in tasks
+            ]
+            for _ in tqdm(as_completed(futures), total=len(futures), desc="SlayQL 2.0 SQL Generation"):
+                pass
+    else:
+        print("All Drafter tasks completed.")
 
-    with ThreadPoolExecutor(max_workers=args.num_workers) as executor:
-        futures = [
-            executor.submit(
-                run_task,
-                generator,
-                data,
-                args.schema_dir,
-                args.log_path,
-                args.task,
-                iid,
-                cid
-            )
-            for iid, cid in tasks
-        ]
-
-        for _ in tqdm(
-            as_completed(futures),
-            total=len(futures),
-            desc="SQL Generation",
-            dynamic_ncols=True
-        ):
-            pass
-
-
-    print("SQL generation finished")
-
-    with ThreadPoolExecutor(max_workers=args.num_candidates) as executor:
-        futures = []
-        for cid in range(args.num_candidates):
-            futures.append(executor.submit(sql_clean, args.log_path, args.task, cid))
-        for f in as_completed(futures):
-            f.result()
-
-    print("SQL cleaning finished")
+    print("\nCleaning SlayQL 2.0 output...")
+    sql_clean(args.log_path, task_name)
+    print("Cleaned!")
 
 if __name__ == "__main__":
     main()

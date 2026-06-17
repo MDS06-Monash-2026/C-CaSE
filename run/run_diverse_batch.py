@@ -23,40 +23,50 @@ def run_pipeline(batch_file, log_path, env, step_prefix=""):
     else:
         print(f"\n{step_prefix}[3/8] Skipping initial schema prompts (cached)")
     
-    if not os.path.exists(f"{log_path}/merge_candidates.json"):
-        print(f"\n{step_prefix}[4/8] Running Interactive Multi-Turn Schema Exploration...")
-        subprocess.run([sys.executable, "complete_schema.py", "--log_path", log_path], env=env, check=True)
+    if env.get("USE_GRAPH_NAV") == "TRUE":
+        if not os.path.exists(f"{log_path}/final_schema_prompts"):
+            print(f"\n{step_prefix}[3/8] Running SlayQL 2.0 Deterministic Schema Engine (Steiner Tree + TSCG)...")
+            subprocess.run([sys.executable, "slayql2_schema_engine.py", "--data_file", batch_file, "--log_path", log_path, "--embed_path", "embeddings"], env=env, check=True)
+        else:
+            print(f"\n{step_prefix}[3/8] Skipping slayql2_schema_engine (cached)")
+        print(f"\n{step_prefix}[5/8 & 6/8] Skipping legacy pruning (SlayQL 2.0 uses one-shot deterministic routing)")
     else:
-        print(f"\n{step_prefix}[4/8] Skipping complete_schema (cached)")
+        if not os.path.exists(f"{log_path}/complete_schema"):
+            print(f"\n{step_prefix}[4/8] Agentic Schema Expansion (complete_schema)...")
+            subprocess.run([sys.executable, "complete_schema.py", "--data_file", batch_file, "--log_path", log_path, "--num_workers", "8"], env=env, check=True)
+        else:
+            print(f"\n{step_prefix}[4/8] Skipping complete_schema (cached)")
+        
+        if not os.path.exists(f"{log_path}/final_schema_prompts"):
+            print(f"\n{step_prefix}[5/8] Post-Processing Schema Trees...")
+            subprocess.run([sys.executable, "postprocess.py", "--log_path", log_path], check=True)
+            print(f"\n{step_prefix}[6/8] Iterative Schema Pruning...")
+            subprocess.run([sys.executable, "generate_schema.py", "--log_path", log_path], env=env, check=True)
+        else:
+            print(f"\n{step_prefix}[5/8 & 6/8] Skipping schema pruning (cached)")
     
-    if not os.path.exists(f"{log_path}/final_schema_prompts"):
-        print(f"\n{step_prefix}[5/8] Post-Processing Schema Trees...")
-        subprocess.run([sys.executable, "postprocess.py", "--log_path", log_path], check=True)
-        print(f"\n{step_prefix}[6/8] Iterative Schema Pruning...")
-        subprocess.run([sys.executable, "generate_schema.py", "--log_path", log_path], env=env, check=True)
-    else:
-        print(f"\n{step_prefix}[5/8 & 6/8] Skipping schema pruning (cached)")
+    num_candidates = "1" if env_slay["USE_GRAPH_NAV"] == "TRUE" else "3"
     
     schema_dir = f"{log_path}/final_schema_prompts"
     
     if not os.path.exists(f"{log_path}/sql_gen"):
         print(f"\n{step_prefix}[7/8] Generating Candidate SQL...")
-        subprocess.run([sys.executable, "sql_generation.py", "--data_file", batch_file, "--schema_dir", schema_dir, "--log_path", log_path, "--num_workers", "8", "--num_candidates", "3"], env=env, check=True)
+        subprocess.run([sys.executable, "sql_generation.py", "--data_file", batch_file, "--schema_dir", schema_dir, "--log_path", log_path, "--num_workers", "8", "--num_candidates", num_candidates], env=env, check=True)
     else:
         print(f"\n{step_prefix}[7/8] Skipping sql_generation (cached)")
         
     print(f"\n{step_prefix}[8/8] Executing Candidates on BigQuery...")
-    subprocess.run([sys.executable, "sql_execution.py", "--data_file", batch_file, "--log_path", log_path, "--num_workers", "4", "--num_candidates", "3"], env=env, check=True)
+    subprocess.run([sys.executable, "sql_execution.py", "--data_file", batch_file, "--log_path", log_path, "--num_workers", "4", "--num_candidates", num_candidates], env=env, check=True)
     
     if not os.path.exists(f"{log_path}/sql_revise"):
         print(f"\n{step_prefix}[Self-Correction] Revision phase...")
-        subprocess.run([sys.executable, "sql_revise.py", "--data_file", batch_file, "--schema_dir", schema_dir, "--log_path", log_path, "--num_workers", "8", "--num_candidates", "3"], env=env, check=True)
+        subprocess.run([sys.executable, "sql_revise.py", "--data_file", batch_file, "--schema_dir", schema_dir, "--log_path", log_path, "--num_workers", "8", "--num_candidates", num_candidates], env=env, check=True)
     else:
         print(f"\n{step_prefix}[Self-Correction] Skipping sql_revise (cached)")
         
     if not os.path.exists(f"{log_path}/sql_selection/final"):
         print(f"\n{step_prefix}[Final] SQL Selection Voting...")
-        subprocess.run([sys.executable, "sql_selection.py", "--log_path", log_path, "--num_candidates", "3"], env=env, check=True)
+        subprocess.run([sys.executable, "sql_selection.py", "--log_path", log_path, "--num_candidates", num_candidates], env=env, check=True)
     else:
         print(f"\n{step_prefix}[Final] Skipping sql_selection (cached)")
 
