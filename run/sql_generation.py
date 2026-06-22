@@ -8,6 +8,9 @@ from typing import Dict, List, Tuple
 from openai import OpenAI
 from config import *
 from tqdm import tqdm
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     INITIAL_RETRY_DELAY = 1
@@ -112,6 +115,16 @@ def run_task(
     with open(schema_path, "r", encoding="utf-8") as f:
         schema = f.read()
 
+    from value_grounder import get_value_hints
+    db_name = data[instance_id].get("db_name", "")
+    question = data[instance_id].get("question", "")
+    try:
+        value_hints_block = get_value_hints(query=question, db_id=db_name, indices_dir="bm25_indices")
+        if value_hints_block:
+            schema += f"\n{value_hints_block}\n"
+    except Exception as e:
+        pass
+
     result = generator.generate(instance_id, data[instance_id], schema)
 
     os.makedirs(f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}", exist_ok=True)
@@ -129,19 +142,34 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
     
     os.makedirs(out_dir, exist_ok=True)
 
+    import re
     for name in os.listdir(in_dir):
         if not name.endswith(".txt"):
             continue
         iid = name[:-4]
         with open(f"{in_dir}/{name}", "r", encoding="utf-8") as f:
             content = f.read()
-        end = content.rfind("```")
-        start = content.rfind("```sql", 0, end)
-        if start != -1 and end != -1 and end > start:
-            sql = content[start + 6:end].strip()
+        
+        blocks = re.findall(r"```sql\s*\n(.*?)\n\s*```", content, re.DOTALL)
+        if not blocks:
+            blocks = re.findall(r"```\s*\n(.*?)\n\s*```", content, re.DOTALL)
+        if blocks:
+            non_empty_blocks = [b.strip() for b in blocks if b.strip()]
+            if non_empty_blocks:
+                sql = max(non_empty_blocks, key=len)
+            else:
+                sql = ""
         else:
-            sql = content.strip()
-        with open(f"{out_dir}/{iid}.sql", "w", encoding="utf-8") as f:
+            end = content.rfind("```")
+            start = content.rfind("```sql", 0, end)
+            if start != -1 and end != -1 and end > start:
+                sql = content[start + 6:end].strip()
+            else:
+                sql = content.strip()
+        
+        instance_dir = f"{out_dir}/{iid}"
+        os.makedirs(instance_dir, exist_ok=True)
+        with open(f"{instance_dir}/selected.sql", "w", encoding="utf-8") as f:
             f.write(sql)
 
 def main():

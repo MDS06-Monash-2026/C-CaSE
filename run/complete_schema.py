@@ -16,6 +16,9 @@ import snowflake.connector
 import pandas as pd
 import shutil
 import argparse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 model = os.environ.get("MODEL_NAME")
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), base_url=os.environ.get("OPENAI_BASE_URL"))
@@ -186,7 +189,7 @@ def remove_column_values(schema_text):
             
     return '\n'.join(processed_lines)
 
-def process_instance_batch(batch_instances, log_path):
+def process_instance_batch(batch_instances, log_path, data_file="spider2_data.json"):
     cache_path = os.path.join(log_path, "cache")
     status_path = os.path.join(log_path, "status")
     schema_path = os.path.join(log_path, "schema_prompts")
@@ -218,10 +221,10 @@ def process_instance_batch(batch_instances, log_path):
             sql_optimization = SQLITE_DIALECT_OPTIMIZATION
 
         with open(documents_path, "r", encoding="utf-8") as f:
-            documents = json.load(f)
+            documents = json.loads(f.read(), strict=False)
 
-        with open("spider2_data.json", "r", encoding="utf-8") as f:
-            spider2_data = json.load(f)
+        with open(data_file, "r", encoding="utf-8") as f:
+            spider2_data = json.loads(f.read(), strict=False)
         
         if instance_id not in spider2_data:
             raise ValueError(f"Instance ID {instance_id} not found in spider2_data.json")
@@ -268,13 +271,24 @@ def process_instance_batch(batch_instances, log_path):
         is_finished = False
         is_error = False
 
-        column_candidates = []
-        table_candidates = []
-        column_type_candidates = []
-        column_value_candidates = []
-        description_candidates = []
+        if info.get("should_early_exit", False):
+            column_candidates = info.get("column_candidates", [])
+            table_candidates = info.get("table_candidates", [])
+            column_type_candidates = info.get("column_types", [])
+            column_value_candidates = info.get("column_values", [])
+            description_candidates = info.get("descriptions", [])
+            all_model_output = "Early exit triggered based on Information-Theoretic Early Exit module.\n"
+            all_inputs = "Skipped input due to early exit.\n"
+            all_calls = {}
+        else:
+            column_candidates = []
+            table_candidates = []
+            column_type_candidates = []
+            column_value_candidates = []
+            description_candidates = []
 
-        for i in range(10):
+        loop_max = 0 if info.get("should_early_exit", False) else info.get("dynamic_t_max", 10)
+        for i in range(loop_max):
             
             all_inputs += f"Turn {i}\n" + str(messages) + "\n" + "=" * 50 + "\n\n"
 
@@ -286,6 +300,9 @@ def process_instance_batch(batch_instances, log_path):
                 messages=messages,
             )
             model_output = response.choices[0].message.content
+            if model_output is None:
+                model_output = ""
+
 
             all_model_output += (f"Turn {i}\n" +
                                  # "=============MODEL REASONING=============" +
@@ -407,7 +424,7 @@ def process_instance_batch(batch_instances, log_path):
             json.dump(each_candidates, f, ensure_ascii=False, indent=2)
 
 
-def complete_schema(log_path, num_threads=3):
+def complete_schema(log_path, num_threads=3, data_file="spider2_data.json"):
     
     status_dir = os.path.join(log_path, "status")
     
@@ -429,9 +446,9 @@ def complete_schema(log_path, num_threads=3):
 
     
     with open(os.path.join(log_path, "initial_candidates.json"), "r", encoding="utf-8") as f:
-        initial_candidates = json.load(f)
-    with open("spider2_data.json", "r", encoding="utf-8") as f:
-        spider2_data = json.load(f)
+        initial_candidates = json.loads(f.read(), strict=False)
+    with open(data_file, "r", encoding="utf-8") as f:
+        spider2_data = json.loads(f.read(), strict=False)
     
     instance_ids = list(spider2_data.keys())
     
@@ -478,7 +495,7 @@ def complete_schema(log_path, num_threads=3):
         if i < len(batches):
             p = mp.Process(
                 target=target_function,
-                args=(batches[i], log_path)
+                args=(batches[i], log_path, data_file)
             )
             processes.append(p)
             p.start()
@@ -490,7 +507,8 @@ def complete_schema(log_path, num_threads=3):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
+    parser.add_argument('--data_file', type=str, default="spider2_data.json")
     args = parser.parse_args()
     print("Starting schema completion...")
-    complete_schema(args.log_path, num_threads=8)
+    complete_schema(args.log_path, num_threads=3, data_file=args.data_file)
     print("Schema completion finished.")

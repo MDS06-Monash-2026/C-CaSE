@@ -21,3 +21,9 @@ __pycache__/
 
 evaluation_suite
 linking_results
+log*/
+subset*
+
+run/.env
+run/detailed_analysis
+run/bm25_indices

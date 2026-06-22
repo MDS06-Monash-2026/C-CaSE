@@ -223,13 +223,24 @@ class SQLReviser:
                     print(f"empty output: {e}  ID: {instance_id}")
             
             messages.append({"role": "assistant", "content": model_output})
-            sql_end = model_output.rfind("```")
-            sql_start = model_output.rfind("```sql", 0, sql_end)
-            if sql_start != -1 and sql_end != -1 and sql_end > sql_start:
-                sql = model_output[sql_start + 6:sql_end].strip()
+            import re
+            blocks = re.findall(r"```sql\s*\n(.*?)\n\s*```", model_output, re.DOTALL)
+            if not blocks:
+                blocks = re.findall(r"```\s*\n(.*?)\n\s*```", model_output, re.DOTALL)
+            if blocks:
+                non_empty_blocks = [b.strip() for b in blocks if b.strip()]
+                if non_empty_blocks:
+                    sql = max(non_empty_blocks, key=len)
+                else:
+                    sql = ""
             else:
-                print(f"parse sql error: {instance_id}")
-                sql = model_output.strip()
+                sql_end = model_output.rfind("```")
+                sql_start = model_output.rfind("```sql", 0, sql_end)
+                if sql_start != -1 and sql_end != -1 and sql_end > sql_start:
+                    sql = model_output[sql_start + 6:sql_end].strip()
+                else:
+                    print(f"parse sql error: {instance_id}")
+                    sql = model_output.strip()
             exec_status, exec_result = thread_safe_sql_execution(instance_id, sql, db_name)
             if exec_status == "success":
                 return sql, exec_result, exec_status, messages

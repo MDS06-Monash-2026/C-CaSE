@@ -8,6 +8,10 @@ from sentence_transformers import SentenceTransformer
 from utils import *
 import argparse
 
+from rbp_graph import propagate_relevance
+from it_ee import calculate_retrieval_entropy, determine_budget
+
+
 def sliding_window_table_match(metadata_table: str, target_table: str) -> bool:
     metadata_parts = metadata_table.lower().split('.')
     target_parts = target_table.lower().split('.')
@@ -238,6 +242,37 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
             device=device
         )
 
+        try:
+            with open("documents/bigquery.json", "r", encoding="utf-8") as bf: bq_docs = json.load(bf)
+            with open("documents/snowflake.json", "r", encoding="utf-8") as sf: sf_docs = json.load(sf)
+            with open("documents/localdb.json", "r", encoding="utf-8") as lf: local_docs = json.load(lf)
+            if instance_id.startswith("bq") or instance_id.startswith("ga"):
+                db_metadata = {"tables": list(bq_docs.get(db_name, {}).keys())}
+            elif instance_id.startswith("sf"):
+                db_metadata = {"tables": list(sf_docs.get(db_name, {}).keys())}
+            else:
+                db_metadata = {"tables": list(local_docs.get(db_name, {}).keys())}
+        except:
+            db_metadata = {"tables": []}
+
+        initial_similarities = {}
+        for res in results:
+            sim = 1.0 / (1.0 + float(res["distance"]))
+            col_path = f"{res['metadata']['table']}.{res['metadata']['column']}"
+            initial_similarities[col_path] = sim
+            
+        S_propagated = propagate_relevance(initial_similarities, db_metadata, alpha=0.7)
+
+        for res in results:
+            col_path = f"{res['metadata']['table']}.{res['metadata']['column']}"
+            res["propagated_score"] = S_propagated.get(col_path, 0.0)
+            
+        results = sorted(results, key=lambda x: x["propagated_score"], reverse=True)
+
+        top_n_scores = [res["propagated_score"] for res in results[:top_k]]
+        entropy = calculate_retrieval_entropy(top_n_scores, temp=0.1)
+        should_early_exit, dynamic_t_max = determine_budget(entropy, base_turns=10, threshold=0.4)
+
         table_candidates = []
         column_candidates = []
         column_types = []
@@ -270,17 +305,20 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
             "column_values": column_values,
             "table_candidates": table_candidates,
             "descriptions": descriptions,
-            "retrieved_count": len(results)
+            "retrieved_count": len(results),
+            "should_early_exit": should_early_exit,
+            "dynamic_t_max": dynamic_t_max,
+            "entropy": entropy
         }
 
     return batch_results
 
 
-def retrieve_additional(instance_id: str, question: str, additional_k: int, log_dir: str, device: str = "cuda:0"):
+def retrieve_additional(instance_id: str, question: str, additional_k: int, log_dir: str, device: str = "cuda:0", data_file="spider2_data.json"):
     cache_dir = os.path.join(log_dir, "cache")
     status_dir = os.path.join(log_dir, "status")
     
-    with open("spider2_data.json", "r", encoding="utf-8") as f:
+    with open(data_file, "r", encoding="utf-8") as f:
         spider2_data = json.load(f)
     
     if instance_id not in spider2_data:
@@ -315,10 +353,14 @@ def retrieve_additional(instance_id: str, question: str, additional_k: int, log_
     return formatted_results, completion_message
 
 
-def retrieve(log_dir: str, top_n: int = 50):
+def retrieve(log_dir: str, top_n: int = 50, data_file="spider2_data.json"):
+    output_file = os.path.join(log_dir, "initial_candidates.json")
+    if os.path.exists(output_file):
+        print(f"Output file {output_file} already exists. Skipping retrieval phase.")
+        return
     os.makedirs(log_dir, exist_ok=True)
 
-    with open("spider2_data.json", "r", encoding="utf-8") as f:
+    with open(data_file, "r", encoding="utf-8") as f:
         spider2_data = json.load(f)
 
     instance_ids = list(spider2_data.keys())
@@ -366,6 +408,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
     parser.add_argument('--top_n', type=int, default=100)
+    parser.add_argument('--data_file', type=str, default="spider2_data.json")
     args = parser.parse_args()
 
-    retrieve(args.log_path, top_n=args.top_n)
+    retrieve(args.log_path, top_n=args.top_n, data_file=args.data_file)
