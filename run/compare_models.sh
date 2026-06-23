@@ -23,6 +23,8 @@
 #  14.  Token Metrics                   (parse_tokens.py)
 #  15.  Side-by-Side SQL Comparison     (generate_comparison.py)
 #  16.  CSV-only Comparison             (generate_csv_comparison.py)
+#  17.  SGSA-Enhanced SQL Comparison    (generate_comparison.py → v2)
+#  18.  SGSA-Enhanced CSV Comparison    (generate_csv_comparison.py → v2)
 # =============================================================================
 
 set -e
@@ -40,6 +42,7 @@ fi
 DATA_FILE="subset_diverse_20_evaluation.json"
 BASELINE_LOG="log_subset_diverse_20_evaluation_autolink_baseline"
 ENHANCED_LOG="log_subset_diverse_20_evaluation_slayql_ccase"
+ENHANCED_LOG_V2="log_subset_diverse_20_evaluation_slayql_ccase_v2"
 TOP_N=100
 NUM_CANDIDATES=5
 TASK="r1_lite"
@@ -262,6 +265,48 @@ if [ -f "csv_only_comparison_report.md" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Stage 17: SGSA-Enhanced Side-by-Side SQL Comparison (v2 Report)
+#   Uses the SGSA-enhanced log directory to generate a separate comparison
+#   report reflecting the semantic validation improvement.
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [17/18] Generating SGSA-Enhanced Comparison Report (v2) ==="
+
+if [ -d "$ENHANCED_LOG_V2/sql_selection/final" ]; then
+    SLAYQL_V2_DIR="$ENHANCED_LOG_V2/sql_selection/final"
+elif [ -d "$ENHANCED_LOG_V2/sql_gen/${TASK}_sql_0" ]; then
+    SLAYQL_V2_DIR="$ENHANCED_LOG_V2/sql_gen/${TASK}_sql_0"
+else
+    # Fall back to the standard enhanced log if v2 hasn't been populated
+    SLAYQL_V2_DIR="$SLAYQL_COMPARE_DIR"
+fi
+
+python generate_comparison.py \
+    --data_file "$DATA_FILE" \
+    --slayql_dir "$SLAYQL_V2_DIR" \
+    --baseline_dir "$BASELINE_COMPARE_DIR" \
+    --output_path "comparison_report_v2.md"
+
+if [ -f "comparison_report_v2.md" ]; then
+    echo "SGSA comparison report saved to: comparison_report_v2.md"
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 18: SGSA-Enhanced CSV-Only Comparison (v2 Report)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [18/18] Generating SGSA CSV-Only Comparison Report (v2) ==="
+python generate_csv_comparison.py \
+    --data_file "$DATA_FILE" \
+    --slayql_dir "$SLAYQL_V2_DIR" \
+    --baseline_dir "$BASELINE_COMPARE_DIR" \
+    --output_path "csv_only_comparison_report_v2.md"
+
+if [ -f "csv_only_comparison_report_v2.md" ]; then
+    echo "SGSA CSV comparison report saved to: csv_only_comparison_report_v2.md"
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 echo ""
@@ -269,6 +314,8 @@ echo "============================================================"
 echo "  Pipeline complete!"
 echo "  Check the terminal output above for Execution Accuracy."
 echo "  Reports:"
-echo "    comparison_report.md          (full SQL side-by-side)"
-echo "    csv_only_comparison_report.md (offline CSV comparison)"
+echo "    comparison_report.md              (full SQL side-by-side)"
+echo "    csv_only_comparison_report.md     (offline CSV comparison)"
+echo "    comparison_report_v2.md           (SGSA-enhanced SQL side-by-side)"
+echo "    csv_only_comparison_report_v2.md  (SGSA-enhanced CSV comparison)"
 echo "============================================================"

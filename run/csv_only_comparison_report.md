@@ -4,17 +4,17 @@
 
 | Metric | Baseline | SlayQL (Enhanced) | Change |
 |---|---|---|---|
-| **Correct Instances** | 67 / 178 (37.6%) | 72 / 178 (40.4%) | +5 |
+| **Correct Instances** | 67 / 178 (37.6%) | 27 / 178 (15.2%) | -40 |
 
 ### Category Breakdown
-- **Improved** (❌ Baseline -> ✅ SlayQL): **14**
-- **Degraded** (✅ Baseline -> ❌ SlayQL): **9**
-- **Both Correct**: **58**
-- **Both Incorrect**: **97**
+- **Improved** (❌ Baseline -> ✅ SlayQL): **7**
+- **Degraded** (✅ Baseline -> ❌ SlayQL): **47**
+- **Both Correct**: **20**
+- **Both Incorrect**: **104**
 
 ---
 
-## 📈 Improved Instances (Baseline ❌ -> SlayQL ✅) (14)
+## 📈 Improved Instances (Baseline ❌ -> SlayQL ✅) (7)
 
 ### 1. bq004 (DB: `ga360`)
 **Question**: In July 2017, among all visitors who bought any YouTube-related product, which distinct product—excluding those containing ‘YouTube’ in the product name—had the highest total quantity purchased?
@@ -47,9 +47,9 @@
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| product_name   |
-|:---------------|
-| Sport Bag      |
+| product_name   |   total_quantity |
+|:---------------|-----------------:|
+| Sport Bag      |              508 |
 
 </details>
 
@@ -64,105 +64,7 @@
 
 ---
 
-### 2. sf_bq251 (DB: `PYPI`)
-**Question**: I want to know the GitHub project URLs for the top 3 most downloaded PyPI packages based on download count. First, extract PyPI package metadata including name, version, and project URLs. Filter these URLs to only include those that link to GitHub repositories. Use a regular expression to clean the GitHub URLs by removing unnecessary parts like 'issues', 'pull', 'blob', and 'tree' paths, keeping only the main repository URL. For packages with multiple versions, use only the most recent version based on upload time. Join this data with download metrics to determine the most downloaded packages. Return only the cleaned GitHub repository URLs (without quotation marks) for the top 3 packages by total download count, ensuring that only packages with valid GitHub URLs are included in the results.
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| CLEANED_GITHUB_URL                         |
-|:-------------------------------------------|
-| https://github.com/pypa/wheel              |
-| https://github.com/astanin/python-tabulate |
-| https://github.com/numpy/numpy             |
-
-**OR**
-
-| CLEANED_GITHUB_URL                |
-|:----------------------------------|
-| https://github.com/redis/redis-py |
-| https://github.com/pypa/wheel     |
-| https://github.com/numpy/numpy    |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| GITHUB_URL                                 |
-|:-------------------------------------------|
-| https://github.com/pypa/wheel              |
-| https://github.com/astanin/python-tabulate |
-| https://github.com/numpy/numpy             |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-| github_url                                           |
-|:-----------------------------------------------------|
-| Issue Tracker, https://github.com/pypa/wheel         |
-| Homepage, https://github.com/astanin/python-tabulate |
-| Source, https://github.com/numpy/numpy               |
-
-</details>
-
----
-
-### 3. sf_bq117 (DB: `NOAA_DATA`)
-**Question**: What is the total number of severe storm events that occurred in the most affected month over the past 15 years according to NOAA records, considering only the top 100 storm events with the highest property damage?
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   events_in_most_affected_month |
-|--------------------------------:|
-|                              60 |
-
-**OR**
-
-|   total_events_in_most_affected_month |
-|--------------------------------------:|
-|                                    58 |
-
-**OR**
-
-|   COUNT(*) |
-|-----------:|
-|         53 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   TOTAL_SEVERE_STORM_EVENTS |
-|----------------------------:|
-|                          53 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-|   TOTAL_SEVERE_STORM_EVENTS |
-|----------------------------:|
-|                          66 |
-
-</details>
-
----
-
-### 4. bq048 (DB: `new_york_noaa`)
+### 2. bq048 (DB: `new_york_noaa`)
 **Question**: Which complaint types with more than 3000 total requests from 2011 to 2020 show the strongest positive and negative Pearson correlations with the daily average wind speed measured at station 744860 (JFK Airport), based on daily complaint proportions (the ratio of type-specific complaints to total daily complaints)? Please provide the complaint types and their correlation coefficients, rounded to four decimal places.
 
 **Status**: Baseline ❌ | SlayQL ✅
@@ -200,8 +102,8 @@
 
 | complaint_type   |   correlation |
 |:-----------------|--------------:|
-| Outdoor Dining   |       -0.3977 |
-| HEAT/HOT WATER   |        0.3907 |
+| HEAT/HOT WATER   |        0.3932 |
+| Outdoor Dining   |       -0.3984 |
 
 </details>
 
@@ -214,43 +116,7 @@ N/A
 
 ---
 
-### 5. sf_bq056 (DB: `GEO_OPENSTREETMAP_BOUNDARIES`)
-**Question**: How many different pairs of roads classified as motorway, trunk, primary, secondary, or residential in California overlap each other without sharing nodes and do not have a bridge tag, where these roads are tagged with 'highway', analyzed through planet ways
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   COUNT(*) |
-|-----------:|
-|         13 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   pair_count |
-|-------------:|
-|           13 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-|   overlapping_road_pairs_count |
-|-------------------------------:|
-|                              0 |
-
-</details>
-
----
-
-### 6. bq051 (DB: `new_york_ghcn`)
+### 3. bq051 (DB: `new_york_ghcn`)
 **Question**: Calculate the average daily number of Citibike trips in New York City during 2016, categorizing days as rainy if the total precipitation exceeds 5 millimeters (obtained by dividing the raw precipitation value by 10), and non-rainy otherwise. Use data from the nearest GHCN station located within 50 km of (40.7128, -74.0060) that has valid, unflagged measurements, then compare the resulting average Citibike trips on rainy days versus non-rainy days.
 
 **Status**: Baseline ❌ | SlayQL ✅
@@ -270,10 +136,10 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| day_category   |   avg_daily_trips |
-|:---------------|------------------:|
-| Non-Rainy      |           38604.5 |
-| Rainy          |           36181.4 |
+| category   |   avg_daily_trips |
+|:-----------|------------------:|
+| Non-rainy  |           38604.5 |
+| Rainy      |           36181.4 |
 
 </details>
 
@@ -288,8 +154,8 @@ N/A
 
 ---
 
-### 7. sf_bq062 (DB: `DEPS_DEV_V1`)
-**Question**: What is the most frequently used license by packages in each system?
+### 4. bq085 (DB: `covid19_jhu_world_bank`)
+**Question**: Could you provide, for the United States, France, China, Italy, Spain, Germany, and Iran, the total number of confirmed COVID-19 cases as of April 20, 2020, along with the number of cases per 100,000 people based on their total 2020 populations calculated by summing all relevant population entries from the World Bank data
 
 **Status**: Baseline ❌ | SlayQL ✅
 
@@ -298,66 +164,98 @@ N/A
 <details open>
 <summary><b>Gold Standard Result (Expected)</b></summary>
 
-| System   | License      |
-|:---------|:-------------|
-| GO       | MIT          |
-| MAVEN    | Apache-2.0   |
-| NPM      | MIT          |
-| NUGET    | non-standard |
-| PYPI     | MIT          |
+| country_name       |   TOTAL_CONFIRMED_CASES |   CASES_PER_100K |
+|:-------------------|------------------------:|-----------------:|
+| Spain              |                  200210 |        422.816   |
+| France             |                  154402 |        229.112   |
+| China              |                   86382 |          6.12235 |
+| United States      |                  799531 |        242.661   |
+| Iran, Islamic Rep. |                   83505 |         99.4191  |
+
+*... and 2 more rows.*
 
 **OR**
 
-| System   | License      |   PackageCount |
-|:---------|:-------------|---------------:|
-| GO       | MIT          |          40143 |
-| MAVEN    | APACHE-2.0   |          85135 |
-| NPM      | MIT          |         831975 |
-| NUGET    | NON-STANDARD |          29088 |
-| PYPI     | MIT          |          26598 |
+| country_or_region   |   total_confirmed_cases |   cases_per_100k_people |
+|:--------------------|------------------------:|------------------------:|
+| US                  |                  799531 |               242.661   |
+| Germany             |                  141672 |               170.196   |
+| Spain               |                  200210 |               422.816   |
+| France              |                  154402 |               229.112   |
+| China               |                   86382 |                 6.08727 |
+
+*... and 2 more rows.*
 
 **OR**
 
-| System   | Most_Frequent_License   |   PKG_COUNT |
-|:---------|:------------------------|------------:|
-| GO       | mit                     |       40143 |
-| MAVEN    | apache-2.0              |       85135 |
-| NPM      | mit                     |      831975 |
-| NUGET    | non-standard            |       29088 |
-| PYPI     | mit                     |       26598 |
+| country_name   |   total_confirmed |   cases_per_100k_population |
+|:---------------|------------------:|----------------------------:|
+| Spain          |            200210 |                      422.82 |
+| Italy          |            181228 |                      304.31 |
+| United States  |            784326 |                      238.05 |
+| France         |            156480 |                      232.2  |
+| Germany        |            147065 |                      176.67 |
+
+*... and 2 more rows.*
+
+**OR**
+
+| country_region   |   TOTAL_CASES |   CASES_PER_100K |
+|:-----------------|--------------:|-----------------:|
+| US               |        784326 |        238.047   |
+| France           |        156480 |        232.195   |
+| China            |         83817 |          5.94055 |
+| Italy            |        181228 |        304.309   |
+| Spain            |        200210 |        422.816   |
+
+*... and 2 more rows.*
+
+**OR**
+
+| COUNTRY       |   CONFIRMED |   CASES_PER_100K |
+|:--------------|------------:|-----------------:|
+| China         |       83817 |           5.9406 |
+| United States |      784326 |         238.047  |
+| Italy         |      181228 |         304.309  |
+| Spain         |      200210 |         422.816  |
+| France        |      156480 |         232.195  |
+
+*... and 2 more rows.*
 
 </details>
 
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| SYSTEM   | MOST_FREQUENT_LICENSE   |
-|:---------|:------------------------|
-| GO       | MIT                     |
-| MAVEN    | Apache-2.0              |
-| NPM      | MIT                     |
-| NUGET    | non-standard            |
-| PYPI     | MIT                     |
+| country   |   total_cases |   cases_per_100k |
+|:----------|--------------:|-----------------:|
+| China     |         86382 |           6.1223 |
+| France    |        154402 |         229.112  |
+| Germany   |        141672 |         170.196  |
+| Iran      |         83505 |          99.4191 |
+| Italy     |        181228 |         304.309  |
+
+*... and 2 more rows.*
 
 </details>
 
 <details open>
 <summary><b>Baseline Execution Result (❌)</b></summary>
 
-| System   | most_frequent_license   |
-|:---------|:------------------------|
-| GO       | Apache-2.0              |
-| MAVEN    | Apache-2.0              |
-| NPM      | MIT                     |
-| NUGET    | non-standard            |
-| PYPI     | MIT                     |
+| country_or_region   |   total_cases |   cases_per_100k |
+|:--------------------|--------------:|-----------------:|
+| China               |         86382 |           6.1223 |
+| France              |        154402 |         229.112  |
+| Germany             |        141672 |         170.196  |
+| Italy               |        181228 |         304.309  |
+| Spain               |        200210 |         422.816  |
 
 </details>
 
 ---
 
-### 8. bq220 (DB: `usfs_fia`)
-**Question**: Based on the condition, plot_tree, and population tables in bigquery-public-data.usfs_fia, for the evaluation_type set to 'EXPCURR' and condition_status_code equal to 1, which states had the largest average subplot size and the largest average macroplot size, respectively, for each of the years 2015, 2016, and 2017? Please include the type of plot (subplot or macroplot), the specific year, the state, and the corresponding average size in your results.
+### 5. bq395 (DB: `sdoh`)
+**Question**: Calculate the percentage change in the total number of unsheltered homeless people from 2015 to 2018 for each state by summing the counts over all Continuums of Care (CoCs) within each state. Then, determine the national average of these state percentage changes. Identify the five states whose percentage change is closest to this national average percentage change. Please provide the state abbreviations.
 
 **Status**: Baseline ❌ | SlayQL ✅
 
@@ -366,139 +264,55 @@ N/A
 <details open>
 <summary><b>Gold Standard Result (Expected)</b></summary>
 
-| PLOT_TYPE   |   YEAR | STATE_NAME   |   MAX_AVG_SIZE |
-|:------------|-------:|:-------------|---------------:|
-| MACROPLOT   |   2015 | California   |        4937.3  |
-| MACROPLOT   |   2016 | California   |        5128.2  |
-| MACROPLOT   |   2017 | California   |        5043.94 |
-| SUBPLOT     |   2015 | Wyoming      |        7634.42 |
-| SUBPLOT     |   2016 | Alaska       |       15679.9  |
-
-*... and 1 more rows.*
+| state_abbrev   |
+|:---------------|
+| MO             |
+| VA             |
+| NH             |
+| KY             |
+| NE             |
 
 **OR**
 
-| PLOT_TYPE   |   YEAR |   STATE |   AVG_SIZE |
-|:------------|-------:|--------:|-----------:|
-| macroplot   |   2015 |       6 |    4937.3  |
-| macroplot   |   2016 |       6 |    5128.2  |
-| macroplot   |   2017 |       6 |    5043.94 |
-| subplot     |   2015 |      56 |    7634.42 |
-| subplot     |   2016 |       2 |   15679.9  |
-
-*... and 1 more rows.*
-
-**OR**
-
-| PLOT_TYPE   |   YEAR | STATE      |   AVERAGE_SIZE |
-|:------------|-------:|:-----------|---------------:|
-| subplot     |   2015 | Wyoming    |        7634.42 |
-| subplot     |   2016 | Alaska     |       15679.9  |
-| subplot     |   2017 | Wyoming    |        6284.79 |
-| macroplot   |   2015 | California |        4937.3  |
-| macroplot   |   2016 | California |        5128.2  |
-
-*... and 1 more rows.*
-
-**OR**
-
-| PLOT_TYPE   |   inventory_year | STATE      |   AVG_SIZE |
-|:------------|-----------------:|:-----------|-----------:|
-| Macroplot   |             2015 | California |    4937.3  |
-| Macroplot   |             2016 | California |    5128.2  |
-| Macroplot   |             2017 | California |    5043.94 |
-| Subplot     |             2015 | Wyoming    |    7634.42 |
-| Subplot     |             2016 | Alaska     |   15679.9  |
-
-*... and 1 more rows.*
-
-**OR**
-
-| Plot Type   |   Year | State      |   Average Size |
-|:------------|-------:|:-----------|---------------:|
-| MACR        |   2015 | California |        4937.3  |
-| MACR        |   2016 | California |        5128.2  |
-| MACR        |   2017 | California |        5043.94 |
-| SUBP        |   2015 | Wyoming    |        7634.42 |
-| SUBP        |   2016 | Alaska     |       15679.9  |
-
-*... and 1 more rows.*
+| State   |
+|:--------|
+| MO      |
+| VA      |
+| DC      |
+| NH      |
+| KY      |
 
 </details>
 
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-|   year | plot_type   |   state |   avg_size |
-|-------:|:------------|--------:|-----------:|
-|   2015 | macroplot   |       6 |    4937.3  |
-|   2015 | subplot     |      56 |    7634.42 |
-|   2016 | macroplot   |       6 |    5128.2  |
-|   2016 | subplot     |       2 |   15679.9  |
-|   2017 | macroplot   |       6 |    5043.94 |
-
-*... and 1 more rows.*
+| state_abbreviation   |
+|:---------------------|
+| MO                   |
+| VA                   |
+| DC                   |
+| NH                   |
+| KY                   |
 
 </details>
 
 <details open>
 <summary><b>Baseline Execution Result (❌)</b></summary>
 
-| plot_type   |   year | state      |   avg_size |
-|:------------|-------:|:-----------|-----------:|
-| macroplot   |   2015 | California |    4906.83 |
-| macroplot   |   2016 | California |    5100.07 |
-| macroplot   |   2017 | California |    5024.52 |
-| subplot     |   2015 | Idaho      |    8830.61 |
-| subplot     |   2016 | Idaho      |    7774.11 |
-
-*... and 1 more rows.*
+| state_abbr   |
+|:-------------|
+| VI           |
+| VA           |
+| OH           |
+| CA           |
+| NE           |
 
 </details>
 
 ---
 
-### 9. bq096 (DB: `gbif`)
-**Question**: Determine which year had the earliest date after January on which more than 10 sightings of Sterna paradisaea were recorded north of 40 degrees latitude. For each year, find the first day after January with over 10 sightings of this species in that region, and identify the year whose earliest such date is the earliest among all years.
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   year |
-|-------:|
-|   2023 |
-
-**OR**
-
-|   year |
-|-------:|
-|   1894 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   year |
-|-------:|
-|   1894 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-N/A
-
-</details>
-
----
-
-### 10. bq114 (DB: `openaq`)
+### 6. bq114 (DB: `openaq`)
 **Question**: Which three cities have the largest difference between their 1990 EPA PM2.5 measurements (using units_of_measure = 'Micrograms/cubic meter (LC)' and parameter_name = 'Acceptable PM2.5 AQI & Speciation Mass') and their 2020 OpenAQ PM2.5 measurements (where pollutant = 'pm25' based on the year extracted from the timestamp), with both datasets matched by latitude and longitude rounded to two decimals, and the difference ordered from greatest to least?
 
 **Status**: Baseline ❌ | SlayQL ✅
@@ -527,11 +341,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| city      |   difference |
-|:----------|-------------:|
-| Knoxville |       8.814  |
-| MADISON   |       4.8733 |
-| HANCOCK   |       4.6795 |
+| city      |   epa_1990_pm25 |   openaq_2020_pm25 |   difference |
+|:----------|----------------:|-------------------:|-------------:|
+| Knoxville |         14.814  |                6   |       8.814  |
+| MADISON   |         11.8733 |                7   |       4.8733 |
+| HANCOCK   |          8.1795 |                3.5 |       4.6795 |
 
 </details>
 
@@ -544,8 +358,8 @@ N/A
 
 ---
 
-### 11. sf_bq346 (DB: `IDC`)
-**Question**: In publicly accessible DICOM data where the Modality is 'SEG' and the SOPClassUID is '1.2.840.10008.5.1.4.1.1.66.4', and each segmentation references its original SOPInstanceUID, which five segmentation categories (by 'SegmentedPropertyCategory.CodeMeaning') occur most frequently?
+### 7. bq229 (DB: `open_images`)
+**Question**: Using the bigquery-public-data.open_images dataset, can you provide a count of how many distinct image URLs are categorized as 'cat' (where the image has label '/m/01yrx' with confidence=1) and how many distinct image URLs are categorized as 'other' (meaning they have no cat label '/m/01yrx' at all)?
 
 **Status**: Baseline ❌ | SlayQL ✅
 
@@ -554,206 +368,41 @@ N/A
 <details open>
 <summary><b>Gold Standard Result (Expected)</b></summary>
 
-| CodeMeaning                        |   frequency |
-|:-----------------------------------|------------:|
-| Anatomical Structure               |         616 |
-| Tissue                             |         491 |
-| Morphological Abnormal Structure   |         279 |
-| Morphologically Altered Structure  |         117 |
-| Morphologically Abnormal Structure |          58 |
+| category   |   url_count |
+|:-----------|------------:|
+| cat        |       40231 |
+| other      |     9122224 |
 
 **OR**
 
-| FINALCATEGORY                      |   TOTALFREQUENCY |
-|:-----------------------------------|-----------------:|
-| Anatomical Structure               |              622 |
-| Tissue                             |              491 |
-| Morphological Abnormal Structure   |              279 |
-| Morphologically Altered Structure  |              163 |
-| Morphologically Abnormal Structure |               58 |
-
-**OR**
-
-| SegmentedPropertyCategory_CodeMeaning   |   Frequency |
-|:----------------------------------------|------------:|
-| "Anatomical Structure"                  |         622 |
-| "Tissue"                                |         491 |
-| "Morphological Abnormal Structure"      |         279 |
-| "Morphologically Altered Structure"     |         163 |
-| "Morphologically Abnormal Structure"    |          58 |
+|   cat_count |   other_count |
+|------------:|--------------:|
+|       40231 |   9.12222e+06 |
 
 </details>
 
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| SegmentedPropertyCategory_CodeMeaning   |   frequency |
-|:----------------------------------------|------------:|
-| Anatomical Structure                    |         622 |
-| Tissue                                  |         491 |
-| Morphological Abnormal Structure        |         279 |
-| Morphologically Altered Structure       |         163 |
-| Morphologically Abnormal Structure      |          58 |
+| category   |   count |
+|:-----------|--------:|
+| cat        |   40231 |
+| other      | 9122224 |
 
 </details>
 
 <details open>
 <summary><b>Baseline Execution Result (❌)</b></summary>
 
-| category             |   frequency |
-|:---------------------|------------:|
-| Tissue               |           4 |
-| Anatomical Structure |           1 |
+|   cat_image_url_count |   other_image_url_count |
+|----------------------:|------------------------:|
+|                 40231 |             9.13804e+06 |
 
 </details>
 
 ---
 
-### 12. bq046 (DB: `TCGA_bioclin_v0`)
-**Question**: Find case barcodes and their corresponding GDC file URLs for female patients aged 30 or younger diagnosed with breast cancer (BRCA) in TCGA database. The query should first identify patients from the Annotations table where entity_type is "Patient" and either category is "History of unacceptable prior treatment related to a prior/other malignancy" or classification is "Redaction". Also identify patients from the Clinical table with disease_code "BRCA", age_at_diagnosis less than or equal to 30, and gender "FEMALE". Perform a FULL JOIN between these two sets, but only keep patients where both categoryName and classificationName are NULL in the final result. Use GDC metadata from archive release 14 (specifically rel14_caseData, rel14_fileData_current, and rel14_GDCfileID_to_GCSurl_NEW tables) to get the corresponding file URLs. 
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| CASE_BARCODE   | file_gdc_url                                                                                                                               |
-|:---------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/1d3113c1-4f40-48d8-9b58-f82ba913f80d/TCGA-AN-A041-01A-11R-A035-13_mirna_gdc_realn.bam                   |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/32b3fe29-3097-4a1b-bedf-0f9d7014fa0d/32b3fe29-3097-4a1b-bedf-0f9d7014fa0d.vep.vcf.gz                    |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/4e57ead2-fca7-4803-a699-2dd651a03f98/4e57ead2-fca7-4803-a699-2dd651a03f98.vcf                           |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/5b68e883-e793-4006-b98e-8d851f6a6534/TCGA-AN-A041-10A-01W-A055-09_IlluminaGA-DNASeq_exome_gdc_realn.bam |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/6099659e-dbba-482a-b1b2-7477d93985d6/6099659e-dbba-482a-b1b2-7477d93985d6.vcf.gz                        |
-
-*... and 318 more rows.*
-
-**OR**
-
-| case_barcode   | gdc_file_url                                                                                                                       |
-|:---------------|:-----------------------------------------------------------------------------------------------------------------------------------|
-| TCGA-B6-A0RG   | gs://gdc-tcga-phs000178-open/181c0148-e3b5-4739-844e-e5919446581e/74dfc8ec-405b-4ffa-a282-daac57bf4d01.FPKM.txt.gz                 |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/1d3113c1-4f40-48d8-9b58-f82ba913f80d/TCGA-AN-A041-01A-11R-A035-13_mirna_gdc_realn.bam           |
-| TCGA-E9-A1NE   | gs://gdc-tcga-phs000178-open/318dc2ae-ec65-4a08-89d9-3d6717c4c886/TCGA-E9-A1NE-11A-03-TSC.70d3974a-8daf-4276-af52-9e72e7780782.svs |
-| TCGA-AO-A03M   | gs://gdc-tcga-phs000178-open/3f197a51-8e41-4e86-a372-ea24e382308a/nationwidechildrens.org_clinical.TCGA-AO-A03M.xml                |
-| TCGA-AO-A129   | gs://gdc-tcga-phs000178-open/039648fe-aee6-48c2-961e-fb157ad71cfc/03895e36-d4e0-4849-a0f1-26550373338d.htseq.counts.gz             |
-
-*... and 269 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| case_barcode   | file_url                                                                                                                                     |
-|:---------------|:---------------------------------------------------------------------------------------------------------------------------------------------|
-| TCGA-AO-A129   | gs://gdc-tcga-phs000178-open/bcb36504-3626-47e9-bf05-de36428737c4/41a9b93b-bd57-49ee-a703-510e61dead63.mirbase21.isoforms.quantification.txt |
-| TCGA-PL-A8LZ   | gs://gdc-tcga-phs000178-open/58d983ee-8d34-4276-95d2-a660a87f1c2e/7bda3c7f-9e51-4e8a-9398-e9dc1dee8c62.htseq.counts.gz                       |
-| TCGA-AN-A041   | gs://gdc-tcga-phs000178-open/5ea3601c-639a-4e8a-8b71-9586e2d5ea83/2c44d562-19b6-497c-a17f-c619e332c342.mirbase21.mirnas.quantification.txt   |
-| TCGA-BH-A0DG   | gs://gdc-tcga-phs000178-controlled/8daa27fd-ad7a-4fc7-a1c8-11b660867d44/8daa27fd-ad7a-4fc7-a1c8-11b660867d44.vep.vcf.gz                      |
-| TCGA-BH-A0DG   | gs://gdc-tcga-phs000178-controlled/a7d4d1d0-68e4-4833-93f3-48aa878933b4/a7d4d1d0-68e4-4833-93f3-48aa878933b4.vep.vcf.gz                      |
-
-*... and 318 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-| case_barcode   | gdc_file_url                                                         |
-|:---------------|:---------------------------------------------------------------------|
-| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/c4980771-b9da-44eb-a4c5-af5f84c3b9e9 |
-| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/3d879fc3-d9fc-45b9-b9da-335e8ef11774 |
-| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/5ea3601c-639a-4e8a-8b71-9586e2d5ea83 |
-| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/7fe80e4a-fe5b-4045-8dea-6f889ef28a75 |
-| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/cd7c236b-2491-4d51-bc54-299206247972 |
-
-*... and 318 more rows.*
-
-</details>
-
----
-
-### 13. bq161 (DB: `pancancer_atlas_2`)
-**Question**: Calculate the net difference between the number of pancreatic adenocarcinoma (PAAD) patients in TCGA's dataset who are confirmed to have mutations in both KRAS and TP53 genes, and those without mutations in either gene. Utilize patient clinical and follow-up data alongside genomic mutation details from TCGA’s cancer genomics database, focusing specifically on PAAD studies where the mutations have passed quality filters.
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   T1.VALUE - T2.VALUE |
-|----------------------:|
-|                    40 |
-
-**OR**
-
-|   net_difference |
-|-----------------:|
-|               39 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   net_difference |
-|-----------------:|
-|               40 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-|   net_difference |
-|-----------------:|
-|               50 |
-
-</details>
-
----
-
-### 14. local018 (DB: `California_Traffic_Collision`)
-**Question**: For the primary collision factor violation category that was the most common cause of traffic accidents in 2021, how many percentage points did its share of annual road incidents in 2021 decrease compared to its share in 2011?
-
-**Status**: Baseline ❌ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   MAX(CASE WHEN COLLISION_YEAR = 2011 THEN PERCENTAGE_SHARE END) - MAX(CASE WHEN COLLISION_YEAR = 2021 THEN PERCENTAGE_SHARE END) |
-|----------------------------------------------------------------------------------------------------------------------------------:|
-|                                                                                                                         -0.553654 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   percentage_point_decrease |
-|----------------------------:|
-|                     -0.5537 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-|   decrease_percentage_points |
-|-----------------------------:|
-|                          nan |
-
-</details>
-
----
-
-## 📉 Degraded Instances (Baseline ✅ -> SlayQL ❌) (9)
+## 📉 Degraded Instances (Baseline ✅ -> SlayQL ❌) (47)
 
 ### 1. bq011 (DB: `ga4`)
 **Question**: How many distinct pseudo users had positive engagement time  in the 7-day period ending on January 7, 2021 at 23:59:59, but had no positive engagement time in the 2-day period ending on the same date (January 7, 2021 at 23:59:59) ?
@@ -774,15 +423,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   distinct_users |
-|-----------------:|
-|                1 |
-|                1 |
-|                1 |
-|                1 |
-|                1 |
-
-*... and 9844 more rows.*
+N/A
 
 </details>
 
@@ -797,585 +438,10 @@ N/A
 
 ---
 
-### 2. sf_bq207 (DB: `PATENTS_USPTO`)
-**Question**: Could you provide the earliest publication numbers, corresponding application numbers, claim numbers, and word counts for the top 100 independent patent claims, based on the highest word count, retrieved from claims stats within uspto_oce_claims (filtered by ind_flg='1'), matched with their publication numbers from uspto_oce_claims match, and further joined with patents publications to ensure only the earliest publication for each application is included, ordered by descending word count, and limited to the top 100 results?
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| EARLIEST_PUBLICATION_NUMBER   |   APPLICATION_NUMBER |   CLAIM_NUMBER |   WORD_COUNT |
-|:------------------------------|---------------------:|---------------:|-------------:|
-| US-5256408-A                  |              7836888 |              1 |         1926 |
-| US-5990084-A                  |              8844031 |              1 |         1750 |
-| US-5514678-A                  |              8307572 |              1 |         1628 |
-| US-6289321-B1                 |              9228896 |              1 |         1322 |
-| US-7256245-B2                 |             10456841 |              1 |         1320 |
-
-*... and 95 more rows.*
-
-**OR**
-
-| publication_number   |     appl_id |   claim_no |   word_ct |
-|:---------------------|------------:|-----------:|----------:|
-| US-5256408-A         | 7.83689e+06 |          1 |      1926 |
-| US-5990084-A         | 8.84403e+06 |          1 |      1750 |
-| US-5514678-A         | 8.30757e+06 |          1 |      1628 |
-| US-6289321-B1        | 9.2289e+06  |          1 |      1322 |
-| US-7256245-B2        | 1.04568e+07 |          1 |      1320 |
-
-*... and 95 more rows.*
-
-**OR**
-
-| publication_number   | application_number   |   claim_no |   word_count |
-|:---------------------|:---------------------|-----------:|-------------:|
-| US-5256408-A         | US-83688892-A        |          1 |         1926 |
-| US-5990084-A         | US-84403197-A        |          1 |         1750 |
-| US-5514678-A         | US-30757294-A        |          1 |         1628 |
-| US-6289321-B1        | US-22889699-A        |          1 |         1322 |
-| US-7256245-B2        | US-45684103-A        |          1 |         1320 |
-
-*... and 95 more rows.*
-
-**OR**
-
-| publication_number   | application_number   |   claim_no |   word_ct |
-|:---------------------|:---------------------|-----------:|----------:|
-| US-5256408-A         | US-83688892-A        |          1 |      1926 |
-| US-5990084-A         | US-84403197-A        |          1 |      1750 |
-| US-5514678-A         | US-30757294-A        |          1 |      1628 |
-| US-6289321-B1        | US-22889699-A        |          1 |      1322 |
-| US-7256245-B2        | US-45684103-A        |          1 |      1320 |
-
-*... and 95 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| publication_number   | application_number   |   claim_no |   word_ct |
-|:---------------------|:---------------------|-----------:|----------:|
-| US-5256408-A         | US-83688892-A        |          1 |      1926 |
-| US-5256408-A         | US-83688892-A        |          1 |      1926 |
-| US-5256408-A         | US-83688892-A        |          1 |      1926 |
-| US-5256408-A         | US-83688892-A        |          1 |      1926 |
-| US-5990084-A         | US-84403197-A        |          1 |      1750 |
-
-*... and 95 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| publication_number   |   application_number |   claim_no |   word_ct |
-|:---------------------|---------------------:|-----------:|----------:|
-| US-5256408-A         |          7.83689e+06 |          1 |      1926 |
-| US-5990084-A         |          8.84403e+06 |          1 |      1750 |
-| US-5514678-A         |          8.30757e+06 |          1 |      1628 |
-| US-6289321-B1        |          9.2289e+06  |          1 |      1322 |
-| US-7256245-B2        |          1.04568e+07 |          1 |      1320 |
-
-*... and 95 more rows.*
-
-</details>
-
----
-
-### 3. sf_bq190 (DB: `THELOOK_ECOMMERCE`)
-**Question**: Determine the number of users who are the youngest and oldest for each gender (male and female) separately, among those who signed up between January 1, 2019, and April 30, 2022. For each gender, identify the minimum and maximum ages within this date range, and count how many users fall into these respective age groups.
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| gender   |   YOUNGEST_AGE |   YOUNGEST_USERS_COUNT |   OLDEST_AGE |   OLDEST_USERS_COUNT |
-|:---------|---------------:|-----------------------:|-------------:|---------------------:|
-| F        |             12 |                    485 |           70 |                  467 |
-| M        |             12 |                    432 |           70 |                  461 |
-
-**OR**
-
-| gender   | age_group   |   age |   user_count |
-|:---------|:------------|------:|-------------:|
-| F        | Youngest    |    12 |          485 |
-| F        | Oldest      |    70 |          467 |
-| M        | Youngest    |    12 |          432 |
-| M        | Oldest      |    70 |          461 |
-
-**OR**
-
-| gender   |   min_age |   min_age_user_count |   max_age |   max_age_user_count |
-|:---------|----------:|---------------------:|----------:|---------------------:|
-| female   |        12 |                  485 |        70 |                  467 |
-| male     |        12 |                  432 |        70 |                  461 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| gender   | AGE_GROUP   |   AGE |   USER_COUNT |
-|:---------|:------------|------:|-------------:|
-| F        | oldest      |    70 |          465 |
-| F        | youngest    |    12 |          485 |
-| M        | oldest      |    70 |          461 |
-| M        | youngest    |    12 |          432 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| gender   |   min_age |   min_age_count |   max_age |   max_age_count |
-|:---------|----------:|----------------:|----------:|----------------:|
-| F        |        12 |             485 |        70 |             467 |
-| M        |        12 |             432 |        70 |             461 |
-
-</details>
-
----
-
-### 4. bq030 (DB: `covid19_open_data`)
-**Question**: As of May 10, 2020, among all countries that had more than 50,000 confirmed COVID-19 cases, which three countries had the highest recovery rates based on the total number of recovered cases relative to their total confirmed cases, and what were their respective recovery rates expressed as percentages?
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| country   |   recovery_rate |
-|:----------|----------------:|
-| France    |       2112.14   |
-| China     |         93.8458 |
-| Germany   |         56.576  |
-
-**OR**
-
-| country_region   |   RECOVERY_RATE |
-|:-----------------|----------------:|
-| Germany          |         94.6936 |
-| China            |         93.4694 |
-| India            |         30.3883 |
-
-**OR**
-
-| country_name   |   recovery_rate_percent |
-|:---------------|------------------------:|
-| China          |                   94.17 |
-| Italy          |                   48.01 |
-| Brazil         |                   39.92 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| country_name   |   recovery_rate_percentage |
-|:---------------|---------------------------:|
-| France         |                    1102.47 |
-| China          |                      94.17 |
-| Italy          |                      48.01 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| country_name   |   recovery_rate_percentage |
-|:---------------|---------------------------:|
-| France         |                  2112.14   |
-| China          |                    93.8458 |
-| Germany        |                    56.576  |
-
-</details>
-
----
-
-### 5. sf_bq345 (DB: `IDC`)
-**Question**: How large are the DICOM image files with SEG or RTSTRUCT modalities and the SOP Class UID "1.2.840.10008.5.1.4.1.1.66.4", when grouped by collection, study, and series IDs, if they have no references to other series, images, or sources? Can you also provide a viewer URL formatted as "https://viewer.imaging.datacommons.cancer.gov/viewer/" followed by the study ID, and list these sizes in kilobytes, sorted from largest to smallest?
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| collection_id       | study_id                                                         | series_id                                                       | viewer_url                                                                                                            |   size_kb |
-|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------|----------:|
-| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |     10672 |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |      6999 |
-| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |      5168 |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |      4620 |
-| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |      3220 |
-
-*... and 47 more rows.*
-
-**OR**
-
-| collection_id       | study_id                                                         | series_id                                                       | viewer_url                                                                                                            |   size_kb |
-|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------|----------:|
-| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |  10672.1  |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |   6999.43 |
-| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |   5168.17 |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |   4619.93 |
-| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |   3220.35 |
-
-*... and 47 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| Collection                    | StudyInstanceUID                                                 | SeriesInstanceUID                                                |   TotalSizeKB | ViewerURL                                                                                                             |
-|:------------------------------|:-----------------------------------------------------------------|:-----------------------------------------------------------------|--------------:|:----------------------------------------------------------------------------------------------------------------------|
-| 10.7937/TCIA.D8Z0-9T85        | 1.3.6.1.4.1.14519.5.2.1.221176767008594781101604801650500788746  | 1.3.6.1.4.1.14519.5.2.1.4878233311774983126678390302251532724    |       5162.4  | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.221176767008594781101604801650500788746  |
-| 10.7937/K9/TCIA.2016.HdHpgJLK | 1.3.6.1.4.1.14519.5.2.1.7695.1700.231985809607621487102944415722 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.232827057081414195697487632839 |       4151.41 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.231985809607621487102944415722 |
-| 10.7937/K9/TCIA.2016.QHSYHJKY | 1.3.6.1.4.1.14519.5.2.1.7695.2311.107706445780109833247801562808 | 1.3.6.1.4.1.14519.5.2.1.7695.2311.390624718420886128536757070342 |       3893.08 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.2311.107706445780109833247801562808 |
-| 10.7937/K9/TCIA.2016.HdHpgJLK | 1.3.6.1.4.1.14519.5.2.1.7695.1700.310641334810324025592282005680 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.174392359340937391733883968275 |       3827.44 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.310641334810324025592282005680 |
-| 10.7937/K9/TCIA.2016.HdHpgJLK | 1.3.6.1.4.1.14519.5.2.1.7695.1700.158764093351572321399834247951 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.328720938742995917710085115996 |       2786.37 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.158764093351572321399834247951 |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| collection_id       | study_instance_uid                                               | series_instance_uid                                             |   total_size_kb | viewer_url                                                                                                            |
-|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|----------------:|:----------------------------------------------------------------------------------------------------------------------|
-| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 |        10672.1  | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          |         6999.43 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |
-| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 |         5168.17 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |
-| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          |         4619.93 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |
-| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        |         3220.35 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |
-
-*... and 47 more rows.*
-
-</details>
-
----
-
-### 6. bq199 (DB: `iowa_liquor_sales`)
-**Question**: Identify the top 10 liquor categories in Iowa in 2021 by calculating, for each category, the average of the per-liter retail prices across all sales transactions in that category during 2021. For these top categories, provide their average per-liter retail prices calculated in the same manner for the years 2019, 2020, and 2021.
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   category | category_name                  |   AVG_PRICE_PER_LITER_2019 |   AVG_PRICE_PER_LITER_2020 |   AVG_PRICE_PER_LITER_2021 |
-|-----------:|:-------------------------------|---------------------------:|---------------------------:|---------------------------:|
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |                    32.2776 |                   168.468  |                    193.657 |
-| 1.0816e+06 | WHISKEY LIQUEUR                |                    87.9773 |                   192.251  |                    174.768 |
-| 1.07e+06   | COCKTAILS/RTD                  |                    34.7467 |                   106.994  |                    142.5   |
-| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |                    29.1636 |                    64.0621 |                    135.389 |
-| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |                    42.1378 |                    52.0777 |                    130.857 |
-
-*... and 5 more rows.*
-
-**OR**
-
-|   category | category_name                  |   year |   avg_per_liter_retail_price |
-|-----------:|:-------------------------------|-------:|-----------------------------:|
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2019 |                      32.2776 |
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2020 |                     168.468  |
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2021 |                     193.657  |
-| 1.0816e+06 | WHISKEY LIQUEUR                |   2019 |                      87.9773 |
-| 1.0816e+06 | WHISKEY LIQUEUR                |   2020 |                     192.251  |
-
-*... and 25 more rows.*
-
-**OR**
-
-|   category | category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
-|-----------:|:-------------------------------|-----------------:|-----------------:|-----------------:|
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |          32.2776 |         168.492  |          193.644 |
-| 1.0816e+06 | WHISKEY LIQUEUR                |          87.978  |         194.192  |          174.768 |
-| 1.07e+06   | COCKTAILS/RTD                  |          34.7467 |         106.994  |          142.5   |
-| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |          29.1622 |          64.5409 |          135.942 |
-| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |          42.1802 |          52.001  |          130.917 |
-
-*... and 5 more rows.*
-
-**OR**
-
-|   category | category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
-|-----------:|:-------------------------------|-----------------:|-----------------:|-----------------:|
-| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |          32.2776 |         168.492  |          193.665 |
-| 1.0816e+06 | WHISKEY LIQUEUR                |          87.9794 |         192.252  |          174.77  |
-| 1.07e+06   | COCKTAILS/RTD                  |          34.7467 |         106.994  |          142.5   |
-| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |          29.1651 |          64.0633 |          135.39  |
-| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |          42.2363 |          52.0839 |          130.858 |
-
-*... and 5 more rows.*
-
-**OR**
-
-| category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
-|:-------------------------------|-----------------:|-----------------:|-----------------:|
-| WHISKEY LIQUEUR                |          87.9773 |         192.251  |         174.768  |
-| TEMPORARY & SPECIALTY PACKAGES |          42.113  |          74.7871 |         139.765  |
-| AMERICAN CORDIALS & LIQUEURS   |          29.1498 |          63.7818 |         134.772  |
-| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
-| TENNESSEE WHISKIES             |          51.9547 |          81.4209 |          98.9861 |
-
-*... and 5 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| category_name                  |   avg_price_2019 |   avg_price_2020 |   avg_price_2021 |
-|:-------------------------------|-----------------:|-----------------:|-----------------:|
-| WHISKEY LIQUEUR                |          87.978  |         194.192  |         174.768  |
-| TEMPORARY & SPECIALTY PACKAGES |          42.1554 |          74.7301 |         139.814  |
-| AMERICAN CORDIALS & LIQUEURS   |          29.1483 |          64.2576 |         135.323  |
-| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
-| TENNESSEE WHISKIES             |          51.9671 |          81.428  |          97.6853 |
-
-*... and 5 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| category_name                  |   avg_price_2019 |   avg_price_2020 |   avg_price_2021 |
-|:-------------------------------|-----------------:|-----------------:|-----------------:|
-| WHISKEY LIQUEUR                |          87.9773 |         192.251  |         174.768  |
-| TEMPORARY & SPECIALTY PACKAGES |          42.113  |          74.7871 |         139.765  |
-| AMERICAN CORDIALS & LIQUEURS   |          29.1498 |          63.7818 |         134.772  |
-| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
-| TENNESSEE WHISKIES             |          51.9547 |          81.4209 |          98.9861 |
-
-*... and 5 more rows.*
-
-</details>
-
----
-
-### 7. local007 (DB: `Baseball`)
-**Question**: Could you help me calculate the average single career span value in years for all baseball players? Please precise the result as a float number. First, calculate the difference in years, months, and days between the debut and final game dates. For each player, the career span is computed as the sum of the absolute number of years, plus the absolute number of months divided by 12, plus the absolute number of days divided by 365. Round each part to two decimal places before summing. Finally, average the career spans and round the result to a float number.
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   AVG_CAREER_SPAN_YEARS |
-|------------------------:|
-|                    4.85 |
-
-**OR**
-
-|                                     AVG( |
-|                   ROUND(ABS(YEARS), 2) + |
-|           ROUND(ABS(MONTHS) / 12.0, 2) + |
-|              ROUND(ABS(DAYS) / 365.0, 2) |
-|                                        ) |
-|-----------------------------------------:|
-|                                  5.09967 |
-
-**OR**
-
-|   AVERAGE_CAREER_SPAN_YEARS |
-|----------------------------:|
-|                     4.82758 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-|   avg_career_span_years |
-|------------------------:|
-|                  4.9238 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   average_career_span |
-|----------------------:|
-|                4.8315 |
-
-</details>
-
----
-
-### 8. local221 (DB: `EU_soccer`)
-**Question**: Tell me top10 teams with the most wins across the league
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| team_long_name    |   TOTAL_WINS |
-|:------------------|-------------:|
-| FC Barcelona      |          234 |
-| Real Madrid CF    |          228 |
-| Celtic            |          218 |
-| FC Bayern Munich  |          193 |
-| Manchester United |          192 |
-
-*... and 5 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| team_name         |
-|:------------------|
-| FC Barcelona      |
-| Real Madrid CF    |
-| Celtic            |
-| FC Bayern Munich  |
-| Manchester United |
-
-*... and 5 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| team              |   wins |
-|:------------------|-------:|
-| FC Barcelona      |    234 |
-| Real Madrid CF    |    228 |
-| Celtic            |    218 |
-| FC Bayern Munich  |    193 |
-| Manchester United |    192 |
-
-*... and 5 more rows.*
-
-</details>
-
----
-
-### 9. sf041 (DB: `YES_ENERGY__SAMPLE_DATA`)
-**Question**: Produce a report for ERCOT on October 1, 2022, that combines hourly data on day-ahead and real-time prices from node ID 10000697078, load forecasts (datatypeid 19060) and actual loads, plus wind (forecast datatypeid 9285, actual datatypeid 16) and solar (forecast datatypeid 662, actual datatypeid 650) generation forecasts and actuals from object ID 10000712973. This report should include time zone alignments, peak classifications, and net load calculations, providing insights into daily operational dynamics and efficiency.
-
-**Status**: Baseline ✅ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| ISO   | DATETIME            | TIMEZONE   | DATETIME_UTC        |   ONPEAK |   OFFPEAK |   WEPEAK |   WDPEAK | MARKETDAY   | PRICE_NODE_NAME   |
-|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:------------|:------------------|
-| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-
-*... and 19 more rows.*
-
-**OR**
-
-| ISO   | DATETIME            | TIMEZONE   | DATETIME_UTC        |   ONPEAK |   OFFPEAK |   WEPEAK |   WDPEAK | MARKETDAY           | PRICE_NODE_NAME   |
-|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:--------------------|:------------------|
-| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
-| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
-| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
-| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
-| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
-
-*... and 19 more rows.*
-
-**OR**
-
-| iso   | datetime            | timezone   | datetime_utc        |   onpeak |   offpeak |   wepeak |   wdpeak | marketday   | price_node_name   |
-|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:------------|:------------------|
-| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
-
-*... and 19 more rows.*
-
-**OR**
-
-| iso   | datetime            | timezone   | datetime_utc        |   onpeak |   offpeak |   wepeak |   wdpeak |   marketday | price_node_name   |
-|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|------------:|:------------------|
-| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
-
-*... and 19 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| iso   | datetime            | timezone        | datetime_utc        |   onpeak |   offpeak |   wepeak |   wdpeak |   MARKETDAY |   price_node_name |
-|:------|:--------------------|:----------------|:--------------------|---------:|----------:|---------:|---------:|------------:|------------------:|
-| ERCOT | 2022-10-01 00:00:00 | America/Chicago | 2022-10-01 05:00:00 |        0 |         0 |        0 |        0 |         nan |               nan |
-| ERCOT | 2022-10-01 01:00:00 | America/Chicago | 2022-10-01 06:00:00 |        0 |         0 |        0 |        0 |         nan |               nan |
-| ERCOT | 2022-10-01 02:00:00 | America/Chicago | 2022-10-01 07:00:00 |        0 |         0 |        0 |        0 |         nan |               nan |
-| ERCOT | 2022-10-01 03:00:00 | America/Chicago | 2022-10-01 08:00:00 |        0 |         0 |        0 |        0 |         nan |               nan |
-| ERCOT | 2022-10-01 04:00:00 | America/Chicago | 2022-10-01 09:00:00 |        0 |         0 |        0 |        0 |         nan |               nan |
-
-*... and 19 more rows.*
-
-*... truncated to first 10 columns.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| iso   | datetime            | timezone   |   datetime_utc |   onpeak |   offpeak |   wepeak |   wdpeak |   marketday | price_node_name   |
-|:------|:--------------------|:-----------|---------------:|---------:|----------:|---------:|---------:|------------:|:------------------|
-| ERCOT | 2022-10-01 00:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 01:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 02:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 03:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
-| ERCOT | 2022-10-01 04:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
-
-*... and 19 more rows.*
-
-*... truncated to first 10 columns.*
-
-</details>
-
----
-
-## 🤝 Both Correct (Baseline ✅ -> SlayQL ✅) (58)
-
-### 1. sf_bq033 (DB: `PATENTS`)
+### 2. sf_bq033 (DB: `PATENTS`)
 **Question**: How many U.S. publications related to IoT (where the abstract includes the phrase 'internet of things') were filed each month from 2008 to 2022, including months with no filings?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -1419,17 +485,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   year |   month |   num_publications |
-|-------:|--------:|-------------------:|
-|   2008 |       1 |                  0 |
-|   2008 |       2 |                  0 |
-|   2008 |       3 |                  0 |
-|   2008 |       4 |                  0 |
-|   2008 |       5 |                  0 |
-
-*... and 175 more rows.*
+N/A
 
 </details>
 
@@ -1450,10 +508,10 @@ N/A
 
 ---
 
-### 2. sf_bq029 (DB: `PATENTS`)
+### 3. sf_bq029 (DB: `PATENTS`)
 **Question**: Get the average number of inventors per patent and the total count of patent publications in Canada (CA) for each 5-year period from 1960 to 2020, based on publication dates. Only include patents that have at least one inventor listed, and group results by 5-year intervals (1960-1964, 1965-1969, etc.).
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -1485,17 +543,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| PERIOD_LABEL   |   AVG_INVENTORS_PER_PATENT |   TOTAL_PATENT_COUNT |
-|:---------------|---------------------------:|---------------------:|
-| 1960-1964      |                     1.5312 |                  433 |
-| 1965-1969      |                     1.5599 |                  543 |
-| 1970-1974      |                     1.6501 |                  523 |
-| 1975-1979      |                     1.7452 |                  467 |
-| 1980-1984      |                     1.7948 |                  458 |
-
-*... and 8 more rows.*
+N/A
 
 </details>
 
@@ -1516,10 +566,10 @@ N/A
 
 ---
 
-### 3. sf_bq127 (DB: `PATENTS_GOOGLE`)
+### 4. sf_bq127 (DB: `PATENTS_GOOGLE`)
 **Question**: For each publication family whose earliest publication was first published in January 2015, please provide the earliest publication date, the distinct publication numbers, their country codes, the distinct CPC and IPC codes, distinct families (namely, the ids) that cite and are cited by this publication family. Please present all lists as comma-separated values, sorted alphabetically
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -1623,17 +673,13 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   family_id |   earliest_date | publication_numbers                | country_codes   | cpc_codes                                                                                                                                                                                                      | ipc_codes                                                                                                                                              |   citing_family_ids |   cited_family_ids |
-|------------:|----------------:|:-----------------------------------|:----------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------:|-------------------:|
-|    23405333 |        20150106 | US-8929523-B2                      | US              | H04L12/2803, H04L12/2838, H04L12/66, H04L2012/2845, H04M11/062                                                                                                                                                 | H04B3/02, H04H20/77, H04J1/00, H04L12/28, H04L12/56, H04L12/66, H04M11/00, H04M11/06                                                                   |       nan           |        2.67252e+07 |
-|    27609051 |        20150106 | US-8926776-B2                      | US              | A61F2/958, A61L2400/12, A61L29/12, A61L29/126, A61M25/10, B82Y30/00, C08K2201/011, C08K7/24, Y10T156/1038, Y10T428/1314, Y10T428/1334, Y10T428/1352, Y10T428/1372, Y10T428/139, Y10T428/30                     | A61F2/958, A61L29/12, A61M25/10, A61M29/02, B29C47/00, B29C49/02, B82Y30/00, C08K7/24                                                                  |       nan           |      nan           |
-|    31184887 |        20150114 | EP-2290616-B1                      | EP              | B60R25/2072, B60R25/24, G07C2009/00793, G07C2209/61, G07C9/00309, H04L27/14                                                                                                                                    | G07C9/00, H03M1/12, H04B1/10, H04B1/69, H04L27/14                                                                                                      |       nan           |      nan           |
-|    34394132 |        20150114 | EP-2587130-A3                      | EP              | F21S8/06, F21V14/02, F21V14/04, F21V15/015, F21V17/104, F21V17/16, F21V23/02, F21V23/0471, F21V29/004, F21V29/502, F21V7/0016, F21V7/005, F21V7/0091, F21V7/10, F21V7/22, F21Y2103/00, F21Y2113/00, Y02B20/386 | F21S8/00, F21S8/06, F21V14/02, F21V14/04, F21V15/015, F21V17/00, F21V17/10, F21V17/16, F21V23/02, F21V23/04, F21V29/00, F21V7/00, F21V7/22, F21Y103/00 |       nan           |      nan           |
-|    34551882 |        20150101 | US-2015002534-A1, US-2015095181-A1 | US              | G06F17/30277, G06F17/30477, G06F3/0416, G06F3/0482, G06F3/04842, G06F3/0488, G06Q30/02, G06Q30/0621, G06Q30/0631, G06Q30/0643, G06T11/001, G09G2354/00, G09G5/06                                               | G06F3/041, G06Q30/00, G06Q30/06, G06T11/00                                                                                                             |         3.45519e+07 |        3.45519e+07 |
-
-*... and 1610 more rows.*
+| TABLE_NAME     |
+|:---------------|
+| CPC_DEFINITION |
+| DISCLOSURES_13 |
+| PUBLICATIONS   |
 
 </details>
 
@@ -1654,76 +700,92 @@ N/A
 
 ---
 
-### 4. sf_bq225 (DB: `GITHUB_REPOS`)
-**Question**: From the GitHub repository files in 'github_repos.sample_files' joined with 'github_repos.sample_contents', which 10 programming languages occur most frequently (based on recognized file extensions) in files that have non-empty content, ordered by their file counts in descending order?
+### 5. sf_bq207 (DB: `PATENTS_USPTO`)
+**Question**: Could you provide the earliest publication numbers, corresponding application numbers, claim numbers, and word counts for the top 100 independent patent claims, based on the highest word count, retrieved from claims stats within uspto_oce_claims (filtered by ind_flg='1'), matched with their publication numbers from uspto_oce_claims match, and further joined with patents publications to ensure only the earliest publication for each application is included, ordered by descending word count, and limited to the top 100 results?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
 <details open>
 <summary><b>Gold Standard Result (Expected)</b></summary>
 
-| language   |
-|:-----------|
-| C          |
-| JavaScript |
-| Java       |
-| C++        |
-| HTML       |
+| EARLIEST_PUBLICATION_NUMBER   |   APPLICATION_NUMBER |   CLAIM_NUMBER |   WORD_COUNT |
+|:------------------------------|---------------------:|---------------:|-------------:|
+| US-5256408-A                  |              7836888 |              1 |         1926 |
+| US-5990084-A                  |              8844031 |              1 |         1750 |
+| US-5514678-A                  |              8307572 |              1 |         1628 |
+| US-6289321-B1                 |              9228896 |              1 |         1322 |
+| US-7256245-B2                 |             10456841 |              1 |         1320 |
 
-*... and 5 more rows.*
+*... and 95 more rows.*
 
 **OR**
 
-| language   |   file_count |
-|:-----------|-------------:|
-| Java       |           18 |
-| JavaScript |           12 |
-| C          |           11 |
-| HTML       |            8 |
-| JSON       |            7 |
+| publication_number   |     appl_id |   claim_no |   word_ct |
+|:---------------------|------------:|-----------:|----------:|
+| US-5256408-A         | 7.83689e+06 |          1 |      1926 |
+| US-5990084-A         | 8.84403e+06 |          1 |      1750 |
+| US-5514678-A         | 8.30757e+06 |          1 |      1628 |
+| US-6289321-B1        | 9.2289e+06  |          1 |      1322 |
+| US-7256245-B2        | 1.04568e+07 |          1 |      1320 |
 
-*... and 5 more rows.*
+*... and 95 more rows.*
+
+**OR**
+
+| publication_number   | application_number   |   claim_no |   word_count |
+|:---------------------|:---------------------|-----------:|-------------:|
+| US-5256408-A         | US-83688892-A        |          1 |         1926 |
+| US-5990084-A         | US-84403197-A        |          1 |         1750 |
+| US-5514678-A         | US-30757294-A        |          1 |         1628 |
+| US-6289321-B1        | US-22889699-A        |          1 |         1322 |
+| US-7256245-B2        | US-45684103-A        |          1 |         1320 |
+
+*... and 95 more rows.*
+
+**OR**
+
+| publication_number   | application_number   |   claim_no |   word_ct |
+|:---------------------|:---------------------|-----------:|----------:|
+| US-5256408-A         | US-83688892-A        |          1 |      1926 |
+| US-5990084-A         | US-84403197-A        |          1 |      1750 |
+| US-5514678-A         | US-30757294-A        |          1 |      1628 |
+| US-6289321-B1        | US-22889699-A        |          1 |      1322 |
+| US-7256245-B2        | US-45684103-A        |          1 |      1320 |
+
+*... and 95 more rows.*
 
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| language   |   file_count |
-|:-----------|-------------:|
-| Java       |           18 |
-| JavaScript |           12 |
-| C          |           11 |
-| HTML       |            8 |
-| JSON       |            7 |
-
-*... and 5 more rows.*
+N/A
 
 </details>
 
 <details open>
 <summary><b>Baseline Execution Result (✅)</b></summary>
 
-| language   |   file_count |
-|:-----------|-------------:|
-| Java       |           18 |
-| JavaScript |           12 |
-| C          |           11 |
-| HTML       |            8 |
-| JSON       |            7 |
+| publication_number   |   application_number |   claim_no |   word_ct |
+|:---------------------|---------------------:|-----------:|----------:|
+| US-5256408-A         |          7.83689e+06 |          1 |      1926 |
+| US-5990084-A         |          8.84403e+06 |          1 |      1750 |
+| US-5514678-A         |          8.30757e+06 |          1 |      1628 |
+| US-6289321-B1        |          9.2289e+06  |          1 |      1322 |
+| US-7256245-B2        |          1.04568e+07 |          1 |      1320 |
 
-*... and 5 more rows.*
+*... and 95 more rows.*
 
 </details>
 
 ---
 
-### 5. sf_bq375 (DB: `GITHUB_REPOS`)
+### 6. sf_bq375 (DB: `GITHUB_REPOS`)
 **Question**: Determine which file type among Python (.py), C (.c), Jupyter Notebook (.ipynb), Java (.java), and JavaScript (.js) in the GitHub codebase has the most files with a directory depth greater than 10, and provide the file count.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -1761,11 +823,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| extension   |   file_count |
-|:------------|-------------:|
-| java        |         2787 |
+N/A
 
 </details>
 
@@ -1780,228 +840,10 @@ N/A
 
 ---
 
-### 6. bq172 (DB: `cms_data`)
-**Question**: For the drug with the highest total number of prescriptions in New York State during 2014, could you list the top five states with the highest total claim counts for this drug? Please also include their total claim counts and total drug costs. 
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| state   |   total_claim_count |   total_drug_cost |
-|:--------|--------------------:|------------------:|
-| CA      |             3725846 |       3.50735e+07 |
-| FL      |             2689327 |       2.10461e+07 |
-| NY      |             2606392 |       2.07293e+07 |
-| TX      |             2212275 |       1.75135e+07 |
-| PA      |             1760543 |       1.41212e+07 |
-
-**OR**
-
-| state   |   total_claim_count |   total_drug_cost |
-|:--------|--------------------:|------------------:|
-| CA      |             3728200 |       3.53493e+07 |
-| FL      |             2690538 |       2.1206e+07  |
-| NY      |             2609790 |       2.1225e+07  |
-| TX      |             2213136 |       1.76406e+07 |
-| PA      |             1762418 |       1.43686e+07 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| state   |   total_claim_count |   total_drug_cost |
-|:--------|--------------------:|------------------:|
-| CA      |             3725846 |       3.50735e+07 |
-| FL      |             2689327 |       2.10461e+07 |
-| NY      |             2606392 |       2.07293e+07 |
-| TX      |             2212275 |       1.75135e+07 |
-| PA      |             1760543 |       1.41212e+07 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| state   |   total_claim_count |   total_drug_cost |
-|:--------|--------------------:|------------------:|
-| CA      |             3725846 |       3.50735e+07 |
-| FL      |             2689327 |       2.10461e+07 |
-| NY      |             2606392 |       2.07293e+07 |
-| TX      |             2212275 |       1.75135e+07 |
-| PA      |             1760543 |       1.41212e+07 |
-
-</details>
-
----
-
-### 7. bq357 (DB: `noaa_data`)
-**Question**: What are the latitude and longitude coordinates and dates between 2005 and 2015 with the top 5 highest daily average wind speeds, excluding records with missing wind speed values? Using data from tables start with prefix "icoads_core".
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   year |   month |   day |   latitude |   longitude |   AVG_WIND_SPEED_MPS |
-|-------:|--------:|------:|-----------:|------------:|---------------------:|
-|   2011 |       1 |    17 |      52.8  |      172.5  |                 5.25 |
-|   2010 |       2 |     9 |      51.8  |      173.5  |                 5.09 |
-|   2015 |       3 |     6 |      44.6  |      -32.5  |                 5    |
-|   2010 |      12 |    25 |      39    |      170.9  |                 4.94 |
-|   2008 |      12 |    15 |      51.66 |      172.33 |                 4.9  |
-
-**OR**
-
-|   latitude |   longitude |   year |   month |   day |   avg_wind_speed |
-|-----------:|------------:|-------:|--------:|------:|-----------------:|
-|      52.8  |      172.5  |   2011 |       1 |    17 |             52.5 |
-|      51.8  |      173.5  |   2010 |       2 |     9 |             50.9 |
-|      44.6  |      -32.5  |   2015 |       3 |     6 |             50   |
-|      39    |      170.9  |   2010 |      12 |    25 |             49.4 |
-|      51.66 |      172.33 |   2008 |      12 |    15 |             49   |
-
-**OR**
-
-|   latitude |   longitude | DATE       |   AVG_WIND_SPEED |
-|-----------:|------------:|:-----------|-----------------:|
-|      52.8  |      172.5  | 2011-01-17 |             52.5 |
-|      51.8  |      173.5  | 2010-02-09 |             50.9 |
-|      44.6  |      -32.5  | 2015-03-06 |             50   |
-|      39    |      170.9  | 2010-12-25 |             49.4 |
-|      51.66 |      172.33 | 2008-12-15 |             49   |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   latitude |   longitude | observation_date   |   avg_wind_speed |
-|-----------:|------------:|:-------------------|-----------------:|
-|      52.8  |      172.5  | 2011-01-17         |             52.5 |
-|      51.8  |      173.5  | 2010-02-09         |             50.9 |
-|      44.6  |      -32.5  | 2015-03-06         |             50   |
-|      39    |      170.9  | 2010-12-25         |             49.4 |
-|      51.66 |      172.33 | 2008-12-15         |             49   |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   latitude |   longitude | observation_date   |
-|-----------:|------------:|:-------------------|
-|      52.8  |      172.5  | 2011-01-17         |
-|      51.8  |      173.5  | 2010-02-09         |
-|      44.6  |      -32.5  | 2015-03-06         |
-|      39    |      170.9  | 2010-12-25         |
-|      51.66 |      172.33 | 2008-12-15         |
-
-</details>
-
----
-
-### 8. bq394 (DB: `noaa_data`)
-**Question**: What are the top 3 months between 2010 and 2014 with the smallest sum of absolute differences between the average air temperature, wet bulb temperature, dew point temperature, and sea surface temperature, including respective years and sum of differences? Please present the year and month in numerical format.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   year |   month |   SUM_OF_DIFFERENCES |
-|-------:|--------:|---------------------:|
-|   2010 |       7 |              13.0125 |
-|   2010 |       8 |              13.06   |
-|   2010 |       6 |              13.407  |
-
-**OR**
-
-|   year |   month |   SUM_ABS_DIFFERENCES |
-|-------:|--------:|----------------------:|
-|   2013 |       6 |               12.6285 |
-|   2013 |       7 |               12.6308 |
-|   2012 |       7 |               12.8841 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   year |   month |   sum_abs_diff |
-|-------:|--------:|---------------:|
-|   2013 |       6 |        12.6285 |
-|   2013 |       7 |        12.6308 |
-|   2012 |       7 |        12.8841 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   year |   month |   sum_abs_diff |
-|-------:|--------:|---------------:|
-|   2013 |       6 |        12.6285 |
-|   2013 |       7 |        12.6308 |
-|   2012 |       7 |        12.8841 |
-
-</details>
-
----
-
-### 9. bq392 (DB: `noaa_gsod`)
-**Question**: What are the top 3 dates in October 2009 with the highest average temperature for station number 723758, in the format YYYY-MM-DD?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| observation_date   |
-|:-------------------|
-| 2009-10-30         |
-| 2009-10-29         |
-| 2009-10-19         |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| date       |
-|:-----------|
-| 2009-10-30 |
-| 2009-10-29 |
-| 2009-10-19 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| date       |
-|:-----------|
-| 2009-10-30 |
-| 2009-10-29 |
-| 2009-10-19 |
-
-</details>
-
----
-
-### 10. sf_bq289 (DB: `GEO_OPENSTREETMAP_CENSUS_PLACES`)
+### 7. sf_bq289 (DB: `GEO_OPENSTREETMAP_CENSUS_PLACES`)
 **Question**: Can you find the shortest distance between any two amenities (either a library, place of worship, or community center) located within Philadelphia, analyzed through pennsylvania table and planet features points?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2015,11 +857,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   shortest_distance_meters |
-|---------------------------:|
-|                      6.465 |
+N/A
 
 </details>
 
@@ -2034,10 +874,10 @@ N/A
 
 ---
 
-### 11. sf_bq250 (DB: `GEO_OPENSTREETMAP_WORLDPOP`)
+### 8. sf_bq250 (DB: `GEO_OPENSTREETMAP_WORLDPOP`)
 **Question**: Based on the most recent 1km population grid data in Singapore before January 2023, using ST_CONVEXHULL to aggregate all population grid centroids into a bounding region and ST_INTERSECTS to identify hospitals from OpenStreetMap’s planet layer (layer_code in (2110, 2120)) that fall within this region, then calculating the distance from each grid cell to its nearest hospital, what is the total population of the grid cell that is farthest from any hospital?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2063,11 +903,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   population |
-|-------------:|
-|            0 |
+N/A
 
 </details>
 
@@ -2082,10 +920,10 @@ N/A
 
 ---
 
-### 12. sf_bq080 (DB: `CRYPTO`)
+### 9. sf_bq080 (DB: `CRYPTO`)
 **Question**: Using only the Ethereum traces table, can you provide a daily cumulative count of smart contracts created by external users (where trace_address is null) versus contracts created by other contracts (where trace_address is not null) between August 30, 2018, and September 30, 2018? Ensure results include every date in this range, even if no new contracts were created, and show strictly increasing cumulative totals.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2129,9 +967,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| date       |   cumulative_ext_user_created |   cumulative_contract_created |
+| date       |   cumulative_external_created |   cumulative_contract_created |
 |:-----------|------------------------------:|------------------------------:|
 | 2018-08-30 |                             0 |                             0 |
 | 2018-08-31 |                             0 |                             0 |
@@ -2160,10 +998,10 @@ N/A
 
 ---
 
-### 13. sf_bq184 (DB: `CRYPTO`)
+### 10. sf_bq184 (DB: `CRYPTO`)
 **Question**: Using only the traces, can you calculate daily cumulative counts of smart contracts created by external addresses (where the trace_address is NULL) versus those created by other contracts (where the trace_address is NOT NULL) for each date from 2017-01-01 through 2021-12-31, ensuring that all dates in this range are included even if no new contracts were created on some days, and showing monotonically increasing cumulative totals for both categories?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2231,17 +1069,17 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| date       |   external_created_cumulative |   contract_created_cumulative |
-|:-----------|------------------------------:|------------------------------:|
-| 2017-01-01 |                             0 |                             0 |
-| 2017-01-02 |                             0 |                             0 |
-| 2017-01-03 |                             0 |                             0 |
-| 2017-01-04 |                             0 |                             0 |
-| 2017-01-05 |                             0 |                             0 |
+| date       |   contracts_from_eoa |   contracts_from_contracts |   cumulative_eoa |   cumulative_contracts |
+|:-----------|---------------------:|---------------------------:|-----------------:|-----------------------:|
+| 2017-01-01 |                    0 |                          0 |                0 |                      0 |
+| 2017-01-02 |                    0 |                          0 |                0 |                      0 |
+| 2017-01-03 |                    0 |                          0 |                0 |                      0 |
+| 2017-01-04 |                    0 |                          0 |                0 |                      0 |
+| 2017-01-05 |                    0 |                          0 |                0 |                      0 |
 
-*... and 1821 more rows.*
+*... and 1822 more rows.*
 
 </details>
 
@@ -2262,10 +1100,10 @@ N/A
 
 ---
 
-### 14. sf_bq187 (DB: `ETHEREUM_BLOCKCHAIN`)
+### 11. sf_bq187 (DB: `ETHEREUM_BLOCKCHAIN`)
 **Question**: Calculate the total circulating supply of 'BNB' tokens (in units divided by 10^18) by summing balances of all non-zero addresses, where each address’s balance equals its total received BNB minus sent BNB. Exclude transactions involving the zero address (0x000...) for both senders and receivers.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2291,11 +1129,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   total_circulating_supply |
-|---------------------------:|
-|                        nan |
+N/A
 
 </details>
 
@@ -2310,10 +1146,10 @@ N/A
 
 ---
 
-### 15. sf_bq333 (DB: `THELOOK_ECOMMERCE`)
+### 12. sf_bq333 (DB: `THELOOK_ECOMMERCE`)
 **Question**: Which three browsers have the shortest average session duration—calculated by the difference in seconds between the earliest and latest timestamps for each user’s session—while only including browsers that have more than 10 total sessions, and what are their respective average session durations?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2337,13 +1173,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| browser   |   avg_session_duration |
-|:----------|-----------------------:|
-| IE        |                24344.2 |
-| Other     |                24405.2 |
-| Safari    |                24483.4 |
+N/A
 
 </details>
 
@@ -2360,88 +1192,154 @@ N/A
 
 ---
 
-### 16. sf_bq020 (DB: `GENOMICS_CANNABIS`)
-**Question**: What is the name of the reference sequence with the highest variant density in the given cannabis genome dataset?
+### 13. sf_bq190 (DB: `THELOOK_ECOMMERCE`)
+**Question**: Determine the number of users who are the youngest and oldest for each gender (male and female) separately, among those who signed up between January 1, 2019, and April 30, 2022. For each gender, identify the minimum and maximum ages within this date range, and count how many users fall into these respective age groups.
 
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| REFERENCE_SEQUENCE_NAME          |
-|:---------------------------------|
-| gi|1098476186|gb|MNPR01010508.1| |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| reference_sequence_name          |
-|:---------------------------------|
-| gi|1098476186|gb|MNPR01010508.1| |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| REFERENCE_SEQUENCE_NAME          |
-|:---------------------------------|
-| gi|1098476186|gb|MNPR01010508.1| |
-
-</details>
-
----
-
-### 17. bq115 (DB: `census_bureau_international`)
-**Question**: Which country has the highest percentage of population under the age of 25 in 2017?
-
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
 <details open>
 <summary><b>Gold Standard Result (Expected)</b></summary>
 
-| country_name   |   PERCENTAGE_UNDER_25 |
-|:---------------|----------------------:|
-| Uganda         |               69.1458 |
+| gender   |   YOUNGEST_AGE |   YOUNGEST_USERS_COUNT |   OLDEST_AGE |   OLDEST_USERS_COUNT |
+|:---------|---------------:|-----------------------:|-------------:|---------------------:|
+| F        |             12 |                    485 |           70 |                  467 |
+| M        |             12 |                    432 |           70 |                  461 |
 
 **OR**
 
-| country_code   | country_name   |   PERCENTAGE |
-|:---------------|:---------------|-------------:|
-| UG             | Uganda         |       69.146 |
+| gender   | age_group   |   age |   user_count |
+|:---------|:------------|------:|-------------:|
+| F        | Youngest    |    12 |          485 |
+| F        | Oldest      |    70 |          467 |
+| M        | Youngest    |    12 |          432 |
+| M        | Oldest      |    70 |          461 |
+
+**OR**
+
+| gender   |   min_age |   min_age_user_count |   max_age |   max_age_user_count |
+|:---------|----------:|---------------------:|----------:|---------------------:|
+| female   |        12 |                  485 |        70 |                  467 |
+| male     |        12 |                  432 |        70 |                  461 |
 
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| country_name   |
-|:---------------|
-| Uganda         |
+N/A
 
 </details>
 
 <details open>
 <summary><b>Baseline Execution Result (✅)</b></summary>
 
-| country_name   |
-|:---------------|
-| Uganda         |
+| gender   |   min_age |   min_age_count |   max_age |   max_age_count |
+|:---------|----------:|----------------:|----------:|----------------:|
+| F        |        12 |             485 |        70 |             467 |
+| M        |        12 |             432 |        70 |             461 |
 
 </details>
 
 ---
 
-### 18. bq087 (DB: `covid19_symptom_search`)
+### 14. sf_bq020 (DB: `GENOMICS_CANNABIS`)
+**Question**: What is the name of the reference sequence with the highest variant density in the given cannabis genome dataset?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| REFERENCE_SEQUENCE_NAME          |
+|:---------------------------------|
+| gi|1098476186|gb|MNPR01010508.1| |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| REFERENCE_SEQUENCE_NAME          |
+|:---------------------------------|
+| gi|1098476186|gb|MNPR01010508.1| |
+
+</details>
+
+---
+
+### 15. bq030 (DB: `covid19_open_data`)
+**Question**: As of May 10, 2020, among all countries that had more than 50,000 confirmed COVID-19 cases, which three countries had the highest recovery rates based on the total number of recovered cases relative to their total confirmed cases, and what were their respective recovery rates expressed as percentages?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| country   |   recovery_rate |
+|:----------|----------------:|
+| France    |       2112.14   |
+| China     |         93.8458 |
+| Germany   |         56.576  |
+
+**OR**
+
+| country_region   |   RECOVERY_RATE |
+|:-----------------|----------------:|
+| Germany          |         94.6936 |
+| China            |         93.4694 |
+| India            |         30.3883 |
+
+**OR**
+
+| country_name   |   recovery_rate_percent |
+|:---------------|------------------------:|
+| China          |                   94.17 |
+| Italy          |                   48.01 |
+| Brazil         |                   39.92 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| country_name   |   recovery_rate_percentage |
+|:---------------|---------------------------:|
+| France         |                     100    |
+| China          |                      94.17 |
+| Italy          |                      48.01 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| country_name   |   recovery_rate_percentage |
+|:---------------|---------------------------:|
+| France         |                  2112.14   |
+| China          |                    93.8458 |
+| Germany        |                    56.576  |
+
+</details>
+
+---
+
+### 16. bq087 (DB: `covid19_symptom_search`)
 **Question**: Please calculate the overall percentage change in the average weekly search frequency for the symptom 'Anosmia' across the five New York City counties—Bronx County, Queens County, Kings County, New York County, and Richmond County—by comparing the combined data from January 1, 2019, through December 31, 2019, with the combined data from January 1, 2020, through December 31, 2020.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2461,11 +1359,11 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
 |   percentage_change |
 |--------------------:|
-|             573.452 |
+|             475.894 |
 
 </details>
 
@@ -2480,10 +1378,10 @@ N/A
 
 ---
 
-### 19. bq089 (DB: `covid19_usa`)
+### 17. bq089 (DB: `covid19_usa`)
 **Question**: Given the latest population estimates from the 2018 five-year American Community Survey, what is the number of vaccine sites per 1000 people for counties in California?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -2527,15 +1425,15 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| county_name      |   sites_per_1000_people |
-|:-----------------|------------------------:|
-| Alameda County   |                  0.1332 |
-| Alpine County    |                  0.8726 |
-| Amador County    |                  0.1586 |
-| Butte County     |                  0.1806 |
-| Calaveras County |                  0.1769 |
+| county_name      |   sites_per_1000 |
+|:-----------------|-----------------:|
+| Alameda County   |           1.3324 |
+| Alpine County    |           8.726  |
+| Amador County    |           1.5861 |
+| Butte County     |           1.8056 |
+| Calaveras County |           1.7685 |
 
 *... and 53 more rows.*
 
@@ -2558,10 +1456,10 @@ N/A
 
 ---
 
-### 20. bq137 (DB: `census_bureau_usa`)
+### 18. bq137 (DB: `census_bureau_usa`)
 **Question**: Please find all zip code areas located within 10 kilometers of the coordinates (-122.3321, 47.6062) by joining the 2010 census population data (summing only male and female populations with no age constraints) and the zip code area information, and return each area’s polygon, land and water area in meters, latitude and longitude, state code, state name, city, county, and total population.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -4565,17 +3463,9 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| polygon                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |   area_land_meters |   area_water_meters |   latitude |   longitude | state_code   | state_name   | city                                                                                         | county      |   total_population |
-|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------:|--------------------:|-----------:|------------:|:-------------|:-------------|:---------------------------------------------------------------------------------------------|:------------|-------------------:|
-| POLYGON((-122.232704 47.641375, -122.233276 47.635589, -122.227871 47.635534, -122.228002 47.621029, -122.222446 47.621042, -122.222156 47.620595, -122.21999 47.615855, -122.22048 47.615222, -122.220234 47.610121, -122.220434 47.596821, -122.216534 47.590421, -122.214734 47.587021, -122.210634 47.583721, -122.200335 47.578222, -122.199007 47.575921, -122.199091 47.574044, -122.194317 47.575186, -122.190372 47.576805, -122.188895 47.57806, -122.18762 47.579527, -122.188621 47.579454, -122.187661 47.581455, -122.188239 47.583258, -122.19099 47.586011, -122.192117 47.589289, -122.188433 47.587923, -122.188483 47.589229, -122.186325 47.589228, -122.188133 47.593821, -122.186341 47.601128, -122.186669 47.601957, -122.183488 47.603303, -122.183644 47.604546, -122.185358 47.605682, -122.185475 47.608192, -122.184338 47.60924, -122.183209 47.613155, -122.183956 47.617292, -122.182796 47.621545, -122.182689 47.623548, -122.184291 47.631878, -122.185625 47.631874, -122.181229 47.632165, -122.183702 47.632675, -122.185623 47.634484, -122.185547 47.646409, -122.196295 47.646432, -122.196282 47.642898, -122.196294 47.641309, -122.198563 47.641812, -122.199808 47.642424, -122.201363 47.643665, -122.203547 47.643012, -122.20973 47.643248, -122.211724 47.642552, -122.213753 47.642716, -122.213733 47.644455, -122.212471 47.645213, -122.210897 47.64864, -122.209642 47.648886, -122.212091 47.657464, -122.218428 47.657464, -122.226175 47.655729, -122.231581 47.653287, -122.235128 47.650163, -122.232704 47.641375)) |           18287141 |             4103292 |    47.6183 |    -122.205 | WA           | Washington   | Beaux Arts Village town, Clyde Hill city, Bellevue city, Yarrow Point town, Hunts Point town | King County |              27946 |
-| POLYGON((-122.231588 47.689098, -122.230403 47.684188, -122.230575 47.680901, -122.229983 47.677172, -122.229681 47.668681, -122.209235 47.666721, -122.212091 47.657464, -122.209642 47.648886, -122.210897 47.64864, -122.212471 47.645213, -122.213733 47.644455, -122.213753 47.642716, -122.211724 47.642552, -122.20973 47.643248, -122.203547 47.643012, -122.201363 47.643665, -122.199808 47.642424, -122.198563 47.641812, -122.196294 47.641309, -122.196282 47.642898, -122.196295 47.646432, -122.185547 47.646409, -122.169267 47.646248, -122.164979 47.646166, -122.164068 47.66078, -122.15875 47.660674, -122.158685 47.665449, -122.161696 47.665473, -122.161679 47.666566, -122.16399 47.666647, -122.163914 47.682341, -122.164469 47.686037, -122.164118 47.68541, -122.160565 47.685811, -122.161738 47.687169, -122.163108 47.687678, -122.164706 47.687547, -122.164663 47.688889, -122.164565 47.68813, -122.161851 47.688159, -122.158769 47.686551, -122.153855 47.686113, -122.154033 47.691365, -122.156766 47.691332, -122.156703 47.694117, -122.159395 47.694123, -122.159309 47.696949, -122.164648 47.696913, -122.164425 47.704132, -122.170073 47.704084, -122.170133 47.701923, -122.172119 47.702241, -122.172844 47.704044, -122.175823 47.703956, -122.207971 47.70401, -122.20804 47.702448, -122.209328 47.704019, -122.212166 47.701251, -122.214546 47.69985, -122.216735 47.69952, -122.230088 47.691208, -122.233572 47.689363, -122.231588 47.689098))                                                                         |           23853717 |             4739025 |    47.676  |    -122.194 | WA           | Washington   | Bellevue city, Kirkland city                                                                 | King County |              34338 |
-| POLYGON((-122.263651 47.613115, -122.246734 47.609021, -122.233134 47.606521, -122.228334 47.604521, -122.220434 47.596821, -122.220234 47.610121, -122.22048 47.615222, -122.21999 47.615855, -122.222156 47.620595, -122.222446 47.621042, -122.228002 47.621029, -122.227871 47.635534, -122.233276 47.635589, -122.232704 47.641375, -122.235128 47.650163, -122.231581 47.653287, -122.226175 47.655729, -122.218428 47.657464, -122.212091 47.657464, -122.209235 47.666721, -122.229681 47.668681, -122.230229 47.666003, -122.231924 47.663757, -122.233939 47.661951, -122.237918 47.659456, -122.245926 47.656132, -122.25103 47.653346, -122.253351 47.651413, -122.256908 47.647229, -122.2591 47.642636, -122.259622 47.640374, -122.261091 47.628694, -122.262238 47.624776, -122.263651 47.613115))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |            3735913 |            11439485 |    47.6347 |    -122.24  | WA           | Washington   | Medina city, Bellevue city                                                                   | King County |               2971 |
-| POLYGON((-122.266493 47.583781, -122.264851 47.579372, -122.261153 47.576115, -122.258604 47.574925, -122.25116 47.572682, -122.247649 47.570537, -122.244154 47.567405, -122.242788 47.565671, -122.240895 47.561961, -122.240388 47.560026, -122.240282 47.556101, -122.241197 47.551954, -122.242137 47.549925, -122.244928 47.546122, -122.246748 47.544389, -122.251215 47.541298, -122.253022 47.539516, -122.254675 47.536371, -122.254938 47.534147, -122.254241 47.530623, -122.252617 47.52764, -122.251192 47.525962, -122.246099 47.522571, -122.240322 47.519865, -122.235699 47.517769, -122.225394 47.521368, -122.219133 47.523721, -122.209733 47.530421, -122.208233 47.531921, -122.203433 47.540921, -122.202007 47.546025, -122.201433 47.550921, -122.201133 47.557721, -122.199333 47.566221, -122.199091 47.574044, -122.199007 47.575921, -122.200335 47.578222, -122.210634 47.583721, -122.214734 47.587021, -122.216534 47.590421, -122.220434 47.596821, -122.228334 47.604521, -122.233134 47.606521, -122.246734 47.609021, -122.263651 47.613115, -122.265147 47.601321, -122.266832 47.587369, -122.266493 47.583781))                                                                                                                                                                                                                                                                                                                                                                                                                         |           16513647 |            16898950 |    47.564  |    -122.231 | WA           | Washington   | Mercer Island city                                                                           | King County |              22699 |
-| POLYGON((-122.344574211164 47.6084506733252, -122.342325274609 47.6043015014773, -122.341737 47.60522, -122.340937 47.60502, -122.339299 47.604544, -122.334674 47.606336, -122.333564 47.606799, -122.323572 47.610979, -122.323115 47.612157, -122.326886 47.612957, -122.327923 47.614056, -122.327855 47.618495, -122.328298 47.61848, -122.329872 47.618432, -122.334304 47.618529, -122.334346 47.617464, -122.344937 47.60912, -122.344574211164 47.6084506733252))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |            1344748 |              271084 |    47.6109 |    -122.336 | WA           | Washington   | Seattle city                                                                                 | King County |              10238 |
-
-*... and 26 more rows.*
+N/A
 
 </details>
 
@@ -4596,100 +3486,10 @@ N/A
 
 ---
 
-### 21. bq061 (DB: `census_bureau_acs_1`)
-**Question**: Which census tract has witnessed the largest increase in median income between 2015 and 2018 in California? Tell me the tract code.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   tract_code |
-|-------------:|
-|       609601 |
-
-**OR**
-
-|      geo_id |
-|------------:|
-| 6.08161e+09 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   tract_code |
-|-------------:|
-|  6.08161e+09 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   tract_code |
-|-------------:|
-|       609601 |
-
-</details>
-
----
-
-### 22. bq113 (DB: `bls`)
-**Question**: Which county in Utah experienced the greatest percentage increase in construction employment from 2000 to 2018, calculated by averaging the employment levels during the third month of each quarter in those years? What is the corresponding percentage increase?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| county_name   |   AVG_CONSTRUCTION_2000 |   AVG_CONSTRUCTION_2018 |   PERCENTAGE_INCREASE |
-|:--------------|------------------------:|------------------------:|----------------------:|
-| Utah          |                 10466.2 |                 24692.2 |                135.92 |
-
-**OR**
-
-| COUNTY_NAME   |   AVG_CONSTRUCTION_EMPL_2000 |   AVG_CONSTRUCTION_EMPL_2018 |   PERCENTAGE_INCREASE |
-|:--------------|-----------------------------:|-----------------------------:|----------------------:|
-| Utah County   |                      10466.2 |                      24692.2 |                135.92 |
-
-**OR**
-
-| county            |   pct_increase |
-|:------------------|---------------:|
-| Utah County, Utah |         135.92 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| county   |   percentage_increase |
-|:---------|----------------------:|
-| Utah     |               135.923 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| county_name   |   pct_increase |
-|:--------------|---------------:|
-| Utah          |        135.923 |
-
-</details>
-
----
-
-### 23. sf_bq078 (DB: `OPEN_TARGETS_PLATFORM_2`)
+### 19. sf_bq078 (DB: `OPEN_TARGETS_PLATFORM_2`)
 **Question**: Retrieve the approved symbol of target genes with the highest overall score that are associated with the disease 'EFO_0000676' from the data source 'IMPC'.
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -4703,11 +3503,11 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| approvedSymbol   |
-|:-----------------|
-| CARD14           |
+| approved_symbol   |   score |
+|:------------------|--------:|
+| ENSG00000141527   |  0.7737 |
 
 </details>
 
@@ -4722,58 +3522,10 @@ N/A
 
 ---
 
-### 24. bq310 (DB: `stackoverflow`)
-**Question**: What is the title of the most viewed "how" question related to Android development on StackOverflow, across specified tags such as 'android-layout', 'android-activity', 'android-intent', and others
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| title                                                 |
-|:------------------------------------------------------|
-| How can I access my localhost from my Android device? |
-
-**OR**
-
-| title                                         |
-|:----------------------------------------------|
-| How to change background color in android app |
-
-**OR**
-
-| OUTPUT                                                        |
-|:--------------------------------------------------------------|
-| How to close/hide the Android soft keyboard programmatically? |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| title                                                         |
-|:--------------------------------------------------------------|
-| How to close/hide the Android soft keyboard programmatically? |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| title                                                         |
-|:--------------------------------------------------------------|
-| How to close/hide the Android soft keyboard programmatically? |
-
-</details>
-
----
-
-### 25. bq302 (DB: `stackoverflow`)
+### 20. bq302 (DB: `stackoverflow`)
 **Question**: What is the monthly proportion of Stack Overflow questions tagged with 'python' in the year 2022?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -4841,7 +3593,7 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
 | month   |   proportion |
 |:--------|-------------:|
@@ -4851,7 +3603,7 @@ N/A
 | 2022-04 |       0.1659 |
 | 2022-05 |       0.1592 |
 
-*... and 4 more rows.*
+*... and 7 more rows.*
 
 </details>
 
@@ -4872,10 +3624,10 @@ N/A
 
 ---
 
-### 26. bq391 (DB: `fhir_synthea`)
+### 21. bq391 (DB: `fhir_synthea`)
 **Question**: Among living patients whose last names begin with "A" and who each have exactly one distinct condition, which eight conditions have the highest number of different active medications prescribed to any single patient, and what are their corresponding codes?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -4919,15 +3671,15 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| condition_name                     |   condition_code |
-|:-----------------------------------|-----------------:|
-| Coronary Heart Disease             |         53741008 |
-| Acute viral pharyngitis (disorder) |        195662009 |
-| Contact dermatitis                 |         40275004 |
-| Atrial Fibrillation                |         49436004 |
-| Hypertension                       |         38341003 |
+|   condition_code |   max_active_meds |
+|-----------------:|------------------:|
+|      5.3741e+07  |                 4 |
+|      1.95662e+08 |                 4 |
+|      4.0275e+07  |                 3 |
+|      4.9436e+07  |                 3 |
+|      1.62864e+08 |                 3 |
 
 *... and 3 more rows.*
 
@@ -4950,10 +3702,10 @@ N/A
 
 ---
 
-### 27. bq126 (DB: `the_met`)
+### 22. bq126 (DB: `the_met`)
 **Question**: What are the titles, artist names, mediums, and original image URLs of objects with 'Photograph' in their names from the 'Photographs' department, created not by an unknown artist, with an object end date of 1839 or earlier?
 
-**Status**: Baseline ✅ | SlayQL ✅
+**Status**: Baseline ✅ | SlayQL ❌
 
 #### 📊 Execution Results Comparison
 
@@ -4985,17 +3737,17 @@ N/A
 </details>
 
 <details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| title                   | artist_name              | medium                   | original_image_url                                             |
-|:------------------------|:-------------------------|:-------------------------|:---------------------------------------------------------------|
-| [Windmills, Montmartre] | Hippolyte Bayard         | Direct positive on paper | http://images.metmuseum.org/CRDImages/ph/original/DP167356.jpg |
-| [Windmills, Montmartre] | Hippolyte Bayard         | Direct positive on paper | http://images.metmuseum.org/CRDImages/ph/original/DP167357.jpg |
-| Bromus Maximus, Genoa   | William Henry Fox Talbot | Photogenic drawing       | http://images.metmuseum.org/CRDImages/ph/original/DP202189.jpg |
-| Bromus Maximus, Genoa   | William Henry Fox Talbot | Photogenic drawing       | http://images.metmuseum.org/CRDImages/ph/original/DP202190.jpg |
-| Felce                   | William Henry Fox Talbot | Photogenic drawing       | http://images.metmuseum.org/CRDImages/ph/original/DP202191.jpg |
+| title      | artist_name              | medium                   |   object_begin_date |   object_end_date |
+|:-----------|:-------------------------|:-------------------------|--------------------:|------------------:|
+| Photograph | Hippolyte Bayard         | Direct positive on paper |                1839 |              1839 |
+| Photograph | William Henry Fox Talbot | Photogenic drawing       |                1839 |              1839 |
+| Photograph | William Henry Fox Talbot | Photogenic drawing       |                1839 |              1839 |
+| Photograph | William Henry Fox Talbot | Photogenic drawing       |                1839 |              1839 |
+| Photograph | William Henry Fox Talbot | Photogenic drawing       |                1839 |              1839 |
 
-*... and 27 more rows.*
+*... and 12 more rows.*
 
 </details>
 
@@ -5016,7 +3768,1972 @@ N/A
 
 ---
 
-### 28. bq389 (DB: `epa_historical_air_quality`)
+### 23. sf_bq345 (DB: `IDC`)
+**Question**: How large are the DICOM image files with SEG or RTSTRUCT modalities and the SOP Class UID "1.2.840.10008.5.1.4.1.1.66.4", when grouped by collection, study, and series IDs, if they have no references to other series, images, or sources? Can you also provide a viewer URL formatted as "https://viewer.imaging.datacommons.cancer.gov/viewer/" followed by the study ID, and list these sizes in kilobytes, sorted from largest to smallest?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| collection_id       | study_id                                                         | series_id                                                       | viewer_url                                                                                                            |   size_kb |
+|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------|----------:|
+| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |     10672 |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |      6999 |
+| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |      5168 |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |      4620 |
+| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |      3220 |
+
+*... and 47 more rows.*
+
+**OR**
+
+| collection_id       | study_id                                                         | series_id                                                       | viewer_url                                                                                                            |   size_kb |
+|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------|----------:|
+| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |  10672.1  |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |   6999.43 |
+| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |   5168.17 |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |   4619.93 |
+| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |   3220.35 |
+
+*... and 47 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| collection_id         | StudyInstanceUID                                                 | SeriesInstanceUID                                                |   TOTAL_KB | VIEWER_URL                                                                                                            |
+|:----------------------|:-----------------------------------------------------------------|:-----------------------------------------------------------------|-----------:|:----------------------------------------------------------------------------------------------------------------------|
+| ispy2                 | 1.3.6.1.4.1.14519.5.2.1.221176767008594781101604801650500788746  | 1.3.6.1.4.1.14519.5.2.1.4878233311774983126678390302251532724    |    5162.4  | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.221176767008594781101604801650500788746  |
+| ispy1                 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.231985809607621487102944415722 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.232827057081414195697487632839 |    4151.41 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.231985809607621487102944415722 |
+| breast_mri_nact_pilot | 1.3.6.1.4.1.14519.5.2.1.7695.2311.107706445780109833247801562808 | 1.3.6.1.4.1.14519.5.2.1.7695.2311.390624718420886128536757070342 |    3893.08 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.2311.107706445780109833247801562808 |
+| ispy1                 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.310641334810324025592282005680 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.174392359340937391733883968275 |    3827.44 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.310641334810324025592282005680 |
+| ispy1                 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.158764093351572321399834247951 | 1.3.6.1.4.1.14519.5.2.1.7695.1700.328720938742995917710085115996 |    2786.37 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7695.1700.158764093351572321399834247951 |
+
+*... and 2 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| collection_id       | study_instance_uid                                               | series_instance_uid                                             |   total_size_kb | viewer_url                                                                                                            |
+|:--------------------|:-----------------------------------------------------------------|:----------------------------------------------------------------|----------------:|:----------------------------------------------------------------------------------------------------------------------|
+| remind              | 1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   | 1.3.6.1.4.1.14519.5.2.1.275817376750961541236211487110113859214 |        10672.1  | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.55045403178940467932173621060561511778   |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    | 1.2.276.0.7230010.3.1.3.1031255639.2132.1345991558.197          |         6999.43 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.324079824083273061732463626574127274827    |
+| remind              | 1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    | 1.3.6.1.4.1.14519.5.2.1.226370507401506462522192096058150735133 |         5168.17 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.1331277597209928758485394432149351028    |
+| rider_lung_ct       | 1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    | 1.2.276.0.7230010.3.1.3.1231426215.1104.1345735104.374          |         4619.93 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.9328.50.1.194028143839351664030033351316288622942    |
+| acrin_nsclc_fdg_pet | 1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 | 1.2.276.0.7230010.3.1.3.17436516.663221.1696970870.43458        |         3220.35 | https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.7009.2403.283266632918809796192416751830 |
+
+*... and 47 more rows.*
+
+</details>
+
+---
+
+### 24. sf_bq219 (DB: `IOWA_LIQUOR_SALES`)
+**Question**: In the Iowa Liquor Sales dataset, starting from January 1, 2022 through the last fully completed month, which two liquor categories, each contributing an average of at least 1% to the monthly sales volume over at least 24 months of available data, have the lowest Pearson correlation coefficient when comparing their monthly percentages of total liquor sales across those months, and what are their names?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| CATEGORY1               | CATEGORY2      |
+|:------------------------|:---------------|
+| AMERICAN FLAVORED VODKA | CREAM LIQUEURS |
+
+**OR**
+
+| output                  |
+|:------------------------|
+| AMERICAN FLAVORED VODKA |
+| CREAM LIQUEURS          |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| CAT_A                   | CAT_B          |
+|:------------------------|:---------------|
+| AMERICAN FLAVORED VODKA | CREAM LIQUEURS |
+
+</details>
+
+---
+
+### 25. bq199 (DB: `iowa_liquor_sales`)
+**Question**: Identify the top 10 liquor categories in Iowa in 2021 by calculating, for each category, the average of the per-liter retail prices across all sales transactions in that category during 2021. For these top categories, provide their average per-liter retail prices calculated in the same manner for the years 2019, 2020, and 2021.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   category | category_name                  |   AVG_PRICE_PER_LITER_2019 |   AVG_PRICE_PER_LITER_2020 |   AVG_PRICE_PER_LITER_2021 |
+|-----------:|:-------------------------------|---------------------------:|---------------------------:|---------------------------:|
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |                    32.2776 |                   168.468  |                    193.657 |
+| 1.0816e+06 | WHISKEY LIQUEUR                |                    87.9773 |                   192.251  |                    174.768 |
+| 1.07e+06   | COCKTAILS/RTD                  |                    34.7467 |                   106.994  |                    142.5   |
+| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |                    29.1636 |                    64.0621 |                    135.389 |
+| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |                    42.1378 |                    52.0777 |                    130.857 |
+
+*... and 5 more rows.*
+
+**OR**
+
+|   category | category_name                  |   year |   avg_per_liter_retail_price |
+|-----------:|:-------------------------------|-------:|-----------------------------:|
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2019 |                      32.2776 |
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2020 |                     168.468  |
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |   2021 |                     193.657  |
+| 1.0816e+06 | WHISKEY LIQUEUR                |   2019 |                      87.9773 |
+| 1.0816e+06 | WHISKEY LIQUEUR                |   2020 |                     192.251  |
+
+*... and 25 more rows.*
+
+**OR**
+
+|   category | category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
+|-----------:|:-------------------------------|-----------------:|-----------------:|-----------------:|
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |          32.2776 |         168.492  |          193.644 |
+| 1.0816e+06 | WHISKEY LIQUEUR                |          87.978  |         194.192  |          174.768 |
+| 1.07e+06   | COCKTAILS/RTD                  |          34.7467 |         106.994  |          142.5   |
+| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |          29.1622 |          64.5409 |          135.942 |
+| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |          42.1802 |          52.001  |          130.917 |
+
+*... and 5 more rows.*
+
+**OR**
+
+|   category | category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
+|-----------:|:-------------------------------|-----------------:|-----------------:|-----------------:|
+| 1.7e+06    | TEMPORARY & SPECIALTY PACKAGES |          32.2776 |         168.492  |          193.665 |
+| 1.0816e+06 | WHISKEY LIQUEUR                |          87.9794 |         192.252  |          174.77  |
+| 1.07e+06   | COCKTAILS/RTD                  |          34.7467 |         106.994  |          142.5   |
+| 1.0813e+06 | AMERICAN CORDIALS & LIQUEURS   |          29.1651 |          64.0633 |          135.39  |
+| 1.7011e+06 | TEMPORARY & SPECIALTY PACKAGES |          42.2363 |          52.0839 |          130.858 |
+
+*... and 5 more rows.*
+
+**OR**
+
+| category_name                  |   AVG_PRICE_2019 |   AVG_PRICE_2020 |   AVG_PRICE_2021 |
+|:-------------------------------|-----------------:|-----------------:|-----------------:|
+| WHISKEY LIQUEUR                |          87.9773 |         192.251  |         174.768  |
+| TEMPORARY & SPECIALTY PACKAGES |          42.113  |          74.7871 |         139.765  |
+| AMERICAN CORDIALS & LIQUEURS   |          29.1498 |          63.7818 |         134.772  |
+| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
+| TENNESSEE WHISKIES             |          51.9547 |          81.4209 |          98.9861 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| category_name                  |   avg_price_2019 |   avg_price_2020 |   avg_price_2021 |
+|:-------------------------------|-----------------:|-----------------:|-----------------:|
+| WHISKEY LIQUEUR                |          87.978  |         194.192  |         174.768  |
+| TEMPORARY & SPECIALTY PACKAGES |          42.1554 |          74.7301 |         139.814  |
+| AMERICAN CORDIALS & LIQUEURS   |          29.1483 |          64.2576 |         135.323  |
+| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
+| TENNESSEE WHISKIES             |          51.9671 |          81.428  |          97.6853 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| category_name                  |   avg_price_2019 |   avg_price_2020 |   avg_price_2021 |
+|:-------------------------------|-----------------:|-----------------:|-----------------:|
+| WHISKEY LIQUEUR                |          87.9773 |         192.251  |         174.768  |
+| TEMPORARY & SPECIALTY PACKAGES |          42.113  |          74.7871 |         139.765  |
+| AMERICAN CORDIALS & LIQUEURS   |          29.1498 |          63.7818 |         134.772  |
+| IMPORTED WHISKIES              |         nan      |         nan      |         122.64   |
+| TENNESSEE WHISKIES             |          51.9547 |          81.4209 |          98.9861 |
+
+*... and 5 more rows.*
+
+</details>
+
+---
+
+### 26. bq049 (DB: `iowa_liquor_sales_plus`)
+**Question**: Please show the monthly per capita Bourbon Whiskey sales during 2022 in Dubuque County for the zip code that ranks third in total Bourbon Whiskey sales, using only the population aged 21 and older.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   zip_code | year_month   |   per_capita_sales |
+|-----------:|:-------------|-------------------:|
+|      52003 | 2022-01      |           1.327    |
+|      52003 | 2022-02      |           0.99238  |
+|      52003 | 2022-03      |           0.871495 |
+|      52003 | 2022-04      |           1.36954  |
+|      52003 | 2022-05      |           1.0246   |
+
+*... and 7 more rows.*
+
+**OR**
+
+| MONTH      |   PER_CAPITA_SALES |
+|:-----------|-------------------:|
+| 2022-01-01 |             1.327  |
+| 2022-02-01 |             0.9924 |
+| 2022-03-01 |             0.8715 |
+| 2022-04-01 |             1.3695 |
+| 2022-05-01 |             1.0246 |
+
+*... and 7 more rows.*
+
+**OR**
+
+|   SALE_MONTH |   MONTHLY_BOURBON_SALES |   POPULATION_21_AND_OVER |   ZIP_CODE |   MONTHLY_PER_CAPITA_SALES |
+|-------------:|------------------------:|-------------------------:|-----------:|---------------------------:|
+|            1 |                13113.4  |                     9882 |      52003 |                     1.327  |
+|            2 |                 9806.7  |                     9882 |      52003 |                     0.9924 |
+|            3 |                 8612.11 |                     9882 |      52003 |                     0.8715 |
+|            4 |                13533.8  |                     9882 |      52003 |                     1.3695 |
+|            5 |                10125.1  |                     9882 |      52003 |                     1.0246 |
+
+*... and 7 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| month   |   per_capita_sales |
+|:--------|-------------------:|
+| 2022-01 |             0      |
+| 2022-02 |             1.5705 |
+| 2022-03 |             0      |
+| 2022-04 |             3.1654 |
+| 2022-05 |             0      |
+
+*... and 7 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   sale_month |   per_capita_sales |
+|-------------:|-------------------:|
+|            1 |             1.327  |
+|            2 |             0.9924 |
+|            3 |             0.8715 |
+|            4 |             1.3695 |
+|            5 |             1.0246 |
+
+*... and 7 more rows.*
+
+</details>
+
+---
+
+### 27. sf_bq147 (DB: `TCGA`)
+**Question**: Can you identify the TCGA breast cancer cases from the RNA sequencing hg38 r35` where the protein_coding gene and the project TCGA-BRCA, and which have RNA sequencing samples of multiple tissue types—including "Solid Tissue Normal"—within the same case?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| case_barcode   |
+|:---------------|
+| TCGA-BH-A203   |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| case_gdc_id                          |
+|:-------------------------------------|
+| b3264748-947a-43aa-b227-b294fbcc8447 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| case_barcode   |
+|:---------------|
+| TCGA-BH-A203   |
+
+</details>
+
+---
+
+### 28. sf_bq176 (DB: `TCGA_MITELMAN`)
+**Question**: Identify the case barcodes from the TCGA-LAML study with the highest weighted average copy number in cytoband 15q11 on chromosome 15, using segment data and cytoband overlaps from TCGA's genomic and Mitelman databases.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| case_barcode   |   WEIGHTED_AVG_COPY_NUMBER |
+|:---------------|---------------------------:|
+| TCGA-AB-2939   |                     1.3198 |
+| TCGA-AB-2941   |                     0.1194 |
+| TCGA-AB-2929   |                     0.0585 |
+| TCGA-AB-2928   |                     0.0194 |
+| TCGA-AB-3002   |                     0.0108 |
+
+*... and 56 more rows.*
+
+**OR**
+
+| case_barcode   |
+|:---------------|
+| TCGA-AB-2972   |
+
+**OR**
+
+| case_barcode   |   WEIGHTED_AVG_COPY_NUMBER |
+|:---------------|---------------------------:|
+| TCGA-AB-2972   |                     0.0296 |
+| TCGA-AB-2952   |                     0.0223 |
+| TCGA-AB-2944   |                     0.0204 |
+| TCGA-AB-2939   |                     0.0147 |
+| TCGA-AB-2840   |                     0.0059 |
+
+*... and 5 more rows.*
+
+**OR**
+
+| case_barcode   |
+|:---------------|
+| TCGA-AB-2939   |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| case_barcode   |
+|:---------------|
+| TCGA-AB-2939   |
+
+</details>
+
+---
+
+### 29. sf_bq452 (DB: `_1000_GENOMES`)
+**Question**: Identify variants on chromosome 12 and, for each variant, calculate the chi-squared score using allele counts in cases and controls, where cases are individuals from the 'EAS' super population and controls are individuals from all other super populations. Apply Yates's correction for continuity in the chi-squared calculation, ensuring that the expected counts for each allele in both groups are at least 5. Return the start position, end position, and chi-squared score of the top variants where the chi-squared score is no less than 29.71679.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|       start |         end |    CHI2 |
+|------------:|------------:|--------:|
+| 2.24891e+07 | 2.24892e+07 | 972.658 |
+| 5.42561e+07 | 5.42561e+07 | 664.68  |
+| 3.84074e+07 | 3.84074e+07 | 524.043 |
+| 1.20541e+08 | 1.20541e+08 | 479.426 |
+| 1.2395e+08  | 1.2395e+08  | 449.262 |
+
+*... and 191 more rows.*
+
+**OR**
+
+|       start |         end |   CHI_SQUARED |
+|------------:|------------:|--------------:|
+| 2.24891e+07 | 2.24892e+07 |       972.658 |
+| 5.42561e+07 | 5.42561e+07 |       664.68  |
+| 3.84074e+07 | 3.84074e+07 |       524.043 |
+| 1.20541e+08 | 1.20541e+08 |       479.426 |
+| 1.2395e+08  | 1.2395e+08  |       449.262 |
+
+*... and 176 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|       start |         end |   CHI_SQUARED |
+|------------:|------------:|--------------:|
+| 2.24891e+07 | 2.24892e+07 |       972.658 |
+| 5.42561e+07 | 5.42561e+07 |       664.68  |
+| 3.84074e+07 | 3.84074e+07 |       524.043 |
+| 1.20541e+08 | 1.20541e+08 |       479.426 |
+| 1.2395e+08  | 1.2395e+08  |       449.262 |
+
+*... and 191 more rows.*
+
+</details>
+
+---
+
+### 30. bq279 (DB: `austin`)
+**Question**: Can you provide the number of distinct active and closed bike share stations for each year 2013 and 2014?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   year |   active_station_count |   closed_station_count |
+|-------:|-----------------------:|-----------------------:|
+|   2013 |                     10 |                      1 |
+|   2014 |                     38 |                      9 |
+
+**OR**
+
+|   trip_year | status   |   COUNT(T1."STATION_ID") |
+|------------:|:---------|-------------------------:|
+|        2013 | active   |                       10 |
+|        2013 | closed   |                        1 |
+|        2014 | active   |                       38 |
+|        2014 | closed   |                        9 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   year |   active_stations |   closed_stations |
+|-------:|------------------:|------------------:|
+|   2013 |                 0 |                 0 |
+|   2014 |                 0 |                 0 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   year | status   |   distinct_stations |
+|-------:|:---------|--------------------:|
+|   2013 | active   |                  10 |
+|   2013 | closed   |                   1 |
+|   2014 | active   |                  38 |
+|   2014 | closed   |                   9 |
+
+</details>
+
+---
+
+### 31. sf_bq283 (DB: `AUSTIN`)
+**Question**: Among all stations that are currently active, identify those that rank in the top 15 (including ties) based on the total number of trips that start at each station. For each of these stations, return the station ID, the total number of starting trips, the percentage of those trips out of the overall starting trips from active stations, and the average trip duration in minutes. Order the results by the station’s rank.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   station_id |   total_starting_trips |   pct_of_active_starts |   avg_duration_minutes |
+|-------------:|-----------------------:|-----------------------:|-----------------------:|
+|         3798 |                 179703 |                 8.8043 |                17.2202 |
+|         2498 |                  82661 |                 4.0499 |                18.4478 |
+|         3838 |                  67726 |                 3.3182 |                17.3529 |
+|         2547 |                  64474 |                 3.1588 |                21.4584 |
+|         2575 |                  63161 |                 3.0945 |                40.1604 |
+
+*... and 10 more rows.*
+
+**OR**
+
+|   start_station_id |   total_trips |   avg_duration_minutes |   percentage_of_total_trips |
+|-------------------:|--------------:|-----------------------:|----------------------------:|
+|               3798 |        179703 |                17.2202 |                     8.80433 |
+|               2498 |         82661 |                18.4478 |                     4.04987 |
+|               3838 |         67726 |                17.3529 |                     3.31815 |
+|               2547 |         64474 |                21.4584 |                     3.15882 |
+|               2575 |         63161 |                40.1604 |                     3.0945  |
+
+*... and 10 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   station_id |   total_trips |   percentage |   avg_duration_minutes |
+|-------------:|--------------:|-------------:|-----------------------:|
+|         3798 |        179703 |       8.8043 |                17.2202 |
+|         2498 |         82661 |       4.0499 |                18.4478 |
+|         3838 |         67726 |       3.3182 |                17.3529 |
+|         2547 |         64474 |       3.1588 |                21.4584 |
+|         2575 |         63161 |       3.0945 |                40.1604 |
+
+*... and 10 more rows.*
+
+</details>
+
+---
+
+### 32. sf_bq423 (DB: `GOOGLE_ADS`)
+**Question**: Between January 1, 2023, and January 1, 2024, which image-type advertisement on the topic of Health, published by a verified advertiser located in Cyprus, was shown in Croatia, has times_shown_availability_date as NULL (meaning the times shown data is available), utilized demographic information, geo-location targeting, contextual signals, customer lists, and topics of interest without any of these selection methods being unused, and additionally had its first shown date strictly after January 1, 2023, and last shown date strictly before January 1, 2024? Among such ads, provide the page URL of the one with the highest upper bound of times shown.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| creative_page_url                                                                                    |
+|:-----------------------------------------------------------------------------------------------------|
+| https://adstransparency.google.com/advertiser/AR03023670995157254145/creative/CR14007923720077705217 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| creative_page_url                                                                                    |
+|:-----------------------------------------------------------------------------------------------------|
+| https://adstransparency.google.com/advertiser/AR03023670995157254145/creative/CR14007923720077705217 |
+
+</details>
+
+---
+
+### 33. bq230 (DB: `usda_nass_agriculture`)
+**Question**: Using the crops dataset, find the total 2022 production figures, measured in bushels, for corn from the 'FIELD CROPS' category and mushrooms from the 'HORTICULTURE' group for each U.S. state. Only include data rows where 'statisticcat_desc' is 'PRODUCTION', 'agg_level_desc' is 'STATE', 'value' is not null, and ensure that for corn the 'unit_desc' is 'BU'. Combine both results so that each state’s 2022 corn and mushroom totals are presented.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| state_name   |   CORN_PRODUCTION |   MUSHROOM_PRODUCTION |
+|:-------------|------------------:|----------------------:|
+| ALABAMA      |       1.8183e+08  |           0           |
+| ARIZONA      |       8.8e+06     |           0           |
+| ARKANSAS     |       6.07375e+08 |           0           |
+| CALIFORNIA   |       1.994e+07   |           7.37802e+07 |
+| COLORADO     |       6.7056e+08  |           0           |
+
+*... and 37 more rows.*
+
+**OR**
+
+| state_name   | state_alpha   |   corn_production_bushels |   mushrooms_production_pounds |
+|:-------------|:--------------|--------------------------:|------------------------------:|
+| ALABAMA      | AL            |               1.8183e+08  |                   0           |
+| ARIZONA      | AZ            |               8.8e+06     |                   0           |
+| ARKANSAS     | AR            |               6.07375e+08 |                   0           |
+| CALIFORNIA   | CA            |               1.994e+07   |                   7.37802e+07 |
+| COLORADO     | CO            |               6.7056e+08  |                   0           |
+
+*... and 36 more rows.*
+
+**OR**
+
+| state_name   |   corn_production_bu |   mushroom_production |
+|:-------------|---------------------:|----------------------:|
+| ALABAMA      |          1.8183e+08  |           0           |
+| ALASKA       |          0           |           0           |
+| ARIZONA      |          8.8e+06     |           0           |
+| ARKANSAS     |          6.07375e+08 |           0           |
+| CALIFORNIA   |          1.994e+07   |           7.37802e+07 |
+
+*... and 45 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| state_name   |   corn_production_bu |   mushroom_production |
+|:-------------|---------------------:|----------------------:|
+| ALABAMA      |          1.8183e+08  |         nan           |
+| ARIZONA      |          8.8e+06     |         nan           |
+| ARKANSAS     |          6.07375e+08 |         nan           |
+| CALIFORNIA   |          1.994e+07   |           7.37802e+07 |
+| COLORADO     |          6.7056e+08  |         nan           |
+
+*... and 37 more rows.*
+
+</details>
+
+---
+
+### 34. sf_bq160 (DB: `META_KAGGLE`)
+**Question**: Please provide the creation date, title, parent forum title, reply count, distinct user replies count, total upvotes, and total views for the earliest five forum topics that belong to any sub-forum under the parent forum titled "General". The reply count should be calculated as the total number of messages associated with each topic, and the distinct user replies count should be the number of unique users who have posted messages in the topic. The upvotes should be calculated as the total number of upvotes on all messages within each topic. If any values are missing or None, please treat them as zero
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|     CreationDate | Title                                                      | parent_forum_title   |   reply_count |   distinct_user_replies_count |   total_upvotes |   total_views |
+|-----------------:|:-----------------------------------------------------------|:---------------------|--------------:|------------------------------:|----------------:|--------------:|
+| 1276652905000000 | General feedback, bugs and feature requests                | General              |            72 |                            38 |              15 |         23959 |
+| 1276652993000000 | Competitions requests                                      | General              |             1 |                             1 |               0 |          2651 |
+| 1278930764000000 | World Cup 2010                                             | General              |             2 |                             2 |               0 |          3693 |
+| 1281691934000000 | Alzheimer's Challenge                                      | General              |             5 |                             2 |               0 |          5697 |
+| 1287609281000000 | Re:Athanasopoulos, et al paper corrections - what changed? | General              |             1 |                             1 |               0 |          1770 |
+
+**OR**
+
+| date                | ForumTopicTitle                                            | ParentForumTitle   |   ForumTopicRepliesCount |   DistinctUserRepliesCount |   TopicUpvotes |   TotalViews |
+|:--------------------|:-----------------------------------------------------------|:-------------------|-------------------------:|---------------------------:|---------------:|-------------:|
+| 2010-06-16T01:48:25 | General feedback, bugs and feature requests                | General            |                       72 |                         38 |             15 |        23959 |
+| 2010-06-16T01:49:53 | Competitions requests                                      | General            |                        1 |                          1 |              0 |         2651 |
+| 2010-07-12T10:32:44 | World Cup 2010                                             | General            |                        2 |                          2 |              0 |         3693 |
+| 2010-08-13T09:32:14 | Alzheimer's Challenge                                      | General            |                        5 |                          2 |              0 |         5697 |
+| 2010-10-20T21:14:41 | Re:Athanasopoulos, et al paper corrections - what changed? | General            |                        1 |                          1 |              0 |         1770 |
+
+**OR**
+
+| CreationTS          | Title                                                      | ParentForumTitle   |   ReplyCount |   DistinctUserReplies |   TotalUpvotes |   TotalViews |
+|:--------------------|:-----------------------------------------------------------|:-------------------|-------------:|----------------------:|---------------:|-------------:|
+| 2010-06-16 01:48:25 | General feedback, bugs and feature requests                | General            |           72 |                    38 |             15 |        23959 |
+| 2010-06-16 01:49:53 | Competitions requests                                      | General            |            1 |                     1 |              0 |         2651 |
+| 2010-07-12 10:32:44 | World Cup 2010                                             | General            |            2 |                     2 |              0 |         3693 |
+| 2010-08-13 09:32:14 | Alzheimer's Challenge                                      | General            |            5 |                     2 |              0 |         5697 |
+| 2010-10-20 21:14:41 | Re:Athanasopoulos, et al paper corrections - what changed? | General            |            1 |                     1 |              0 |         1770 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|     CreationDate | Title                                                      | Parent Forum Title   |   Reply count |   Distinct user replies count |   Total upvotes |   Total views |
+|-----------------:|:-----------------------------------------------------------|:---------------------|--------------:|------------------------------:|----------------:|--------------:|
+| 1276652905000000 | General feedback, bugs and feature requests                | General              |            72 |                            38 |              15 |         23959 |
+| 1276652993000000 | Competitions requests                                      | General              |             1 |                             1 |               0 |          2651 |
+| 1278930764000000 | World Cup 2010                                             | General              |             2 |                             2 |               0 |          3693 |
+| 1281691934000000 | Alzheimer's Challenge                                      | General              |             5 |                             2 |               0 |          5697 |
+| 1287609281000000 | Re:Athanasopoulos, et al paper corrections - what changed? | General              |             1 |                             1 |               0 |          1770 |
+
+</details>
+
+---
+
+### 35. sf_bq072 (DB: `DEATH`)
+**Question**: Please provide, for each age from 12 through 18 (inclusive), the total number of deaths and the number of deaths among individuals identified as Black (based on race descriptions containing the word ‘black’), specifically for deaths associated with ICD-10 codes whose descriptions include the word ‘vehicle’ and for deaths associated with ICD-10 codes whose descriptions include the word ‘firearm.’ Use the EntityAxisConditions table to determine which ICD-10 codes were involved in each death, rather than joining ICD-10 code information directly on the death records.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   Age | Category   |   TotalDeaths |   BlackDeaths |
+|------:|:-----------|--------------:|--------------:|
+|    12 | firearm    |            39 |             7 |
+|    12 | vehicle    |            60 |            16 |
+|    13 | firearm    |            71 |            15 |
+|    13 | vehicle    |            71 |            12 |
+|    14 | firearm    |           105 |            27 |
+
+*... and 9 more rows.*
+
+**OR**
+
+|   Age |   Vehicle_Deaths_Total |   Vehicle_Deaths_Black |   Firearm_Deaths_Total |   Firearm_Deaths_Black |
+|------:|-----------------------:|-----------------------:|-----------------------:|-----------------------:|
+|    12 |                     60 |                     16 |                     39 |                      7 |
+|    13 |                     71 |                     12 |                     71 |                     15 |
+|    14 |                     93 |                     20 |                    105 |                     27 |
+|    15 |                    133 |                     23 |                    164 |                     58 |
+|    16 |                    262 |                     42 |                    246 |                    109 |
+
+*... and 2 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   age | cause   |   total_deaths |   black_deaths |
+|------:|:--------|---------------:|---------------:|
+|    12 | Firearm |             39 |              7 |
+|    12 | Vehicle |             60 |             16 |
+|    13 | Firearm |             71 |             15 |
+|    13 | Vehicle |             71 |             12 |
+|    14 | Firearm |            105 |             27 |
+
+*... and 9 more rows.*
+
+</details>
+
+---
+
+### 36. local007 (DB: `Baseball`)
+**Question**: Could you help me calculate the average single career span value in years for all baseball players? Please precise the result as a float number. First, calculate the difference in years, months, and days between the debut and final game dates. For each player, the career span is computed as the sum of the absolute number of years, plus the absolute number of months divided by 12, plus the absolute number of days divided by 365. Round each part to two decimal places before summing. Finally, average the career spans and round the result to a float number.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   AVG_CAREER_SPAN_YEARS |
+|------------------------:|
+|                    4.85 |
+
+**OR**
+
+|                                     AVG( |
+|                   ROUND(ABS(YEARS), 2) + |
+|           ROUND(ABS(MONTHS) / 12.0, 2) + |
+|              ROUND(ABS(DAYS) / 365.0, 2) |
+|                                        ) |
+|-----------------------------------------:|
+|                                  5.09967 |
+
+**OR**
+
+|   AVERAGE_CAREER_SPAN_YEARS |
+|----------------------------:|
+|                     4.82758 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   avg_career_span_years |
+|------------------------:|
+|                  4.9238 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   average_career_span |
+|----------------------:|
+|                4.8315 |
+
+</details>
+
+---
+
+### 37. local019 (DB: `WWE`)
+**Question**: For the NXT title that had the shortest match (excluding titles with "title change"), what were the names of the two wrestlers involved?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| WRESTLER1     | WRESTLER2   |
+|:--------------|:------------|
+| Bron Breakker | Duke Hudson |
+
+**OR**
+
+| winner_name      | loser_name   | duration   |
+|:-----------------|:-------------|:-----------|
+| Tiffany Stratton | Thea Hail    | 08:28      |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| winner_name   | loser_name   |
+|:--------------|:-------------|
+| Bron Breakker | Duke Hudson  |
+
+</details>
+
+---
+
+### 38. local031 (DB: `Brazilian_E_Commerce`)
+**Question**: What is the highest monthly delivered orders volume in the year with the lowest annual delivered orders volume among 2016, 2017, and 2018?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   HIGHEST_MONTHLY_VOLUME |
+|-------------------------:|
+|                      205 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   monthly_volume | month   |
+|-----------------:|:--------|
+|              208 | 2016-10 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   highest_monthly_delivered_orders_volume |
+|------------------------------------------:|
+|                                       205 |
+
+</details>
+
+---
+
+### 39. local049 (DB: `modern_data`)
+**Question**: Can you help me calculate the average number of new unicorn companies per year in the top industry from 2019 to 2021?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   AVERAGE_NEW_UNICORNS_PER_YEAR |
+|--------------------------------:|
+|                         60.3333 |
+
+**OR**
+
+|   AVG_NEW_UNICORNS_PER_YEAR |
+|----------------------------:|
+|                     57.6667 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   avg_new_unicorns_per_year |
+|----------------------------:|
+|                     57.6667 |
+
+</details>
+
+---
+
+### 40. local050 (DB: `complex_oracle`)
+**Question**: What is the median of the average monthly projected sales in USD for France in 2021, calculated by using the monthly sales data from 2019 and 2020 (filtered by promo_total_id=1 and channel_total_id=1), applying the growth rate from 2019 to 2020 to project 2021, converting to USD based on the currency table, and then determining the monthly averages before finding their median?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   OUTPUT |
+|---------:|
+|   2552.7 |
+
+**OR**
+
+|   median_monthly_avg_projected_sales_usd |
+|-----------------------------------------:|
+|                                  2077.39 |
+
+**OR**
+
+|   median_avg_monthly_projected_sales_usd_2021 |
+|----------------------------------------------:|
+|                                       2014.66 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   median_of_monthly_avg_projected_sales_usd |
+|--------------------------------------------:|
+|                                     2552.69 |
+
+</details>
+
+---
+
+### 41. local202 (DB: `city_legislation`)
+**Question**: For alien data, how many of the top 10 states by alien population have a higher percentage of friendly aliens than hostile aliens, with an average alien age exceeding 200?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   qualified_states_count |
+|-------------------------:|
+|                        5 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   count |
+|--------:|
+|       0 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   matching_states_count |
+|------------------------:|
+|                       5 |
+
+</details>
+
+---
+
+### 42. local284 (DB: `bank_sales_trading`)
+**Question**: For veg whsle data, can you generate a summary of our items' loss rates? Include the average loss rate, and also break down the count of items that are below, above, and within one standard deviation from this average.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   AVG_LOSS_RATE |   COUNT_BELOW |   COUNT_WITHIN |   COUNT_ABOVE |
+|----------------:|--------------:|---------------:|--------------:|
+|         9.42669 |            35 |            187 |            29 |
+
+**OR**
+
+|   BELOW_COUNT |   WITHIN_COUNT |   ABOVE_COUNT |   AVG_LOSS |   STDEV_LOSS |
+|--------------:|---------------:|--------------:|-----------:|-------------:|
+|            35 |            187 |            29 |    9.42669 |      5.20064 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   avg_loss_rate |   items_below_1std |   items_within_1std |   items_above_1std |
+|----------------:|-------------------:|--------------------:|-------------------:|
+|          9.4267 |                 35 |                 187 |                 29 |
+
+</details>
+
+---
+
+### 43. local074 (DB: `bank_sales_trading`)
+**Question**: Please generate a summary of the closing balances at the end of each month for each customer transactions, show the monthly changes and monthly cumulative bank account balances. Ensure that even if a customer has no account activity in a given month, the balance for that month is still included in the output.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   customer_id | MONTH   |   MONTHLY_CHANGE |   CUMULATIVE_BALANCE |
+|--------------:|:--------|-----------------:|---------------------:|
+|             1 | 2020-01 |              312 |                  312 |
+|             1 | 2020-02 |                0 |                  312 |
+|             1 | 2020-03 |             -952 |                 -640 |
+|             1 | 2020-04 |                0 |                 -640 |
+|             2 | 2020-01 |              549 |                  549 |
+
+*... and 1995 more rows.*
+
+**OR**
+
+|   customer_id | TXN_MONTH   |   MONTHLY_CHANGE |   CLOSING_BALANCE |
+|--------------:|:------------|-----------------:|------------------:|
+|             1 | 2020-01-01  |              312 |               312 |
+|             1 | 2020-02-01  |                0 |               312 |
+|             1 | 2020-03-01  |             -952 |              -640 |
+|             1 | 2020-04-01  |                0 |              -640 |
+|             2 | 2020-01-01  |              549 |               549 |
+
+*... and 1995 more rows.*
+
+**OR**
+
+|   customer_id | month_end_date   |   monthly_change |   closing_balance_end_of_month |
+|--------------:|:-----------------|-----------------:|-------------------------------:|
+|             1 | 2020-01-31       |              312 |                            312 |
+|             1 | 2020-02-29       |                0 |                            312 |
+|             1 | 2020-03-31       |             -952 |                           -640 |
+|             1 | 2020-04-30       |                0 |                           -640 |
+|             2 | 2020-01-31       |              549 |                            549 |
+
+*... and 1995 more rows.*
+
+**OR**
+
+|   customer_id | month_end   |   monthly_change |   closing_balance |
+|--------------:|:------------|-----------------:|------------------:|
+|             1 | 2020-01-31  |              312 |               312 |
+|             1 | 2020-02-29  |                0 |               312 |
+|             1 | 2020-03-31  |             -952 |              -640 |
+|             1 | 2020-04-30  |                0 |              -640 |
+|             2 | 2020-01-31  |              549 |               549 |
+
+*... and 912 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   customer_id | month      |   monthly_change |   cumulative_balance |
+|--------------:|:-----------|-----------------:|---------------------:|
+|             2 | 2020-01-01 |                1 |                    1 |
+|             2 | 2020-02-01 |                1 |                    2 |
+|             2 | 2020-03-01 |                1 |                    3 |
+|             2 | 2020-04-01 |                1 |                    4 |
+|             2 | 2020-05-01 |                1 |                    5 |
+
+*... and 295 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   customer_id | month_start   |   monthly_change |   closing_balance |
+|--------------:|:--------------|-----------------:|------------------:|
+|             1 | 2020-01-01    |              312 |               312 |
+|             1 | 2020-02-01    |                0 |               312 |
+|             1 | 2020-03-01    |             -952 |              -640 |
+|             1 | 2020-04-01    |                0 |              -640 |
+|             2 | 2020-01-01    |              549 |               549 |
+
+*... and 1995 more rows.*
+
+</details>
+
+---
+
+### 44. sf044 (DB: `FINANCE__ECONOMICS`)
+**Question**: What was the percentage change in post-market close prices for the Magnificent 7 tech companies from January 1 to June 30, 2024?
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| TICKER   | START_DATE   |   START_PRICE | END_DATE   |   END_PRICE |   PERCENT_CHANGE |
+|:---------|:-------------|--------------:|:-----------|------------:|-----------------:|
+| AAPL     | 2024-01-02   |        185.32 | 2024-06-28 |      211.7  |            14.23 |
+| AMZN     | 2024-01-02   |        149.66 | 2024-06-28 |      193.24 |            29.12 |
+| GOOGL    | 2024-01-02   |        138.03 | 2024-06-28 |      182.57 |            32.27 |
+| META     | 2024-01-02   |        346.05 | 2024-06-28 |      505.15 |            45.98 |
+| MSFT     | 2024-01-02   |        369.89 | 2024-06-28 |      447.45 |            20.97 |
+
+*... and 2 more rows.*
+
+**OR**
+
+| COMPANY_NAME         |   PERCENTAGE_CHANGE |
+|:---------------------|--------------------:|
+| META PLATFORMS, INC. |             45.976  |
+| APPLE INC.           |             14.2348 |
+| ALPHABET INC.        |             32.2683 |
+| TESLA, INC.          |            -20.4105 |
+| NVIDIA CORP          |            157.823  |
+
+*... and 2 more rows.*
+
+**OR**
+
+| TICKER   |   PERCENTAGE_CHANGE |
+|:---------|--------------------:|
+| AMZN     |             29.1193 |
+| AAPL     |             14.2348 |
+| NVDA     |            -74.2177 |
+| META     |             45.976  |
+| TSLA     |            -20.4105 |
+
+*... and 2 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| ticker   | start_date   |   start_value | end_date   |   end_value |   percentage_change |
+|:---------|:-------------|--------------:|:-----------|------------:|--------------------:|
+| AAPL     | 2024-01-02   |        185.32 | 2024-06-28 |      211.7  |             14.2348 |
+| AMZN     | 2024-01-02   |        149.66 | 2024-06-28 |      193.24 |             29.1193 |
+| GOOGL    | 2024-01-02   |        138.03 | 2024-06-28 |      182.57 |             32.2683 |
+| META     | 2024-01-02   |        346.05 | 2024-06-28 |      505.15 |             45.976  |
+| MSFT     | 2024-01-02   |        369.89 | 2024-06-28 |      447.45 |             20.9684 |
+
+*... and 2 more rows.*
+
+</details>
+
+---
+
+### 45. sf018 (DB: `BRAZE_USER_EVENT_DEMO_DATASET`)
+**Question**: Examine user engagement with push notifications within a specified one-hour window on June 1, 2023.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   push_notification_sends |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
+
+*... and 15 more rows.*
+
+**OR**
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | AD_TRACKING_ENABLED   |   CARRIER |   BROWSER |   DEVICE_MODEL |   PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|:----------------------|----------:|----------:|---------------:|--------------------------:|
+| JyWFOSKn8bq    | TtsQhigYhp9249v | 0l5LHnWXqut5jaG | IeCV5zc2TJmBQsa        | android    | True                  |       nan |       nan |            nan |                         1 |
+| JyWFOSKn8bq    | mpAoUqZPyoFAelw | 0EEL3XiK2nn1hBC | WoeFmXwfhCbKtxh        | ios        | True                  |       nan |       nan |            nan |                         1 |
+| OkIYT1HbF7u    | jzyghJJxmuZoc6K | 0NqYV7Eahux8V49 | 1qSqPKoURmyvzra        | ios        | True                  |       nan |       nan |            nan |                         1 |
+| JyWFOSKn8bq    | 29MOKIcX8G5S1Co | 0HN78xHZ80J9HMC | V4zRW6nFEF52srw        | ios        | True                  |       nan |       nan |            nan |                         1 |
+| JyWFOSKn8bq    | WklAh438kTdbZY5 | 2lBi9TbhCQbnqwH | AmnNM6V7sgXTzeF        | android    | True                  |       nan |       nan |            nan |                         1 |
+
+*... and 1428 more rows.*
+
+**OR**
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
+
+*... and 1396 more rows.*
+
+**OR**
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | AD_TRACKING_ENABLED   | CARRIER   | BROWSER   | DEVICE_MODEL                   |   PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|:----------------------|:----------|:----------|:-------------------------------|--------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    | True                  | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX            |                         1 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        | True                  | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO                 |                         1 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        | True                  | oqfIduO   | UYU17BK   | SAMSUNG GALAXY NOTE 10/10 PLUS |                         1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        | True                  | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX            |                         1 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        | True                  | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX            |                         1 |
+
+*... and 1396 more rows.*
+
+**OR**
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
+
+*... and 1396 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | DEVICE_MODEL        | CARRIER   | BROWSER   |   PUSH_NOTIFICATION_SENDS |   UNIQUE_PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|:--------------------|:----------|:----------|--------------------------:|---------------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    | APPLE IPHONE XS MAX | mn9rnJN   | Hm9zVns   |                         0 |                                0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        | HUAWEI P30 PRO      | WhayAwA   | oS0ax3s   |                         0 |                                0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        | nan                 | nan       | nan       |                         1 |                                1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        | APPLE IPHONE XS MAX | 10Q0qob   | ck3gRh0   |                         0 |                                0 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        | APPLE IPHONE XS MAX | 0g4HYXP   | KboMkBs   |                         0 |                                0 |
+
+*... and 1428 more rows.*
+
+*... truncated to first 10 columns.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
+|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
+| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
+| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
+| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
+| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
+
+*... and 1428 more rows.*
+
+*... truncated to first 10 columns.*
+
+</details>
+
+---
+
+### 46. sf041 (DB: `YES_ENERGY__SAMPLE_DATA`)
+**Question**: Produce a report for ERCOT on October 1, 2022, that combines hourly data on day-ahead and real-time prices from node ID 10000697078, load forecasts (datatypeid 19060) and actual loads, plus wind (forecast datatypeid 9285, actual datatypeid 16) and solar (forecast datatypeid 662, actual datatypeid 650) generation forecasts and actuals from object ID 10000712973. This report should include time zone alignments, peak classifications, and net load calculations, providing insights into daily operational dynamics and efficiency.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| ISO   | DATETIME            | TIMEZONE   | DATETIME_UTC        |   ONPEAK |   OFFPEAK |   WEPEAK |   WDPEAK | MARKETDAY   | PRICE_NODE_NAME   |
+|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:------------|:------------------|
+| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+
+*... and 19 more rows.*
+
+**OR**
+
+| ISO   | DATETIME            | TIMEZONE   | DATETIME_UTC        |   ONPEAK |   OFFPEAK |   WEPEAK |   WDPEAK | MARKETDAY           | PRICE_NODE_NAME   |
+|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:--------------------|:------------------|
+| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
+| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
+| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
+| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
+| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01 00:00:00 | HB_NORTH          |
+
+*... and 19 more rows.*
+
+**OR**
+
+| iso   | datetime            | timezone   | datetime_utc        |   onpeak |   offpeak |   wepeak |   wdpeak | marketday   | price_node_name   |
+|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|:------------|:------------------|
+| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |        0 |         1 |        0 |        0 | 2022-10-01  | HB_NORTH          |
+
+*... and 19 more rows.*
+
+**OR**
+
+| iso   | datetime            | timezone   | datetime_utc        |   onpeak |   offpeak |   wepeak |   wdpeak |   marketday | price_node_name   |
+|:------|:--------------------|:-----------|:--------------------|---------:|----------:|---------:|---------:|------------:|:------------------|
+| ERCOT | 2022-10-01 00:00:00 | CDT        | 2022-10-01 05:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 01:00:00 | CDT        | 2022-10-01 06:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 02:00:00 | CDT        | 2022-10-01 07:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 03:00:00 | CDT        | 2022-10-01 08:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 04:00:00 | CDT        | 2022-10-01 09:00:00 |      nan |       nan |      nan |      nan |         nan | HB_NORTH          |
+
+*... and 19 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| iso   | datetime            | timezone   |   datetime_utc |   onpeak |   offpeak |   wepeak |   wdpeak |   marketday | price_node_name   |
+|:------|:--------------------|:-----------|---------------:|---------:|----------:|---------:|---------:|------------:|:------------------|
+| ERCOT | 2022-10-01 00:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 01:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 02:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 03:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
+| ERCOT | 2022-10-01 04:00:00 | CDT        |            nan |        0 |         0 |        0 |        0 |         nan | HB_NORTH          |
+
+*... and 19 more rows.*
+
+*... truncated to first 10 columns.*
+
+</details>
+
+---
+
+### 47. sf011 (DB: `CENSUS_GALAXY__ZIP_CODE_TO_BLOCK_GROUP_SAMPLE`)
+**Question**: Determine the population distribution within each block group relative to its census tract in New York State using 2021 ACS data. Include block group ID, census value, state county tract ID, total tract population, and the population ratio of each block group.
+
+**Status**: Baseline ✅ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   BlockGroupID |   census_value |   StateCountyTractID |   total_tract_population |   population_ratio |
+|---------------:|---------------:|---------------------:|-------------------------:|-------------------:|
+|     3.6001e+11 |           1728 |           3.6001e+10 |                     3435 |           0.503057 |
+|     3.6001e+11 |           1585 |           3.6001e+10 |                     5933 |           0.26715  |
+|     3.6001e+11 |            922 |           3.6001e+10 |                     2247 |           0.410325 |
+|     3.6001e+11 |           1319 |           3.6001e+10 |                     3355 |           0.393145 |
+|     3.6001e+11 |           2165 |           3.6001e+10 |                     6029 |           0.359098 |
+
+*... and 15920 more rows.*
+
+**OR**
+
+|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPop |   BlockGroupRatio |
+|---------------:|--------------:|---------------------:|----------------:|------------------:|
+|     3.6051e+11 |          1866 |           3.6051e+10 |            4130 |          0.451816 |
+|     3.6051e+11 |          2264 |           3.6051e+10 |            4130 |          0.548184 |
+|     3.6051e+11 |           844 |           3.6051e+10 |            3616 |          0.233407 |
+|     3.6051e+11 |          1320 |           3.6051e+10 |            4117 |          0.320622 |
+|     3.6051e+11 |           796 |           3.6051e+10 |            4624 |          0.172145 |
+
+*... and 95 more rows.*
+
+**OR**
+
+|   block_group_id |   census_value |   state_county_tract_id |   tract_population |   population_ratio |
+|-----------------:|---------------:|------------------------:|-------------------:|-------------------:|
+|       3.6001e+11 |            894 |              3.6001e+10 |               2215 |           0.403612 |
+|       3.6001e+11 |           1321 |              3.6001e+10 |               2215 |           0.596388 |
+|       3.6001e+11 |            327 |              3.6001e+10 |               2890 |           0.113149 |
+|       3.6001e+11 |           1448 |              3.6001e+10 |               2890 |           0.501038 |
+|       3.6001e+11 |           1115 |              3.6001e+10 |               2890 |           0.385813 |
+
+*... and 606 more rows.*
+
+**OR**
+
+|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPopulation |   PopulationRatio |
+|---------------:|--------------:|---------------------:|-----------------------:|------------------:|
+|     3.6001e+11 |           894 |           3.6001e+10 |                   2215 |          0.403612 |
+|     3.6001e+11 |          1321 |           3.6001e+10 |                   2215 |          0.596388 |
+|     3.6001e+11 |           327 |           3.6001e+10 |                   2890 |          0.113149 |
+|     3.6001e+11 |          1448 |           3.6001e+10 |                   2890 |          0.501038 |
+|     3.6001e+11 |          1115 |           3.6001e+10 |                   2890 |          0.385813 |
+
+*... and 16065 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPopulation |   PopulationRatio |
+|---------------:|--------------:|---------------------:|-----------------------:|------------------:|
+|     3.6001e+11 |           894 |           3.6001e+10 |                   2215 |            0.4036 |
+|     3.6001e+11 |          1321 |           3.6001e+10 |                   2215 |            0.5964 |
+|     3.6001e+11 |           327 |           3.6001e+10 |                   2890 |            0.1131 |
+|     3.6001e+11 |          1448 |           3.6001e+10 |                   2890 |            0.501  |
+|     3.6001e+11 |          1115 |           3.6001e+10 |                   2890 |            0.3858 |
+
+*... and 16065 more rows.*
+
+</details>
+
+---
+
+## 🤝 Both Correct (Baseline ✅ -> SlayQL ✅) (20)
+
+### 1. sf_bq225 (DB: `GITHUB_REPOS`)
+**Question**: From the GitHub repository files in 'github_repos.sample_files' joined with 'github_repos.sample_contents', which 10 programming languages occur most frequently (based on recognized file extensions) in files that have non-empty content, ordered by their file counts in descending order?
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| language   |
+|:-----------|
+| C          |
+| JavaScript |
+| Java       |
+| C++        |
+| HTML       |
+
+*... and 5 more rows.*
+
+**OR**
+
+| language   |   file_count |
+|:-----------|-------------:|
+| Java       |           18 |
+| JavaScript |           12 |
+| C          |           11 |
+| HTML       |            8 |
+| JSON       |            7 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| language   |   file_count |
+|:-----------|-------------:|
+| C          |           76 |
+| JavaScript |           28 |
+| Java       |           20 |
+| HTML       |           10 |
+| JSON       |           10 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| language   |   file_count |
+|:-----------|-------------:|
+| Java       |           18 |
+| JavaScript |           12 |
+| C          |           11 |
+| HTML       |            8 |
+| JSON       |            7 |
+
+*... and 5 more rows.*
+
+</details>
+
+---
+
+### 2. bq172 (DB: `cms_data`)
+**Question**: For the drug with the highest total number of prescriptions in New York State during 2014, could you list the top five states with the highest total claim counts for this drug? Please also include their total claim counts and total drug costs. 
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| state   |   total_claim_count |   total_drug_cost |
+|:--------|--------------------:|------------------:|
+| CA      |             3725846 |       3.50735e+07 |
+| FL      |             2689327 |       2.10461e+07 |
+| NY      |             2606392 |       2.07293e+07 |
+| TX      |             2212275 |       1.75135e+07 |
+| PA      |             1760543 |       1.41212e+07 |
+
+**OR**
+
+| state   |   total_claim_count |   total_drug_cost |
+|:--------|--------------------:|------------------:|
+| CA      |             3728200 |       3.53493e+07 |
+| FL      |             2690538 |       2.1206e+07  |
+| NY      |             2609790 |       2.1225e+07  |
+| TX      |             2213136 |       1.76406e+07 |
+| PA      |             1762418 |       1.43686e+07 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| state   |   total_claim_count |   total_drug_cost |
+|:--------|--------------------:|------------------:|
+| CA      |             3725846 |       3.50735e+07 |
+| FL      |             2689327 |       2.10461e+07 |
+| NY      |             2606392 |       2.07293e+07 |
+| TX      |             2212275 |       1.75135e+07 |
+| PA      |             1760543 |       1.41212e+07 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| state   |   total_claim_count |   total_drug_cost |
+|:--------|--------------------:|------------------:|
+| CA      |             3725846 |       3.50735e+07 |
+| FL      |             2689327 |       2.10461e+07 |
+| NY      |             2606392 |       2.07293e+07 |
+| TX      |             2212275 |       1.75135e+07 |
+| PA      |             1760543 |       1.41212e+07 |
+
+</details>
+
+---
+
+### 3. bq357 (DB: `noaa_data`)
+**Question**: What are the latitude and longitude coordinates and dates between 2005 and 2015 with the top 5 highest daily average wind speeds, excluding records with missing wind speed values? Using data from tables start with prefix "icoads_core".
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   year |   month |   day |   latitude |   longitude |   AVG_WIND_SPEED_MPS |
+|-------:|--------:|------:|-----------:|------------:|---------------------:|
+|   2011 |       1 |    17 |      52.8  |      172.5  |                 5.25 |
+|   2010 |       2 |     9 |      51.8  |      173.5  |                 5.09 |
+|   2015 |       3 |     6 |      44.6  |      -32.5  |                 5    |
+|   2010 |      12 |    25 |      39    |      170.9  |                 4.94 |
+|   2008 |      12 |    15 |      51.66 |      172.33 |                 4.9  |
+
+**OR**
+
+|   latitude |   longitude |   year |   month |   day |   avg_wind_speed |
+|-----------:|------------:|-------:|--------:|------:|-----------------:|
+|      52.8  |      172.5  |   2011 |       1 |    17 |             52.5 |
+|      51.8  |      173.5  |   2010 |       2 |     9 |             50.9 |
+|      44.6  |      -32.5  |   2015 |       3 |     6 |             50   |
+|      39    |      170.9  |   2010 |      12 |    25 |             49.4 |
+|      51.66 |      172.33 |   2008 |      12 |    15 |             49   |
+
+**OR**
+
+|   latitude |   longitude | DATE       |   AVG_WIND_SPEED |
+|-----------:|------------:|:-----------|-----------------:|
+|      52.8  |      172.5  | 2011-01-17 |             52.5 |
+|      51.8  |      173.5  | 2010-02-09 |             50.9 |
+|      44.6  |      -32.5  | 2015-03-06 |             50   |
+|      39    |      170.9  | 2010-12-25 |             49.4 |
+|      51.66 |      172.33 | 2008-12-15 |             49   |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+|   latitude |   longitude | date       |   daily_avg_wind_speed |
+|-----------:|------------:|:-----------|-----------------------:|
+|      52.8  |      172.5  | 2011-01-17 |                   52.5 |
+|      51.8  |      173.5  | 2010-02-09 |                   50.9 |
+|      44.6  |      -32.5  | 2015-03-06 |                   50   |
+|      39    |      170.9  | 2010-12-25 |                   49.4 |
+|      51.66 |      172.33 | 2008-12-15 |                   49   |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   latitude |   longitude | observation_date   |
+|-----------:|------------:|:-------------------|
+|      52.8  |      172.5  | 2011-01-17         |
+|      51.8  |      173.5  | 2010-02-09         |
+|      44.6  |      -32.5  | 2015-03-06         |
+|      39    |      170.9  | 2010-12-25         |
+|      51.66 |      172.33 | 2008-12-15         |
+
+</details>
+
+---
+
+### 4. bq394 (DB: `noaa_data`)
+**Question**: What are the top 3 months between 2010 and 2014 with the smallest sum of absolute differences between the average air temperature, wet bulb temperature, dew point temperature, and sea surface temperature, including respective years and sum of differences? Please present the year and month in numerical format.
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   year |   month |   SUM_OF_DIFFERENCES |
+|-------:|--------:|---------------------:|
+|   2010 |       7 |              13.0125 |
+|   2010 |       8 |              13.06   |
+|   2010 |       6 |              13.407  |
+
+**OR**
+
+|   year |   month |   SUM_ABS_DIFFERENCES |
+|-------:|--------:|----------------------:|
+|   2013 |       6 |               12.6285 |
+|   2013 |       7 |               12.6308 |
+|   2012 |       7 |               12.8841 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+|   year |   month |   sum_abs_diff |
+|-------:|--------:|---------------:|
+|   2013 |       6 |        12.6285 |
+|   2013 |       7 |        12.6308 |
+|   2012 |       7 |        12.8841 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   year |   month |   sum_abs_diff |
+|-------:|--------:|---------------:|
+|   2013 |       6 |        12.6285 |
+|   2013 |       7 |        12.6308 |
+|   2012 |       7 |        12.8841 |
+
+</details>
+
+---
+
+### 5. bq392 (DB: `noaa_gsod`)
+**Question**: What are the top 3 dates in October 2009 with the highest average temperature for station number 723758, in the format YYYY-MM-DD?
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| observation_date   |
+|:-------------------|
+| 2009-10-30         |
+| 2009-10-29         |
+| 2009-10-19         |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| date_str   |
+|:-----------|
+| 2009-10-30 |
+| 2009-10-29 |
+| 2009-10-19 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| date       |
+|:-----------|
+| 2009-10-30 |
+| 2009-10-29 |
+| 2009-10-19 |
+
+</details>
+
+---
+
+### 6. bq115 (DB: `census_bureau_international`)
+**Question**: Which country has the highest percentage of population under the age of 25 in 2017?
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| country_name   |   PERCENTAGE_UNDER_25 |
+|:---------------|----------------------:|
+| Uganda         |               69.1458 |
+
+**OR**
+
+| country_code   | country_name   |   PERCENTAGE |
+|:---------------|:---------------|-------------:|
+| UG             | Uganda         |       69.146 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| country   |   percentage |
+|:----------|-------------:|
+| Uganda    |      69.1458 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| country_name   |
+|:---------------|
+| Uganda         |
+
+</details>
+
+---
+
+### 7. bq061 (DB: `census_bureau_acs_1`)
+**Question**: Which census tract has witnessed the largest increase in median income between 2015 and 2018 in California? Tell me the tract code.
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   tract_code |
+|-------------:|
+|       609601 |
+
+**OR**
+
+|      geo_id |
+|------------:|
+| 6.08161e+09 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+|   tract_code |   income_change |
+|-------------:|----------------:|
+|       609601 |           96643 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+|   tract_code |
+|-------------:|
+|       609601 |
+
+</details>
+
+---
+
+### 8. bq113 (DB: `bls`)
+**Question**: Which county in Utah experienced the greatest percentage increase in construction employment from 2000 to 2018, calculated by averaging the employment levels during the third month of each quarter in those years? What is the corresponding percentage increase?
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| county_name   |   AVG_CONSTRUCTION_2000 |   AVG_CONSTRUCTION_2018 |   PERCENTAGE_INCREASE |
+|:--------------|------------------------:|------------------------:|----------------------:|
+| Utah          |                 10466.2 |                 24692.2 |                135.92 |
+
+**OR**
+
+| COUNTY_NAME   |   AVG_CONSTRUCTION_EMPL_2000 |   AVG_CONSTRUCTION_EMPL_2018 |   PERCENTAGE_INCREASE |
+|:--------------|-----------------------------:|-----------------------------:|----------------------:|
+| Utah County   |                      10466.2 |                      24692.2 |                135.92 |
+
+**OR**
+
+| county            |   pct_increase |
+|:------------------|---------------:|
+| Utah County, Utah |         135.92 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| county   |   percentage_increase |
+|:---------|----------------------:|
+| Utah     |               135.923 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| county_name   |   pct_increase |
+|:--------------|---------------:|
+| Utah          |        135.923 |
+
+</details>
+
+---
+
+### 9. bq310 (DB: `stackoverflow`)
+**Question**: What is the title of the most viewed "how" question related to Android development on StackOverflow, across specified tags such as 'android-layout', 'android-activity', 'android-intent', and others
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| title                                                 |
+|:------------------------------------------------------|
+| How can I access my localhost from my Android device? |
+
+**OR**
+
+| title                                         |
+|:----------------------------------------------|
+| How to change background color in android app |
+
+**OR**
+
+| OUTPUT                                                        |
+|:--------------------------------------------------------------|
+| How to close/hide the Android soft keyboard programmatically? |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+| title                                                         |   view_count |
+|:--------------------------------------------------------------|-------------:|
+| How to close/hide the Android soft keyboard programmatically? |      1752733 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| title                                                         |
+|:--------------------------------------------------------------|
+| How to close/hide the Android soft keyboard programmatically? |
+
+</details>
+
+---
+
+### 10. bq389 (DB: `epa_historical_air_quality`)
 **Question**: Please calculate the monthly average levels of PM10, PM2.5 FRM, PM2.5 non-FRM, volatile organic emissions, SO2 (scaled by a factor of 10), and Lead (scaled by a factor of 100) air pollutants in California for the year 2020.
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -5142,128 +5859,7 @@ N/A
 
 ---
 
-### 29. sf_bq219 (DB: `IOWA_LIQUOR_SALES`)
-**Question**: In the Iowa Liquor Sales dataset, starting from January 1, 2022 through the last fully completed month, which two liquor categories, each contributing an average of at least 1% to the monthly sales volume over at least 24 months of available data, have the lowest Pearson correlation coefficient when comparing their monthly percentages of total liquor sales across those months, and what are their names?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| CATEGORY1               | CATEGORY2      |
-|:------------------------|:---------------|
-| AMERICAN FLAVORED VODKA | CREAM LIQUEURS |
-
-**OR**
-
-| output                  |
-|:------------------------|
-| AMERICAN FLAVORED VODKA |
-| CREAM LIQUEURS          |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| CATEGORY_1              | CATEGORY_2     |   PEARSON_CORRELATION |
-|:------------------------|:---------------|----------------------:|
-| AMERICAN FLAVORED VODKA | CREAM LIQUEURS |             -0.737908 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| CAT_A                   | CAT_B          |
-|:------------------------|:---------------|
-| AMERICAN FLAVORED VODKA | CREAM LIQUEURS |
-
-</details>
-
----
-
-### 30. bq049 (DB: `iowa_liquor_sales_plus`)
-**Question**: Please show the monthly per capita Bourbon Whiskey sales during 2022 in Dubuque County for the zip code that ranks third in total Bourbon Whiskey sales, using only the population aged 21 and older.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   zip_code | year_month   |   per_capita_sales |
-|-----------:|:-------------|-------------------:|
-|      52003 | 2022-01      |           1.327    |
-|      52003 | 2022-02      |           0.99238  |
-|      52003 | 2022-03      |           0.871495 |
-|      52003 | 2022-04      |           1.36954  |
-|      52003 | 2022-05      |           1.0246   |
-
-*... and 7 more rows.*
-
-**OR**
-
-| MONTH      |   PER_CAPITA_SALES |
-|:-----------|-------------------:|
-| 2022-01-01 |             1.327  |
-| 2022-02-01 |             0.9924 |
-| 2022-03-01 |             0.8715 |
-| 2022-04-01 |             1.3695 |
-| 2022-05-01 |             1.0246 |
-
-*... and 7 more rows.*
-
-**OR**
-
-|   SALE_MONTH |   MONTHLY_BOURBON_SALES |   POPULATION_21_AND_OVER |   ZIP_CODE |   MONTHLY_PER_CAPITA_SALES |
-|-------------:|------------------------:|-------------------------:|-----------:|---------------------------:|
-|            1 |                13113.4  |                     9882 |      52003 |                     1.327  |
-|            2 |                 9806.7  |                     9882 |      52003 |                     0.9924 |
-|            3 |                 8612.11 |                     9882 |      52003 |                     0.8715 |
-|            4 |                13533.8  |                     9882 |      52003 |                     1.3695 |
-|            5 |                10125.1  |                     9882 |      52003 |                     1.0246 |
-
-*... and 7 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| month   |   per_capita_sales |
-|:--------|-------------------:|
-| 2022-01 |             1.327  |
-| 2022-02 |             0.9924 |
-| 2022-03 |             0.8715 |
-| 2022-04 |             1.3695 |
-| 2022-05 |             1.0246 |
-
-*... and 7 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   sale_month |   per_capita_sales |
-|-------------:|-------------------:|
-|            1 |             1.327  |
-|            2 |             0.9924 |
-|            3 |             0.8715 |
-|            4 |             1.3695 |
-|            5 |             1.0246 |
-
-*... and 7 more rows.*
-
-</details>
-
----
-
-### 31. bq286 (DB: `usa_names`)
+### 11. bq286 (DB: `usa_names`)
 **Question**: Can you tell me the name of the most popular female baby in Wyoming for the year 2021, based on the proportion of female babies given that name compared to the total number of female babies given the same name across all states?
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -5288,9 +5884,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| name    |
-|:--------|
-| Bentley |
+| name    |   ratio |
+|:--------|--------:|
+| Bentley |  0.0625 |
 
 </details>
 
@@ -5305,293 +5901,7 @@ N/A
 
 ---
 
-### 32. sf_bq147 (DB: `TCGA`)
-**Question**: Can you identify the TCGA breast cancer cases from the RNA sequencing hg38 r35` where the protein_coding gene and the project TCGA-BRCA, and which have RNA sequencing samples of multiple tissue types—including "Solid Tissue Normal"—within the same case?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| case_barcode   |
-|:---------------|
-| TCGA-BH-A203   |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| case_barcode   |
-|:---------------|
-| TCGA-BH-A203   |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| case_barcode   |
-|:---------------|
-| TCGA-BH-A203   |
-
-</details>
-
----
-
-### 33. sf_bq176 (DB: `TCGA_MITELMAN`)
-**Question**: Identify the case barcodes from the TCGA-LAML study with the highest weighted average copy number in cytoband 15q11 on chromosome 15, using segment data and cytoband overlaps from TCGA's genomic and Mitelman databases.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| case_barcode   |   WEIGHTED_AVG_COPY_NUMBER |
-|:---------------|---------------------------:|
-| TCGA-AB-2939   |                     1.3198 |
-| TCGA-AB-2941   |                     0.1194 |
-| TCGA-AB-2929   |                     0.0585 |
-| TCGA-AB-2928   |                     0.0194 |
-| TCGA-AB-3002   |                     0.0108 |
-
-*... and 56 more rows.*
-
-**OR**
-
-| case_barcode   |
-|:---------------|
-| TCGA-AB-2972   |
-
-**OR**
-
-| case_barcode   |   WEIGHTED_AVG_COPY_NUMBER |
-|:---------------|---------------------------:|
-| TCGA-AB-2972   |                     0.0296 |
-| TCGA-AB-2952   |                     0.0223 |
-| TCGA-AB-2944   |                     0.0204 |
-| TCGA-AB-2939   |                     0.0147 |
-| TCGA-AB-2840   |                     0.0059 |
-
-*... and 5 more rows.*
-
-**OR**
-
-| case_barcode   |
-|:---------------|
-| TCGA-AB-2939   |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| case_barcode   |
-|:---------------|
-| TCGA-AB-2939   |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| case_barcode   |
-|:---------------|
-| TCGA-AB-2939   |
-
-</details>
-
----
-
-### 34. sf_bq452 (DB: `_1000_GENOMES`)
-**Question**: Identify variants on chromosome 12 and, for each variant, calculate the chi-squared score using allele counts in cases and controls, where cases are individuals from the 'EAS' super population and controls are individuals from all other super populations. Apply Yates's correction for continuity in the chi-squared calculation, ensuring that the expected counts for each allele in both groups are at least 5. Return the start position, end position, and chi-squared score of the top variants where the chi-squared score is no less than 29.71679.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|       start |         end |    CHI2 |
-|------------:|------------:|--------:|
-| 2.24891e+07 | 2.24892e+07 | 972.658 |
-| 5.42561e+07 | 5.42561e+07 | 664.68  |
-| 3.84074e+07 | 3.84074e+07 | 524.043 |
-| 1.20541e+08 | 1.20541e+08 | 479.426 |
-| 1.2395e+08  | 1.2395e+08  | 449.262 |
-
-*... and 191 more rows.*
-
-**OR**
-
-|       start |         end |   CHI_SQUARED |
-|------------:|------------:|--------------:|
-| 2.24891e+07 | 2.24892e+07 |       972.658 |
-| 5.42561e+07 | 5.42561e+07 |       664.68  |
-| 3.84074e+07 | 3.84074e+07 |       524.043 |
-| 1.20541e+08 | 1.20541e+08 |       479.426 |
-| 1.2395e+08  | 1.2395e+08  |       449.262 |
-
-*... and 176 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|       start |         end |   chi_squared |
-|------------:|------------:|--------------:|
-| 2.24891e+07 | 2.24892e+07 |       972.658 |
-| 5.42561e+07 | 5.42561e+07 |       664.68  |
-| 3.84074e+07 | 3.84074e+07 |       524.043 |
-| 1.20541e+08 | 1.20541e+08 |       479.426 |
-| 1.2395e+08  | 1.2395e+08  |       449.262 |
-
-*... and 191 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|       start |         end |   CHI_SQUARED |
-|------------:|------------:|--------------:|
-| 2.24891e+07 | 2.24892e+07 |       972.658 |
-| 5.42561e+07 | 5.42561e+07 |       664.68  |
-| 3.84074e+07 | 3.84074e+07 |       524.043 |
-| 1.20541e+08 | 1.20541e+08 |       479.426 |
-| 1.2395e+08  | 1.2395e+08  |       449.262 |
-
-*... and 191 more rows.*
-
-</details>
-
----
-
-### 35. bq279 (DB: `austin`)
-**Question**: Can you provide the number of distinct active and closed bike share stations for each year 2013 and 2014?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   year |   active_station_count |   closed_station_count |
-|-------:|-----------------------:|-----------------------:|
-|   2013 |                     10 |                      1 |
-|   2014 |                     38 |                      9 |
-
-**OR**
-
-|   trip_year | status   |   COUNT(T1."STATION_ID") |
-|------------:|:---------|-------------------------:|
-|        2013 | active   |                       10 |
-|        2013 | closed   |                        1 |
-|        2014 | active   |                       38 |
-|        2014 | closed   |                        9 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   year | status   |   station_count |
-|-------:|:---------|----------------:|
-|   2013 | active   |              10 |
-|   2013 | closed   |               1 |
-|   2014 | active   |              38 |
-|   2014 | closed   |               9 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   year | status   |   distinct_stations |
-|-------:|:---------|--------------------:|
-|   2013 | active   |                  10 |
-|   2013 | closed   |                   1 |
-|   2014 | active   |                  38 |
-|   2014 | closed   |                   9 |
-
-</details>
-
----
-
-### 36. sf_bq283 (DB: `AUSTIN`)
-**Question**: Among all stations that are currently active, identify those that rank in the top 15 (including ties) based on the total number of trips that start at each station. For each of these stations, return the station ID, the total number of starting trips, the percentage of those trips out of the overall starting trips from active stations, and the average trip duration in minutes. Order the results by the station’s rank.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   station_id |   total_starting_trips |   pct_of_active_starts |   avg_duration_minutes |
-|-------------:|-----------------------:|-----------------------:|-----------------------:|
-|         3798 |                 179703 |                 8.8043 |                17.2202 |
-|         2498 |                  82661 |                 4.0499 |                18.4478 |
-|         3838 |                  67726 |                 3.3182 |                17.3529 |
-|         2547 |                  64474 |                 3.1588 |                21.4584 |
-|         2575 |                  63161 |                 3.0945 |                40.1604 |
-
-*... and 10 more rows.*
-
-**OR**
-
-|   start_station_id |   total_trips |   avg_duration_minutes |   percentage_of_total_trips |
-|-------------------:|--------------:|-----------------------:|----------------------------:|
-|               3798 |        179703 |                17.2202 |                     8.80433 |
-|               2498 |         82661 |                18.4478 |                     4.04987 |
-|               3838 |         67726 |                17.3529 |                     3.31815 |
-|               2547 |         64474 |                21.4584 |                     3.15882 |
-|               2575 |         63161 |                40.1604 |                     3.0945  |
-
-*... and 10 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   station_id |   total_trips |   percentage |   avg_duration_minutes |
-|-------------:|--------------:|-------------:|-----------------------:|
-|         3798 |        179703 |       8.8043 |                17.2202 |
-|         2498 |         82661 |       4.0499 |                18.4478 |
-|         3838 |         67726 |       3.3182 |                17.3529 |
-|         2547 |         64474 |       3.1588 |                21.4584 |
-|         2575 |         63161 |       3.0945 |                40.1604 |
-
-*... and 10 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   station_id |   total_trips |   percentage |   avg_duration_minutes |
-|-------------:|--------------:|-------------:|-----------------------:|
-|         3798 |        179703 |       8.8043 |                17.2202 |
-|         2498 |         82661 |       4.0499 |                18.4478 |
-|         3838 |         67726 |       3.3182 |                17.3529 |
-|         2547 |         64474 |       3.1588 |                21.4584 |
-|         2575 |         63161 |       3.0945 |                40.1604 |
-
-*... and 10 more rows.*
-
-</details>
-
----
-
-### 37. bq284 (DB: `bbc`)
+### 12. bq284 (DB: `bbc`)
 **Question**: Can you provide a breakdown of the total number of articles into different categories and the percentage of those articles that mention "education" within each category from the BBC News?
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -5666,43 +5976,7 @@ N/A
 
 ---
 
-### 38. sf_bq423 (DB: `GOOGLE_ADS`)
-**Question**: Between January 1, 2023, and January 1, 2024, which image-type advertisement on the topic of Health, published by a verified advertiser located in Cyprus, was shown in Croatia, has times_shown_availability_date as NULL (meaning the times shown data is available), utilized demographic information, geo-location targeting, contextual signals, customer lists, and topics of interest without any of these selection methods being unused, and additionally had its first shown date strictly after January 1, 2023, and last shown date strictly before January 1, 2024? Among such ads, provide the page URL of the one with the highest upper bound of times shown.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| creative_page_url                                                                                    |
-|:-----------------------------------------------------------------------------------------------------|
-| https://adstransparency.google.com/advertiser/AR03023670995157254145/creative/CR14007923720077705217 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| creative_page_url                                                                                    |
-|:-----------------------------------------------------------------------------------------------------|
-| https://adstransparency.google.com/advertiser/AR03023670995157254145/creative/CR14007923720077705217 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| creative_page_url                                                                                    |
-|:-----------------------------------------------------------------------------------------------------|
-| https://adstransparency.google.com/advertiser/AR03023670995157254145/creative/CR14007923720077705217 |
-
-</details>
-
----
-
-### 39. bq232 (DB: `london`)
+### 13. bq232 (DB: `london`)
 **Question**: Could you provide the total number of 'Other Theft' incidents within the 'Theft and Handling' category for each year in the Westminster borough?
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -5727,13 +6001,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-|   year |   total_other_theft_incidents |
-|-------:|------------------------------:|
-|   2008 |                         16501 |
-|   2009 |                         16045 |
-|   2010 |                         15906 |
-|   2011 |                         17872 |
-|   2012 |                         19556 |
+|   year |   incident_count |
+|-------:|-----------------:|
+|   2008 |            16501 |
+|   2009 |            16045 |
+|   2010 |            15906 |
+|   2011 |            17872 |
+|   2012 |            19556 |
 
 *... and 4 more rows.*
 
@@ -5756,153 +6030,7 @@ N/A
 
 ---
 
-### 40. bq230 (DB: `usda_nass_agriculture`)
-**Question**: Using the crops dataset, find the total 2022 production figures, measured in bushels, for corn from the 'FIELD CROPS' category and mushrooms from the 'HORTICULTURE' group for each U.S. state. Only include data rows where 'statisticcat_desc' is 'PRODUCTION', 'agg_level_desc' is 'STATE', 'value' is not null, and ensure that for corn the 'unit_desc' is 'BU'. Combine both results so that each state’s 2022 corn and mushroom totals are presented.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| state_name   |   CORN_PRODUCTION |   MUSHROOM_PRODUCTION |
-|:-------------|------------------:|----------------------:|
-| ALABAMA      |       1.8183e+08  |           0           |
-| ARIZONA      |       8.8e+06     |           0           |
-| ARKANSAS     |       6.07375e+08 |           0           |
-| CALIFORNIA   |       1.994e+07   |           7.37802e+07 |
-| COLORADO     |       6.7056e+08  |           0           |
-
-*... and 37 more rows.*
-
-**OR**
-
-| state_name   | state_alpha   |   corn_production_bushels |   mushrooms_production_pounds |
-|:-------------|:--------------|--------------------------:|------------------------------:|
-| ALABAMA      | AL            |               1.8183e+08  |                   0           |
-| ARIZONA      | AZ            |               8.8e+06     |                   0           |
-| ARKANSAS     | AR            |               6.07375e+08 |                   0           |
-| CALIFORNIA   | CA            |               1.994e+07   |                   7.37802e+07 |
-| COLORADO     | CO            |               6.7056e+08  |                   0           |
-
-*... and 36 more rows.*
-
-**OR**
-
-| state_name   |   corn_production_bu |   mushroom_production |
-|:-------------|---------------------:|----------------------:|
-| ALABAMA      |          1.8183e+08  |           0           |
-| ALASKA       |          0           |           0           |
-| ARIZONA      |          8.8e+06     |           0           |
-| ARKANSAS     |          6.07375e+08 |           0           |
-| CALIFORNIA   |          1.994e+07   |           7.37802e+07 |
-
-*... and 45 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| state_name   |   corn_production |   mushroom_production |
-|:-------------|------------------:|----------------------:|
-| ALABAMA      |       1.8183e+08  |         nan           |
-| ARIZONA      |       8.8e+06     |         nan           |
-| ARKANSAS     |       6.07375e+08 |         nan           |
-| CALIFORNIA   |       1.994e+07   |           7.37802e+07 |
-| COLORADO     |       6.7056e+08  |         nan           |
-
-*... and 37 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| state_name   |   corn_production_bu |   mushroom_production |
-|:-------------|---------------------:|----------------------:|
-| ALABAMA      |          1.8183e+08  |         nan           |
-| ARIZONA      |          8.8e+06     |         nan           |
-| ARKANSAS     |          6.07375e+08 |         nan           |
-| CALIFORNIA   |          1.994e+07   |           7.37802e+07 |
-| COLORADO     |          6.7056e+08  |         nan           |
-
-*... and 37 more rows.*
-
-</details>
-
----
-
-### 41. sf_bq160 (DB: `META_KAGGLE`)
-**Question**: Please provide the creation date, title, parent forum title, reply count, distinct user replies count, total upvotes, and total views for the earliest five forum topics that belong to any sub-forum under the parent forum titled "General". The reply count should be calculated as the total number of messages associated with each topic, and the distinct user replies count should be the number of unique users who have posted messages in the topic. The upvotes should be calculated as the total number of upvotes on all messages within each topic. If any values are missing or None, please treat them as zero
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|     CreationDate | Title                                                      | parent_forum_title   |   reply_count |   distinct_user_replies_count |   total_upvotes |   total_views |
-|-----------------:|:-----------------------------------------------------------|:---------------------|--------------:|------------------------------:|----------------:|--------------:|
-| 1276652905000000 | General feedback, bugs and feature requests                | General              |            72 |                            38 |              15 |         23959 |
-| 1276652993000000 | Competitions requests                                      | General              |             1 |                             1 |               0 |          2651 |
-| 1278930764000000 | World Cup 2010                                             | General              |             2 |                             2 |               0 |          3693 |
-| 1281691934000000 | Alzheimer's Challenge                                      | General              |             5 |                             2 |               0 |          5697 |
-| 1287609281000000 | Re:Athanasopoulos, et al paper corrections - what changed? | General              |             1 |                             1 |               0 |          1770 |
-
-**OR**
-
-| date                | ForumTopicTitle                                            | ParentForumTitle   |   ForumTopicRepliesCount |   DistinctUserRepliesCount |   TopicUpvotes |   TotalViews |
-|:--------------------|:-----------------------------------------------------------|:-------------------|-------------------------:|---------------------------:|---------------:|-------------:|
-| 2010-06-16T01:48:25 | General feedback, bugs and feature requests                | General            |                       72 |                         38 |             15 |        23959 |
-| 2010-06-16T01:49:53 | Competitions requests                                      | General            |                        1 |                          1 |              0 |         2651 |
-| 2010-07-12T10:32:44 | World Cup 2010                                             | General            |                        2 |                          2 |              0 |         3693 |
-| 2010-08-13T09:32:14 | Alzheimer's Challenge                                      | General            |                        5 |                          2 |              0 |         5697 |
-| 2010-10-20T21:14:41 | Re:Athanasopoulos, et al paper corrections - what changed? | General            |                        1 |                          1 |              0 |         1770 |
-
-**OR**
-
-| CreationTS          | Title                                                      | ParentForumTitle   |   ReplyCount |   DistinctUserReplies |   TotalUpvotes |   TotalViews |
-|:--------------------|:-----------------------------------------------------------|:-------------------|-------------:|----------------------:|---------------:|-------------:|
-| 2010-06-16 01:48:25 | General feedback, bugs and feature requests                | General            |           72 |                    38 |             15 |        23959 |
-| 2010-06-16 01:49:53 | Competitions requests                                      | General            |            1 |                     1 |              0 |         2651 |
-| 2010-07-12 10:32:44 | World Cup 2010                                             | General            |            2 |                     2 |              0 |         3693 |
-| 2010-08-13 09:32:14 | Alzheimer's Challenge                                      | General            |            5 |                     2 |              0 |         5697 |
-| 2010-10-20 21:14:41 | Re:Athanasopoulos, et al paper corrections - what changed? | General            |            1 |                     1 |              0 |         1770 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| CreationDate        | Title                                                      | ParentForumTitle   |   ReplyCount |   DistinctUserRepliesCount |   TotalUpvotes |   TotalViews |
-|:--------------------|:-----------------------------------------------------------|:-------------------|-------------:|---------------------------:|---------------:|-------------:|
-| 2010-06-16 01:48:25 | General feedback, bugs and feature requests                | General            |           72 |                         38 |             15 |        23959 |
-| 2010-06-16 01:49:53 | Competitions requests                                      | General            |            1 |                          1 |              0 |         2651 |
-| 2010-07-12 10:32:44 | World Cup 2010                                             | General            |            2 |                          2 |              0 |         3693 |
-| 2010-08-13 09:32:14 | Alzheimer's Challenge                                      | General            |            5 |                          2 |              0 |         5697 |
-| 2010-10-20 21:14:41 | Re:Athanasopoulos, et al paper corrections - what changed? | General            |            1 |                          1 |              0 |         1770 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|     CreationDate | Title                                                      | Parent Forum Title   |   Reply count |   Distinct user replies count |   Total upvotes |   Total views |
-|-----------------:|:-----------------------------------------------------------|:---------------------|--------------:|------------------------------:|----------------:|--------------:|
-| 1276652905000000 | General feedback, bugs and feature requests                | General              |            72 |                            38 |              15 |         23959 |
-| 1276652993000000 | Competitions requests                                      | General              |             1 |                             1 |               0 |          2651 |
-| 1278930764000000 | World Cup 2010                                             | General              |             2 |                             2 |               0 |          3693 |
-| 1281691934000000 | Alzheimer's Challenge                                      | General              |             5 |                             2 |               0 |          5697 |
-| 1287609281000000 | Re:Athanasopoulos, et al paper corrections - what changed? | General              |             1 |                             1 |               0 |          1770 |
-
-</details>
-
----
-
-### 42. bq402 (DB: `ecommerce`)
+### 14. bq402 (DB: `ecommerce`)
 **Question**: Calculate the conversion rate from unique visitors to purchasers by using data exclusively from the `web_analytics` table in the `data-to-insights.ecommerce` dataset. A visitor is defined as a unique `fullVisitorId` present in the table, while a purchaser is a visitor who has at least one transaction recorded (`totals.transactions` is not null). The conversion rate is computed by dividing the number of unique purchasers by the total number of unique visitors. Additionally, calculate the average number of transactions per purchaser, considering only those visitors who have made at least one transaction.
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -5927,9 +6055,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-|   unique_visitors |   unique_purchasers |   conversion_rate |   avg_transactions_per_purchaser |
-|------------------:|--------------------:|------------------:|---------------------------------:|
-|            741721 |               20015 |             0.027 |                           1.2441 |
+|   conversion_rate |   avg_transactions_per_purchaser |
+|------------------:|---------------------------------:|
+|             0.027 |                           1.2441 |
 
 </details>
 
@@ -5944,151 +6072,7 @@ N/A
 
 ---
 
-### 43. sf_bq072 (DB: `DEATH`)
-**Question**: Please provide, for each age from 12 through 18 (inclusive), the total number of deaths and the number of deaths among individuals identified as Black (based on race descriptions containing the word ‘black’), specifically for deaths associated with ICD-10 codes whose descriptions include the word ‘vehicle’ and for deaths associated with ICD-10 codes whose descriptions include the word ‘firearm.’ Use the EntityAxisConditions table to determine which ICD-10 codes were involved in each death, rather than joining ICD-10 code information directly on the death records.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   Age | Category   |   TotalDeaths |   BlackDeaths |
-|------:|:-----------|--------------:|--------------:|
-|    12 | firearm    |            39 |             7 |
-|    12 | vehicle    |            60 |            16 |
-|    13 | firearm    |            71 |            15 |
-|    13 | vehicle    |            71 |            12 |
-|    14 | firearm    |           105 |            27 |
-
-*... and 9 more rows.*
-
-**OR**
-
-|   Age |   Vehicle_Deaths_Total |   Vehicle_Deaths_Black |   Firearm_Deaths_Total |   Firearm_Deaths_Black |
-|------:|-----------------------:|-----------------------:|-----------------------:|-----------------------:|
-|    12 |                     60 |                     16 |                     39 |                      7 |
-|    13 |                     71 |                     12 |                     71 |                     15 |
-|    14 |                     93 |                     20 |                    105 |                     27 |
-|    15 |                    133 |                     23 |                    164 |                     58 |
-|    16 |                    262 |                     42 |                    246 |                    109 |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   Age | CAUSE   |   TOTAL_DEATHS |   BLACK_DEATHS |
-|------:|:--------|---------------:|---------------:|
-|    12 | firearm |             39 |              7 |
-|    12 | vehicle |             60 |             16 |
-|    13 | firearm |             71 |             15 |
-|    13 | vehicle |             71 |             12 |
-|    14 | firearm |            105 |             27 |
-
-*... and 9 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   age | cause   |   total_deaths |   black_deaths |
-|------:|:--------|---------------:|---------------:|
-|    12 | Firearm |             39 |              7 |
-|    12 | Vehicle |             60 |             16 |
-|    13 | Firearm |             71 |             15 |
-|    13 | Vehicle |             71 |             12 |
-|    14 | Firearm |            105 |             27 |
-
-*... and 9 more rows.*
-
-</details>
-
----
-
-### 44. local019 (DB: `WWE`)
-**Question**: For the NXT title that had the shortest match (excluding titles with "title change"), what were the names of the two wrestlers involved?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| WRESTLER1     | WRESTLER2   |
-|:--------------|:------------|
-| Bron Breakker | Duke Hudson |
-
-**OR**
-
-| winner_name      | loser_name   | duration   |
-|:-----------------|:-------------|:-----------|
-| Tiffany Stratton | Thea Hail    | 08:28      |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| winner_name   | loser_name   |
-|:--------------|:-------------|
-| Bron Breakker | Duke Hudson  |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| winner_name   | loser_name   |
-|:--------------|:-------------|
-| Bron Breakker | Duke Hudson  |
-
-</details>
-
----
-
-### 45. local031 (DB: `Brazilian_E_Commerce`)
-**Question**: What is the highest monthly delivered orders volume in the year with the lowest annual delivered orders volume among 2016, 2017, and 2018?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   HIGHEST_MONTHLY_VOLUME |
-|-------------------------:|
-|                      205 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   highest_monthly_delivered_orders_volume |
-|------------------------------------------:|
-|                                       205 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   highest_monthly_delivered_orders_volume |
-|------------------------------------------:|
-|                                       205 |
-
-</details>
-
----
-
-### 46. local038 (DB: `Pagila`)
+### 15. local038 (DB: `Pagila`)
 **Question**: Could you help me determine which actor starred most frequently in English-language children's category films that were rated either G or PG, had a running time of 120 minutes or less, and were released between 2000 and 2010? Please provide the actor's full name.
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -6113,9 +6097,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| actor_full_name   |
-|:------------------|
-| HELEN VOIGHT      |
+| full_name    |   film_count |
+|:-------------|-------------:|
+| HELEN VOIGHT |            3 |
 
 </details>
 
@@ -6130,49 +6114,7 @@ N/A
 
 ---
 
-### 47. local049 (DB: `modern_data`)
-**Question**: Can you help me calculate the average number of new unicorn companies per year in the top industry from 2019 to 2021?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   AVERAGE_NEW_UNICORNS_PER_YEAR |
-|--------------------------------:|
-|                         60.3333 |
-
-**OR**
-
-|   AVG_NEW_UNICORNS_PER_YEAR |
-|----------------------------:|
-|                     57.6667 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   avg_new_unicorns_per_year |
-|----------------------------:|
-|                     57.6667 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   avg_new_unicorns_per_year |
-|----------------------------:|
-|                     57.6667 |
-
-</details>
-
----
-
-### 48. local054 (DB: `chinook`)
+### 16. local054 (DB: `chinook`)
 **Question**: Could you tell me the first names of customers who spent less than $1 on albums by the best-selling artist, along with the amounts they spent?
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -6195,13 +6137,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| first_name   |   amount_spent |
-|:-------------|---------------:|
-| Eduardo      |           0.99 |
-| Edward       |           0.99 |
-| Ladislav     |           0.99 |
-| Hugh         |           0.99 |
-| Stanisław    |           0.99 |
+| FirstName   |   amount |
+|:------------|---------:|
+| Eduardo     |     0.99 |
+| Edward      |     0.99 |
+| Hugh        |     0.99 |
+| Ladislav    |     0.99 |
+| Stanisław   |     0.99 |
 
 </details>
 
@@ -6220,91 +6162,7 @@ N/A
 
 ---
 
-### 49. local050 (DB: `complex_oracle`)
-**Question**: What is the median of the average monthly projected sales in USD for France in 2021, calculated by using the monthly sales data from 2019 and 2020 (filtered by promo_total_id=1 and channel_total_id=1), applying the growth rate from 2019 to 2020 to project 2021, converting to USD based on the currency table, and then determining the monthly averages before finding their median?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   OUTPUT |
-|---------:|
-|   2552.7 |
-
-**OR**
-
-|   median_monthly_avg_projected_sales_usd |
-|-----------------------------------------:|
-|                                  2077.39 |
-
-**OR**
-
-|   median_avg_monthly_projected_sales_usd_2021 |
-|----------------------------------------------:|
-|                                       2014.66 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   median_val |
-|-------------:|
-|       2552.7 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   median_of_monthly_avg_projected_sales_usd |
-|--------------------------------------------:|
-|                                     2552.69 |
-
-</details>
-
----
-
-### 50. local202 (DB: `city_legislation`)
-**Question**: For alien data, how many of the top 10 states by alien population have a higher percentage of friendly aliens than hostile aliens, with an average alien age exceeding 200?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   qualified_states_count |
-|-------------------------:|
-|                        5 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   result |
-|---------:|
-|        5 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   matching_states_count |
-|------------------------:|
-|                       5 |
-
-</details>
-
----
-
-### 51. local168 (DB: `city_legislation`)
+### 17. local168 (DB: `city_legislation`)
 **Question**: Among job postings that specifically have the Data Analyst, require a non-null annual average salary, and are remote, what is the overall average salary when considering only the top three most frequently demanded skills for these positions?
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -6347,9 +6205,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-|   overall_avg_salary |
-|---------------------:|
-|               106900 |
+|   avg_salary |
+|-------------:|
+|      92689.2 |
 
 </details>
 
@@ -6364,139 +6222,7 @@ N/A
 
 ---
 
-### 52. local284 (DB: `bank_sales_trading`)
-**Question**: For veg whsle data, can you generate a summary of our items' loss rates? Include the average loss rate, and also break down the count of items that are below, above, and within one standard deviation from this average.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   AVG_LOSS_RATE |   COUNT_BELOW |   COUNT_WITHIN |   COUNT_ABOVE |
-|----------------:|--------------:|---------------:|--------------:|
-|         9.42669 |            35 |            187 |            29 |
-
-**OR**
-
-|   BELOW_COUNT |   WITHIN_COUNT |   ABOVE_COUNT |   AVG_LOSS |   STDEV_LOSS |
-|--------------:|---------------:|--------------:|-----------:|-------------:|
-|            35 |            187 |            29 |    9.42669 |      5.20064 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   avg_loss_rate |   stddev_loss_rate |   items_below_1std |   items_within_1std |   items_above_1std |
-|----------------:|-------------------:|-------------------:|--------------------:|-------------------:|
-|          9.4267 |             5.2006 |                 35 |                 187 |                 29 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   avg_loss_rate |   items_below_1std |   items_within_1std |   items_above_1std |
-|----------------:|-------------------:|--------------------:|-------------------:|
-|          9.4267 |                 35 |                 187 |                 29 |
-
-</details>
-
----
-
-### 53. local074 (DB: `bank_sales_trading`)
-**Question**: Please generate a summary of the closing balances at the end of each month for each customer transactions, show the monthly changes and monthly cumulative bank account balances. Ensure that even if a customer has no account activity in a given month, the balance for that month is still included in the output.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   customer_id | MONTH   |   MONTHLY_CHANGE |   CUMULATIVE_BALANCE |
-|--------------:|:--------|-----------------:|---------------------:|
-|             1 | 2020-01 |              312 |                  312 |
-|             1 | 2020-02 |                0 |                  312 |
-|             1 | 2020-03 |             -952 |                 -640 |
-|             1 | 2020-04 |                0 |                 -640 |
-|             2 | 2020-01 |              549 |                  549 |
-
-*... and 1995 more rows.*
-
-**OR**
-
-|   customer_id | TXN_MONTH   |   MONTHLY_CHANGE |   CLOSING_BALANCE |
-|--------------:|:------------|-----------------:|------------------:|
-|             1 | 2020-01-01  |              312 |               312 |
-|             1 | 2020-02-01  |                0 |               312 |
-|             1 | 2020-03-01  |             -952 |              -640 |
-|             1 | 2020-04-01  |                0 |              -640 |
-|             2 | 2020-01-01  |              549 |               549 |
-
-*... and 1995 more rows.*
-
-**OR**
-
-|   customer_id | month_end_date   |   monthly_change |   closing_balance_end_of_month |
-|--------------:|:-----------------|-----------------:|-------------------------------:|
-|             1 | 2020-01-31       |              312 |                            312 |
-|             1 | 2020-02-29       |                0 |                            312 |
-|             1 | 2020-03-31       |             -952 |                           -640 |
-|             1 | 2020-04-30       |                0 |                           -640 |
-|             2 | 2020-01-31       |              549 |                            549 |
-
-*... and 1995 more rows.*
-
-**OR**
-
-|   customer_id | month_end   |   monthly_change |   closing_balance |
-|--------------:|:------------|-----------------:|------------------:|
-|             1 | 2020-01-31  |              312 |               312 |
-|             1 | 2020-02-29  |                0 |               312 |
-|             1 | 2020-03-31  |             -952 |              -640 |
-|             1 | 2020-04-30  |                0 |              -640 |
-|             2 | 2020-01-31  |              549 |               549 |
-
-*... and 912 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   customer_id | month   |   monthly_change |   cumulative_balance |
-|--------------:|:--------|-----------------:|---------------------:|
-|             1 | 2020-01 |              312 |                  312 |
-|             1 | 2020-02 |                0 |                  312 |
-|             1 | 2020-03 |             -952 |                 -640 |
-|             1 | 2020-04 |                0 |                 -640 |
-|             2 | 2020-01 |              549 |                  549 |
-
-*... and 1995 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   customer_id | month_start   |   monthly_change |   closing_balance |
-|--------------:|:--------------|-----------------:|------------------:|
-|             1 | 2020-01-01    |              312 |               312 |
-|             1 | 2020-02-01    |                0 |               312 |
-|             1 | 2020-03-01    |             -952 |              -640 |
-|             1 | 2020-04-01    |                0 |              -640 |
-|             2 | 2020-01-01    |              549 |               549 |
-
-*... and 1995 more rows.*
-
-</details>
-
----
-
-### 54. local085 (DB: `northwind`)
+### 18. local085 (DB: `northwind`)
 **Question**: Among employees who have more than 50 total orders, which three have the highest percentage of late orders, where an order is considered late if the shipped date is on or after its required date? Please list each employee's ID, the number of late orders, and the corresponding late-order percentage.
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -6517,11 +6243,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-|   employeeid |   late_orders |   late_order_percentage |
-|-------------:|--------------:|------------------------:|
-|            4 |            10 |                  6.4103 |
-|            7 |             4 |                  5.5556 |
-|            8 |             5 |                  4.8077 |
+|   employee_id |   late_orders |   percentage |
+|--------------:|--------------:|-------------:|
+|             4 |            10 |       6.4103 |
+|             7 |             4 |       5.5556 |
+|             8 |             5 |       4.8077 |
 
 </details>
 
@@ -6538,7 +6264,61 @@ N/A
 
 ---
 
-### 55. local244 (DB: `music`)
+### 19. local221 (DB: `EU_soccer`)
+**Question**: Tell me top10 teams with the most wins across the league
+
+**Status**: Baseline ✅ | SlayQL ✅
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| team_long_name    |   TOTAL_WINS |
+|:------------------|-------------:|
+| FC Barcelona      |          234 |
+| Real Madrid CF    |          228 |
+| Celtic            |          218 |
+| FC Bayern Munich  |          193 |
+| Manchester United |          192 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (✅)</b></summary>
+
+|   team_id | team_name         |   wins |
+|----------:|:------------------|-------:|
+|      8634 | FC Barcelona      |    234 |
+|      8633 | Real Madrid CF    |    228 |
+|      9925 | Celtic            |    218 |
+|      9823 | FC Bayern Munich  |    193 |
+|     10260 | Manchester United |    192 |
+
+*... and 5 more rows.*
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (✅)</b></summary>
+
+| team              |   wins |
+|:------------------|-------:|
+| FC Barcelona      |    234 |
+| Real Madrid CF    |    228 |
+| Celtic            |    218 |
+| FC Bayern Munich  |    193 |
+| Manchester United |    192 |
+
+*... and 5 more rows.*
+
+</details>
+
+---
+
+### 20. local244 (DB: `music`)
 **Question**: Calculate the duration of each track, classify them as short, medium, or long, output the minimum and maximum time for each kind (in minutes) and the total revenue for each category, group by the category.
 
 **Status**: Baseline ✅ | SlayQL ✅
@@ -6567,11 +6347,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (✅)</b></summary>
 
-| category   |   min_time_minutes |   max_time_minutes |   total_revenue |
-|:-----------|-------------------:|-------------------:|----------------:|
-| Long       |            47.7262 |            88.1159 |           41.79 |
-| Medium     |             3.2893 |            47.0861 |         1817.55 |
-| Short      |             0.0179 |             3.2888 |          469.26 |
+| category   |   min_duration_minutes |   max_duration_minutes |   total_revenue |
+|:-----------|-----------------------:|-----------------------:|----------------:|
+| Long       |                47.7262 |                88.1159 |           41.79 |
+| Medium     |                 3.2893 |                47.0861 |         1817.55 |
+| Short      |                 0.0179 |                 3.2888 |          469.26 |
 
 </details>
 
@@ -6588,281 +6368,7 @@ N/A
 
 ---
 
-### 56. sf044 (DB: `FINANCE__ECONOMICS`)
-**Question**: What was the percentage change in post-market close prices for the Magnificent 7 tech companies from January 1 to June 30, 2024?
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| TICKER   | START_DATE   |   START_PRICE | END_DATE   |   END_PRICE |   PERCENT_CHANGE |
-|:---------|:-------------|--------------:|:-----------|------------:|-----------------:|
-| AAPL     | 2024-01-02   |        185.32 | 2024-06-28 |      211.7  |            14.23 |
-| AMZN     | 2024-01-02   |        149.66 | 2024-06-28 |      193.24 |            29.12 |
-| GOOGL    | 2024-01-02   |        138.03 | 2024-06-28 |      182.57 |            32.27 |
-| META     | 2024-01-02   |        346.05 | 2024-06-28 |      505.15 |            45.98 |
-| MSFT     | 2024-01-02   |        369.89 | 2024-06-28 |      447.45 |            20.97 |
-
-*... and 2 more rows.*
-
-**OR**
-
-| COMPANY_NAME         |   PERCENTAGE_CHANGE |
-|:---------------------|--------------------:|
-| META PLATFORMS, INC. |             45.976  |
-| APPLE INC.           |             14.2348 |
-| ALPHABET INC.        |             32.2683 |
-| TESLA, INC.          |            -20.4105 |
-| NVIDIA CORP          |            157.823  |
-
-*... and 2 more rows.*
-
-**OR**
-
-| TICKER   |   PERCENTAGE_CHANGE |
-|:---------|--------------------:|
-| AMZN     |             29.1193 |
-| AAPL     |             14.2348 |
-| NVDA     |            -74.2177 |
-| META     |             45.976  |
-| TSLA     |            -20.4105 |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| TICKER   |   percentage_change |
-|:---------|--------------------:|
-| AAPL     |             14.2348 |
-| AMZN     |             29.1193 |
-| GOOGL    |             32.2683 |
-| META     |             45.976  |
-| MSFT     |             20.9684 |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| ticker   | start_date   |   start_value | end_date   |   end_value |   percentage_change |
-|:---------|:-------------|--------------:|:-----------|------------:|--------------------:|
-| AAPL     | 2024-01-02   |        185.32 | 2024-06-28 |      211.7  |             14.2348 |
-| AMZN     | 2024-01-02   |        149.66 | 2024-06-28 |      193.24 |             29.1193 |
-| GOOGL    | 2024-01-02   |        138.03 | 2024-06-28 |      182.57 |             32.2683 |
-| META     | 2024-01-02   |        346.05 | 2024-06-28 |      505.15 |             45.976  |
-| MSFT     | 2024-01-02   |        369.89 | 2024-06-28 |      447.45 |             20.9684 |
-
-*... and 2 more rows.*
-
-</details>
-
----
-
-### 57. sf018 (DB: `BRAZE_USER_EVENT_DEMO_DATASET`)
-**Question**: Examine user engagement with push notifications within a specified one-hour window on June 1, 2023.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   push_notification_sends |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
-
-*... and 15 more rows.*
-
-**OR**
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | AD_TRACKING_ENABLED   |   CARRIER |   BROWSER |   DEVICE_MODEL |   PUSH_NOTIFICATION_SENDS |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|:----------------------|----------:|----------:|---------------:|--------------------------:|
-| JyWFOSKn8bq    | TtsQhigYhp9249v | 0l5LHnWXqut5jaG | IeCV5zc2TJmBQsa        | android    | True                  |       nan |       nan |            nan |                         1 |
-| JyWFOSKn8bq    | mpAoUqZPyoFAelw | 0EEL3XiK2nn1hBC | WoeFmXwfhCbKtxh        | ios        | True                  |       nan |       nan |            nan |                         1 |
-| OkIYT1HbF7u    | jzyghJJxmuZoc6K | 0NqYV7Eahux8V49 | 1qSqPKoURmyvzra        | ios        | True                  |       nan |       nan |            nan |                         1 |
-| JyWFOSKn8bq    | 29MOKIcX8G5S1Co | 0HN78xHZ80J9HMC | V4zRW6nFEF52srw        | ios        | True                  |       nan |       nan |            nan |                         1 |
-| JyWFOSKn8bq    | WklAh438kTdbZY5 | 2lBi9TbhCQbnqwH | AmnNM6V7sgXTzeF        | android    | True                  |       nan |       nan |            nan |                         1 |
-
-*... and 1428 more rows.*
-
-**OR**
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
-
-*... and 1396 more rows.*
-
-**OR**
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | AD_TRACKING_ENABLED   | CARRIER   | BROWSER   | DEVICE_MODEL                   |   PUSH_NOTIFICATION_SENDS |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|:----------------------|:----------|:----------|:-------------------------------|--------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    | True                  | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX            |                         1 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        | True                  | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO                 |                         1 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        | True                  | oqfIduO   | UYU17BK   | SAMSUNG GALAXY NOTE 10/10 PLUS |                         1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        | True                  | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX            |                         1 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        | True                  | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX            |                         1 |
-
-*... and 1396 more rows.*
-
-**OR**
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
-
-*... and 1396 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   | CARRIER   | BROWSER   | DEVICE_MODEL        |   push_notification_sends |   unique_push_notification_sends |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|:----------|:----------|:--------------------|--------------------------:|---------------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |                                0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |                                0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        | nan       | nan       | nan                 |                         1 |                                1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |                                0 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |                                0 |
-
-*... and 1428 more rows.*
-
-*... truncated to first 10 columns.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-| APP_GROUP_ID   | CAMPAIGN_ID     | USER_ID         | MESSAGE_VARIATION_ID   | PLATFORM   |   AD_TRACKING_ENABLED | CARRIER   | BROWSER   | DEVICE_MODEL        |   PUSH_NOTIFICATION_SENDS |
-|:---------------|:----------------|:----------------|:-----------------------|:-----------|----------------------:|:----------|:----------|:--------------------|--------------------------:|
-| JyWFOSKn8bq    | 02NZQWYzNePLUMp | 1pS2qEnjrXRnSEl | m2lGBnG1Kk1IfLD        | android    |                     1 | mn9rnJN   | Hm9zVns   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 0Mkl2Ol0plypd6Q | CfcDoBuJJb2AsTO        | ios        |                   nan | WhayAwA   | oS0ax3s   | HUAWEI P30 PRO      |                         0 |
-| JyWFOSKn8bq    | 03kKtKsNYyWb4gP | 189aP8JmcQXSQxa | CfcDoBuJJb2AsTO        | ios        |                     1 | nan       | nan       | nan                 |                         1 |
-| JyWFOSKn8bq    | 05VJb1dAeUHJK3n | 0GwtA2vKmfH9ERI | TnZ7Qm5RmTWF1nG        | ios        |                     1 | 10Q0qob   | ck3gRh0   | APPLE IPHONE XS MAX |                         0 |
-| JyWFOSKn8bq    | 0PFujSagpqqZbi2 | 1reNvUG2alTg4TO | sBf1SancoKcCpPw        | ios        |                     1 | 0g4HYXP   | KboMkBs   | APPLE IPHONE XS MAX |                         0 |
-
-*... and 1428 more rows.*
-
-*... truncated to first 10 columns.*
-
-</details>
-
----
-
-### 58. sf011 (DB: `CENSUS_GALAXY__ZIP_CODE_TO_BLOCK_GROUP_SAMPLE`)
-**Question**: Determine the population distribution within each block group relative to its census tract in New York State using 2021 ACS data. Include block group ID, census value, state county tract ID, total tract population, and the population ratio of each block group.
-
-**Status**: Baseline ✅ | SlayQL ✅
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-|   BlockGroupID |   census_value |   StateCountyTractID |   total_tract_population |   population_ratio |
-|---------------:|---------------:|---------------------:|-------------------------:|-------------------:|
-|     3.6001e+11 |           1728 |           3.6001e+10 |                     3435 |           0.503057 |
-|     3.6001e+11 |           1585 |           3.6001e+10 |                     5933 |           0.26715  |
-|     3.6001e+11 |            922 |           3.6001e+10 |                     2247 |           0.410325 |
-|     3.6001e+11 |           1319 |           3.6001e+10 |                     3355 |           0.393145 |
-|     3.6001e+11 |           2165 |           3.6001e+10 |                     6029 |           0.359098 |
-
-*... and 15920 more rows.*
-
-**OR**
-
-|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPop |   BlockGroupRatio |
-|---------------:|--------------:|---------------------:|----------------:|------------------:|
-|     3.6051e+11 |          1866 |           3.6051e+10 |            4130 |          0.451816 |
-|     3.6051e+11 |          2264 |           3.6051e+10 |            4130 |          0.548184 |
-|     3.6051e+11 |           844 |           3.6051e+10 |            3616 |          0.233407 |
-|     3.6051e+11 |          1320 |           3.6051e+10 |            4117 |          0.320622 |
-|     3.6051e+11 |           796 |           3.6051e+10 |            4624 |          0.172145 |
-
-*... and 95 more rows.*
-
-**OR**
-
-|   block_group_id |   census_value |   state_county_tract_id |   tract_population |   population_ratio |
-|-----------------:|---------------:|------------------------:|-------------------:|-------------------:|
-|       3.6001e+11 |            894 |              3.6001e+10 |               2215 |           0.403612 |
-|       3.6001e+11 |           1321 |              3.6001e+10 |               2215 |           0.596388 |
-|       3.6001e+11 |            327 |              3.6001e+10 |               2890 |           0.113149 |
-|       3.6001e+11 |           1448 |              3.6001e+10 |               2890 |           0.501038 |
-|       3.6001e+11 |           1115 |              3.6001e+10 |               2890 |           0.385813 |
-
-*... and 606 more rows.*
-
-**OR**
-
-|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPopulation |   PopulationRatio |
-|---------------:|--------------:|---------------------:|-----------------------:|------------------:|
-|     3.6001e+11 |           894 |           3.6001e+10 |                   2215 |          0.403612 |
-|     3.6001e+11 |          1321 |           3.6001e+10 |                   2215 |          0.596388 |
-|     3.6001e+11 |           327 |           3.6001e+10 |                   2890 |          0.113149 |
-|     3.6001e+11 |          1448 |           3.6001e+10 |                   2890 |          0.501038 |
-|     3.6001e+11 |          1115 |           3.6001e+10 |                   2890 |          0.385813 |
-
-*... and 16065 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (✅)</b></summary>
-
-|   BlockGroupID |   CensusValue |   StateCountyTractID |   total_tract_population |   population_ratio |
-|---------------:|--------------:|---------------------:|-------------------------:|-------------------:|
-|     3.6001e+11 |           894 |           3.6001e+10 |                     2215 |             0.4036 |
-|     3.6001e+11 |          1321 |           3.6001e+10 |                     2215 |             0.5964 |
-|     3.6001e+11 |           327 |           3.6001e+10 |                     2890 |             0.1131 |
-|     3.6001e+11 |          1448 |           3.6001e+10 |                     2890 |             0.501  |
-|     3.6001e+11 |          1115 |           3.6001e+10 |                     2890 |             0.3858 |
-
-*... and 16065 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (✅)</b></summary>
-
-|   BlockGroupID |   CensusValue |   StateCountyTractID |   TotalTractPopulation |   PopulationRatio |
-|---------------:|--------------:|---------------------:|-----------------------:|------------------:|
-|     3.6001e+11 |           894 |           3.6001e+10 |                   2215 |            0.4036 |
-|     3.6001e+11 |          1321 |           3.6001e+10 |                   2215 |            0.5964 |
-|     3.6001e+11 |           327 |           3.6001e+10 |                   2890 |            0.1131 |
-|     3.6001e+11 |          1448 |           3.6001e+10 |                   2890 |            0.501  |
-|     3.6001e+11 |          1115 |           3.6001e+10 |                   2890 |            0.3858 |
-
-*... and 16065 more rows.*
-
-</details>
-
----
-
-## ❌ Both Incorrect (Baseline ❌ -> SlayQL ❌) (97)
+## ❌ Both Incorrect (Baseline ❌ -> SlayQL ❌) (104)
 
 ### 1. ga004 (DB: `ga4`)
 **Question**: Can you figure out the average difference in pageviews between users who bought something and those who didn’t in December 2020? Just label anyone who was involved in purchase events as a purchaser.
@@ -6889,9 +6395,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   avg_pageview_difference |
-|--------------------------:|
-|                   45.3746 |
+N/A
 
 </details>
 
@@ -6967,15 +6471,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| page_name   |
-|:------------|
-| Home        |
-| PDP         |
-| PLP         |
-| PLP         |
-| PLP         |
-
-*... and 1 more rows.*
+N/A
 
 </details>
 
@@ -7021,9 +6517,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| most_common_next_page   |   max_time_on_home_seconds |
-|:------------------------|---------------------------:|
-| /home                   |                    1547.97 |
+| next_page_path   |   max_time_seconds |
+|:-----------------|-------------------:|
+| /home            |            1547.97 |
 
 </details>
 
@@ -7063,9 +6559,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| PATENT_NUMBER   |   ORIGINALITY_SCORE |
-|:----------------|--------------------:|
-| US-9121016-B2   |              0.8366 |
+N/A
 
 </details>
 
@@ -7111,9 +6605,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   patent_id |   backward_count |   forward_citations_within_3_years |
-|------------:|-----------------:|-----------------------------------:|
-| 9.58566e+06 |              102 |                                 37 |
+N/A
 
 </details>
 
@@ -7153,9 +6645,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   avg_commits_per_month |
-|------------------------:|
-|                 28.6667 |
+N/A
 
 </details>
 
@@ -7207,9 +6697,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   language |
-|-----------:|
-|        nan |
+N/A
 
 </details>
 
@@ -7224,7 +6712,101 @@ N/A
 
 ---
 
-### 8. sf_bq071 (DB: `NOAA_DATA_PLUS`)
+### 8. sf_bq251 (DB: `PYPI`)
+**Question**: I want to know the GitHub project URLs for the top 3 most downloaded PyPI packages based on download count. First, extract PyPI package metadata including name, version, and project URLs. Filter these URLs to only include those that link to GitHub repositories. Use a regular expression to clean the GitHub URLs by removing unnecessary parts like 'issues', 'pull', 'blob', and 'tree' paths, keeping only the main repository URL. For packages with multiple versions, use only the most recent version based on upload time. Join this data with download metrics to determine the most downloaded packages. Return only the cleaned GitHub repository URLs (without quotation marks) for the top 3 packages by total download count, ensuring that only packages with valid GitHub URLs are included in the results.
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| CLEANED_GITHUB_URL                         |
+|:-------------------------------------------|
+| https://github.com/pypa/wheel              |
+| https://github.com/astanin/python-tabulate |
+| https://github.com/numpy/numpy             |
+
+**OR**
+
+| CLEANED_GITHUB_URL                |
+|:----------------------------------|
+| https://github.com/redis/redis-py |
+| https://github.com/pypa/wheel     |
+| https://github.com/numpy/numpy    |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+| github_url                                           |
+|:-----------------------------------------------------|
+| Issue Tracker, https://github.com/pypa/wheel         |
+| Homepage, https://github.com/astanin/python-tabulate |
+| Source, https://github.com/numpy/numpy               |
+
+</details>
+
+---
+
+### 9. sf_bq117 (DB: `NOAA_DATA`)
+**Question**: What is the total number of severe storm events that occurred in the most affected month over the past 15 years according to NOAA records, considering only the top 100 storm events with the highest property damage?
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   events_in_most_affected_month |
+|--------------------------------:|
+|                              60 |
+
+**OR**
+
+|   total_events_in_most_affected_month |
+|--------------------------------------:|
+|                                    58 |
+
+**OR**
+
+|   COUNT(*) |
+|-----------:|
+|         53 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   total_severe_events |
+|----------------------:|
+|                  9124 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+|   TOTAL_SEVERE_STORM_EVENTS |
+|----------------------------:|
+|                          66 |
+
+</details>
+
+---
+
+### 10. sf_bq071 (DB: `NOAA_DATA_PLUS`)
 **Question**: Can you provide the count of hurricanes and a list of hurricane names (sorted alphabetically and separated by commas) for each city and its associated zip code, where the hurricanes fall within the boundaries of the zip codes? Please exclude any unnamed hurricanes, and sort the results by the count of hurricanes in descending order. The output should include the following columns: city, zip code, state, count of hurricanes, and the list of hurricanes.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7285,7 +6867,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-N/A
+|   city |   zip_code |   state |   count_of_hurricanes | hurricane_list                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|-------:|-----------:|--------:|----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|    nan |        nan |     nan |                   204 | ABBY, ABLE, AGNES, ALBERTO, ALEX, ALFA, ALICE, ALICIA, ALLEN, ALLISON, ALMA, ALPHA, AMELIA, AMY, ANA, ANDREA, ANDREW, ARLENE, ARTHUR, AUDREY, BABE, BAKER, BARBARA, BARRY, BECKY, BELLE, BERTHA, BERYL, BETA, BETH, BETSY, BEULAH, BILL, BOB, BONNIE, BRENDA, BRET, CAMILLE, CANDY, CARLA, CARMEN, CAROL, CAROLINE, CARRIE, CELIA, CHANTAL, CHARLEY, CHRIS, CINDY, CLARA, CLAUDETTE, CLEO, COLIN, CONNIE, COSME, CRISTOBAL, DAISY, DANIELLE, DANNY, DAVID, DAWN, DEAN, DEBBIE, DEBBY, DEBRA, DELIA, DELTA, DENNIS, DIANA, DIANE, DOLLY, DON, DONNA, DORA, DOREEN, DORIA, DORIAN, DOTTIE, EARL, EASY, EDITH, EDNA, EDOUARD, ELENA, ELLA, ELOISE, ELSA, EMILY, ERIKA, ERIN, ERNESTO, ESTHER, ETA, ETHEL, FABIAN, FAY, FELICE, FERN, FLORENCE, FLOSSY, FLOYD, FRAN, FRANCES, FRED, FREDERIC, GABRIELLE, GASTON, GEORGES, GERDA, GILBERT, GINGER, GINNY, GLADYS, GLORIA, GORDON, GRACE, GRACIE, GRETA, GUSTAV, HALLIE, HANNA, HAROLD, HARVEY, HAZEL, HEIDI, HELENE, HENRI, HERMINE, HILARY, HILDA, HOPE, HOW, HUGO, HUMBERTO, HYACINTH, IAN, IDA, IDALIA, IGNACIO, IKE, IMELDA, INEZ, IONE, IRENE, IRMA, ISAAC, ISABEL, ISAIAS, ISBELL, ISIDORE, ISMAEL, IVAN, JEANNE, JEN-KATH, JENNY, JERRY, JOANNE, JOSEPHINE, JUAN, JUDITH, JULIA, KATE, KATHLEEN, KATRINA, KEITH, KING, KYLE, LAURA, LEE, LESLIE, LESTER, LIDIA, LILI, LOVE, MARCO, MARTY, MATTHEW, MICHAEL, MINDY, MITCH, NAOMI, NATE, NESTOR, NEWTON, NICHOLAS, NICOLE, NORA, NORMAN, NOT_NAMED, ODILE, OLGA, OMAR, OPAL, OPHELIA, PALOMA, RAYMOND, RITA, ROSA, SALLY, SANDY, TAMMY, WANDA, WILMA, ZETA |
 
 </details>
 
@@ -7306,7 +6890,7 @@ N/A
 
 ---
 
-### 9. sf_bq426 (DB: `NEW_YORK_CITIBIKE_1`)
+### 11. sf_bq426 (DB: `NEW_YORK_CITIBIKE_1`)
 **Question**: What user type recorded the highest average temperature for trips starting and ending in New York City's zip code 10019 during 2018? Include average precipitation, wind speed, and temperature for that user type based on weather data from the New York Central Park station.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7358,7 +6942,7 @@ N/A
 
 ---
 
-### 10. sf_bq291 (DB: `NOAA_GLOBAL_FORECAST_SYSTEM`)
+### 12. sf_bq291 (DB: `NOAA_GLOBAL_FORECAST_SYSTEM`)
 **Question**: Can you provide a daily weather summary for July 2019 within a 5 km radius of latitude 26.75 and longitude 51.5? I need the maximum, minimum, and average temperatures; total precipitation; average cloud cover between 10 AM and 5 PM; total snowfall (when average temperature is below 32°F); and total rainfall (when average temperature is 32°F or above) for each forecast date. The data should correspond to forecasts created in July 2019 for the following day.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7402,7 +6986,7 @@ N/A
 
 ---
 
-### 11. bq293 (DB: `new_york_geo`)
+### 13. bq293 (DB: `new_york_geo`)
 **Question**: I want to analyze New York City yellow taxi trip data specifically for January 1, 2015, using the bigquery-public-data.new_york.tlc_yellow_trips_2015 dataset. I need to join this with the geo_us_boundaries.zip_codes table to map each trip to its respective NYC zip code based on the pickup coordinates. The analysis should create a complete hour-by-hour breakdown for all zip codes by cross-joining distinct zip codes with distinct hours, including hours with zero trips. For each zip code and hour combination, calculate the total number of trips and the following time-based metrics: count of trips from 1 hour ago, 1 day (24 hours) ago, 7 days (168 hours) ago, and 14 days (336 hours) ago. Additionally, compute the 14-day and 21-day moving averages and standard deviations of trip counts, excluding the current hour. Only include trips with valid latitude and longitude coordinates. The final results should be sorted by the highest trip counts, showing only the top 5 groups with the most trips.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7425,13 +7009,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   zip_code |   hour |   trip_count |   trips_1_hour_ago |   trips_24_hours_ago |   trips_168_hours_ago |   trips_336_hours_ago |   moving_avg_14d |   moving_stddev_14d |   moving_avg_21d |
-|-----------:|-------:|-------------:|-------------------:|---------------------:|----------------------:|----------------------:|-----------------:|--------------------:|-----------------:|
-|      10016 |      1 |         2017 |               1730 |                    0 |                     0 |                     0 |           1730   |              nan    |           1730   |
-|      10003 |      0 |         1801 |                  0 |                    0 |                     0 |                     0 |            nan   |              nan    |            nan   |
-|      10016 |      2 |         1758 |               2017 |                    0 |                     0 |                     0 |           1873.5 |              202.94 |           1873.5 |
-|      10022 |      1 |         1731 |               1440 |                    0 |                     0 |                     0 |           1440   |              nan    |           1440   |
-|      10016 |      0 |         1730 |                  0 |                    0 |                     0 |                     0 |            nan   |              nan    |            nan   |
+|   zip_code | hour                      |   total_trips |   trips_1h_ago |   trips_24h_ago |   trips_168h_ago |   trips_336h_ago |   moving_avg_14d |   moving_avg_21d |   moving_std_14d |
+|-----------:|:--------------------------|--------------:|---------------:|----------------:|-----------------:|-----------------:|-----------------:|-----------------:|-----------------:|
+|      10016 | 2015-01-01 01:00:00+00:00 |          2017 |           1730 |               0 |                0 |                0 |           5.1488 |           3.4325 |          94.3792 |
+|      10003 | 2015-01-01 00:00:00+00:00 |          1801 |              0 |               0 |                0 |                0 |           0      |           0      |           0      |
+|      10016 | 2015-01-01 02:00:00+00:00 |          1758 |           2017 |               0 |                0 |                0 |          11.1518 |           7.4345 |         144.753  |
+|      10022 | 2015-01-01 01:00:00+00:00 |          1731 |           1440 |               0 |                0 |                0 |           4.2857 |           2.8571 |          78.5584 |
+|      10016 | 2015-01-01 00:00:00+00:00 |          1730 |              0 |               0 |                0 |                0 |           0      |           0      |           0      |
 
 *... truncated to first 10 columns.*
 
@@ -7454,7 +7038,7 @@ N/A
 
 ---
 
-### 12. sf_bq017 (DB: `GEO_OPENSTREETMAP`)
+### 14. sf_bq017 (DB: `GEO_OPENSTREETMAP`)
 **Question**: What are the five longest types of highways within the multipolygon boundary of Denmark (as defined by Wikidata ID 'Q35') by total length, analyzed through planet features?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7477,15 +7061,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| COLUMN_NAME   | DATA_TYPE   |
-|:--------------|:------------|
-| changeset     | NUMBER      |
-| all_tags      | VARIANT     |
-| id            | NUMBER      |
-| username      | TEXT        |
-| geometry      | BINARY      |
-
-*... and 13 more rows.*
+N/A
 
 </details>
 
@@ -7506,7 +7082,7 @@ N/A
 
 ---
 
-### 13. sf_bq073 (DB: `CENSUS_BUREAU_ACS_2`)
+### 15. sf_bq073 (DB: `CENSUS_BUREAU_ACS_2`)
 **Question**: Using data on ZIP-level median income differences between 2015 and 2018, along with the 2017 ACS employment figures, list each state in descending order of total vulnerable workers, where “vulnerable” is defined as 38% of wholesale trade employees and 41% of manufacturing employees in 2017. Your results should include the state name, the number of vulnerable wholesale trade workers, the number of vulnerable manufacturing workers, and the combined total of these vulnerable workers.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7555,15 +7131,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| state_name   |   vulnerable_wholesale_trade_workers |   vulnerable_manufacturing_workers |   total_vulnerable_workers |
-|:-------------|-------------------------------------:|-----------------------------------:|---------------------------:|
-| California   |                             202225   |                             701755 |                     903980 |
-| Texas        |                             145074   |                             457829 |                     602903 |
-| Ohio         |                              56310.7 |                             348124 |                     404434 |
-| Illinois     |                              72548.1 |                             312492 |                     385040 |
-| Michigan     |                              41222.8 |                             340996 |                     382219 |
+| state_name   |   vulnerable_wholesale |   vulnerable_manufacturing |   total |
+|:-------------|-----------------------:|---------------------------:|--------:|
+| Texas        |                9645.92 |                    30513.8 | 40159.8 |
+| Pennsylvania |                3441.66 |                    20519.3 | 23960.9 |
+| Ohio         |                2785.4  |                    21058.8 | 23844.2 |
+| Louisiana    |                4142.76 |                    17622.2 | 21765   |
+| New York     |                4235.86 |                    15251.2 | 19487   |
 
-*... and 47 more rows.*
+*... and 49 more rows.*
 
 </details>
 
@@ -7584,7 +7160,41 @@ N/A
 
 ---
 
-### 14. sf_bq092 (DB: `CRYPTO`)
+### 16. sf_bq056 (DB: `GEO_OPENSTREETMAP_BOUNDARIES`)
+**Question**: How many different pairs of roads classified as motorway, trunk, primary, secondary, or residential in California overlap each other without sharing nodes and do not have a bridge tag, where these roads are tagged with 'highway', analyzed through planet ways
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   COUNT(*) |
+|-----------:|
+|         13 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+|   overlapping_road_pairs_count |
+|-------------------------------:|
+|                              0 |
+
+</details>
+
+---
+
+### 17. sf_bq092 (DB: `CRYPTO`)
 **Question**: In April 2023, what are the highest and lowest balances across all Dash addresses when calculating the net balance for each address using double-entry bookkeeping (where inputs are treated as debits/negative values and outputs as credits/positive values)? Consider all transactions filtered by block_timestamp_month='2023-04-01', and when an address appears as an array in the data, concatenate the array elements into a comma-separated string. For each address and type combination, sum all the values to determine the balance.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7618,9 +7228,10 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   highest_balance |   lowest_balance |
-|------------------:|-----------------:|
-|       1.58906e+10 |     -1.39313e+11 |
+| balance_type   |     balance |
+|:---------------|------------:|
+| highest        | 3.67745e+13 |
+| lowest         | 0           |
 
 </details>
 
@@ -7635,7 +7246,7 @@ N/A
 
 ---
 
-### 15. sf_bq068 (DB: `CRYPTO`)
+### 18. sf_bq068 (DB: `CRYPTO`)
 **Question**: Using double-entry bookkeeping principles by treating transaction inputs as debits (negative values) and outputs as credits (positive values) for all Bitcoin Cash transactions between 2014-03-01 and 2014-04-01, how can we calculate the maximum and minimum final balances grouped by address type from these transactions?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7664,13 +7275,10 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| address_type   |    max_balance |     min_balance |
-|:---------------|---------------:|----------------:|
-| multisig       |         960000 |         -338520 |
-| nonstandard    |          80000 |               0 |
-| pubkey         |     6472336405 |     -5025261218 |
-| pubkeyhash     | 18000016658500 | -11111461735989 |
-| scripthash     |    10000000000 |     -2994020000 |
+| address_type   |      max_balance |   min_balance |
+|:---------------|-----------------:|--------------:|
+| P2PKH          |      3.11305e+10 |          5850 |
+| P2SH           | 221817           |        221817 |
 
 </details>
 
@@ -7689,7 +7297,7 @@ N/A
 
 ---
 
-### 16. sf_bq037 (DB: `HUMAN_GENOME_VARIANTS`)
+### 19. sf_bq037 (DB: `HUMAN_GENOME_VARIANTS`)
 **Question**: About the refined human genetic variations collected in phase 3 on 2015-02-20, I want to know the minimum and maximum start positions as well as the proportions of these two respectively for reference bases 'AT' and 'TA'.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7716,10 +7324,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| reference_bases   |   min_start |   max_start |   proportion |
-|:------------------|------------:|------------:|-------------:|
-| AT                |    29784267 |   138735543 |       0.5525 |
-| TA                |    29816555 |   138696638 |       0.4475 |
+N/A
 
 </details>
 
@@ -7734,7 +7339,7 @@ N/A
 
 ---
 
-### 17. bq034 (DB: `ghcn_d`)
+### 20. bq034 (DB: `ghcn_d`)
 **Question**: I want to know the IDs, names of weather stations within a 50 km straight-line distance from the center of Chicago (41.8319°N, 87.6847°W)
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7771,13 +7376,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| id          | name                      |
-|:------------|:--------------------------|
-| US1ILCK0412 | OAK PARK 1.1 N            |
-| USW00014834 | JOLIET                    |
-| USC00115131 | LOCKPORT L&D              |
-| USC00111550 | CHICAGO NORTHERLY IS      |
-| US1ILCK0082 | BURNHAM-HEGEWISCH 1.6 NNW |
+| id          | name                    |
+|:------------|:------------------------|
+| US1ILCK0004 | BARTLETT 1.9 NNW        |
+| US1ILCK0005 | HARWOOD HEIGHTS 1.0 ENE |
+| US1ILCK0010 | CHICAGO 3.0 N           |
+| US1ILCK0011 | OAK LAWN 1.6 NW         |
+| US1ILCK0012 | BRIDGEVIEW 1.3 NNW      |
 
 *... and 457 more rows.*
 
@@ -7800,7 +7405,7 @@ N/A
 
 ---
 
-### 18. bq053 (DB: `new_york`)
+### 21. bq053 (DB: `new_york`)
 **Question**: Calculate the change in the number of living trees of each fall color in New York City from 1995 to 2015 by computing, for each tree species, the difference between the number of trees not marked as dead in 1995 and the number of trees alive in 2015, matching species by the uppercase form of their scientific names from the tree_species table. Then, group the species by their fall color and sum these differences to determine the total change in the number of trees for each fall color.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7837,15 +7442,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| fall_color    |   total_change |
-|:--------------|---------------:|
-| Cream         |              0 |
-| Maroon        |          73886 |
-| Orange/Brown  |             20 |
-| Purple/Maroon |             50 |
-| Red           |          18583 |
-
-*... and 8 more rows.*
+N/A
 
 </details>
 
@@ -7866,7 +7463,7 @@ N/A
 
 ---
 
-### 19. bq202 (DB: `new_york_plus`)
+### 22. bq202 (DB: `new_york_plus`)
 **Question**: For the station that had the highest number of Citibike trips starting there in 2018, which numeric day of the week and which hour of the day had the greatest number of trips based on the start time of those trips?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7891,9 +7488,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   numeric_day_of_week |   hour_of_day |
-|----------------------:|--------------:|
-|                     5 |            18 |
+|   day_of_week |   hour_of_day |   trip_count |
+|--------------:|--------------:|-------------:|
+|             5 |            18 |         1943 |
 
 </details>
 
@@ -7908,7 +7505,7 @@ N/A
 
 ---
 
-### 20. bq186 (DB: `san_francisco`)
+### 23. bq186 (DB: `san_francisco`)
 **Question**: Please find, for each year-month combination (in the format YYYYMM) derived from the start date of bike share trips in San Francisco, the first trip duration in minutes, the last trip duration in minutes, the highest trip duration in minutes, and the lowest trip duration in minutes, where ‘first’ and ‘last’ are determined by the chronological order of the trip start date, then group your results by this year-month and sort them by the same year-month key.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -7977,7 +7574,7 @@ N/A
 |       201311 |                   12.3167 |                   5.4667 |                    12037.3  |                     1      |
 |       201312 |                   15.7167 |                   5.55   |                    10322    |                     1      |
 
-*... and 32 more rows.*
+*... and 43 more rows.*
 
 </details>
 
@@ -7998,7 +7595,7 @@ N/A
 
 ---
 
-### 21. bq059 (DB: `san_francisco_plus`)
+### 24. bq059 (DB: `san_francisco_plus`)
 **Question**: What is the highest average speed (rounded to 1 decimal, in metric m/s) for bike trips in Berkeley with trip distance greater than 1000 meters?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8017,9 +7614,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   highest_avg_speed_m_per_s |
-|----------------------------:|
-|                           4 |
+N/A
 
 </details>
 
@@ -8034,7 +7629,7 @@ N/A
 
 ---
 
-### 22. sf_bq294 (DB: `SAN_FRANCISCO_PLUS`)
+### 25. sf_bq294 (DB: `SAN_FRANCISCO_PLUS`)
 **Question**: Could you provide the details of the top 5 longest bike share trips that started between July 1, 2017, and December 31, 2017, including the trip ID, duration in seconds, start date, start station name, route (derived from start station name to end station name), bike number, subscriber type, member's birth year, the member's current age (calculated using the current year), an age classification based on whether the member is younger than 40, between 40 and 60, or older than 60, the member's gender, and the name of the region of the start station? Please exclude any trips where the start station name, member's birth year, or member's gender is not specified.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8077,15 +7672,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|            trip_id |   duration_sec | start_date          | start_station_name            | route                                                               |   bike_number | subscriber_type   |   member_birth_year |   age | age_class         |
-|-------------------:|---------------:|:--------------------|:------------------------------|:--------------------------------------------------------------------|--------------:|:------------------|--------------------:|------:|:------------------|
-| 201711181216331214 |          86252 | 2017-11-18 12:16:33 | Downtown Berkeley BART        | Downtown Berkeley BART - Telegraph Ave at Alcatraz Ave              |          1214 | Customer          |                1993 |    33 | Young (<40 Y.O)   |
-| 201708261619002509 |          86135 | 2017-08-26 16:19:00 | Broadway at Kearny            | Broadway at Kearny - Broadway at Battery St                         |          2509 | Customer          |                1990 |    36 | Young (<40 Y.O)   |
-|   2017083011593475 |          86075 | 2017-08-30 11:59:34 | Howard St at 8th St           | Howard St at 8th St - 19th St at Mission St                         |            75 | Subscriber        |                1984 |    42 | Adult (40-60 Y.O) |
-| 201712091603082143 |          85975 | 2017-12-09 16:03:08 | The Embarcadero at Sansome St | The Embarcadero at Sansome St - Union Square (Powell St at Post St) |          2143 | Customer          |                1991 |    35 | Young (<40 Y.O)   |
-| 201709250906571277 |          85972 | 2017-09-25 09:06:57 | 12th St at 4th Ave            | 12th St at 4th Ave - 12th St at 4th Ave                             |          1277 | Customer          |                1987 |    39 | Young (<40 Y.O)   |
-
-*... truncated to first 10 columns.*
+N/A
 
 </details>
 
@@ -8106,7 +7693,7 @@ N/A
 
 ---
 
-### 23. sf_bq265 (DB: `THELOOK_ECOMMERCE`)
+### 26. sf_bq265 (DB: `THELOOK_ECOMMERCE`)
 **Question**: Can you list the email addresses of the top 10 users who registered in 2019 and made purchases in 2019, ranking them by their highest average order value, where average order value is calculated by multiplying the number of items in each order by the sale price, summing this total across all orders for each user, and then dividing by the total number of orders?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8167,15 +7754,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| email                     |
-|:--------------------------|
-| brandonmartin@example.net |
-| rossthompson@example.org  |
-| matthewmiller@example.org |
-| adammcdowell@example.net  |
-| karenphillips@example.net |
-
-*... and 5 more rows.*
+N/A
 
 </details>
 
@@ -8196,7 +7775,7 @@ N/A
 
 ---
 
-### 24. bq086 (DB: `covid19_open_world_bank`)
+### 27. bq086 (DB: `covid19_open_world_bank`)
 **Question**: You need to calculate the percentage of each country's population that had been confirmed with COVID-19 by June 30, 2020. The population data for 2018 can be found in the World Bank dataset, and the cumulative COVID-19 confirmed cases data is available in the COVID-19 Open Data dataset. Calculate the percentage of each country's population, that was cumulatively confirmed to have COVID-19
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8281,15 +7860,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| country_name   |   infection_percentage |
-|:---------------|-----------------------:|
-| Afghanistan    |                 0.0864 |
-| Albania        |                 0.09   |
-| Algeria        |                 0.0338 |
-| American Samoa |                 0      |
-| Andorra        |                 1.1103 |
+| country_name   |   population_2018 |   cumulative_confirmed |   infection_percentage |
+|:---------------|------------------:|-----------------------:|-----------------------:|
+| Afghanistan    |          37172386 |                  32108 |                 0.0864 |
+| Albania        |           2866376 |                   2580 |                 0.09   |
+| Algeria        |          42228429 |                  14272 |                 0.0338 |
+| American Samoa |             55465 |                      0 |                 0      |
+| Andorra        |             77006 |                    855 |                 1.1103 |
 
-*... and 177 more rows.*
+*... and 228 more rows.*
 
 </details>
 
@@ -8310,107 +7889,7 @@ N/A
 
 ---
 
-### 25. bq085 (DB: `covid19_jhu_world_bank`)
-**Question**: Could you provide, for the United States, France, China, Italy, Spain, Germany, and Iran, the total number of confirmed COVID-19 cases as of April 20, 2020, along with the number of cases per 100,000 people based on their total 2020 populations calculated by summing all relevant population entries from the World Bank data
-
-**Status**: Baseline ❌ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| country_name       |   TOTAL_CONFIRMED_CASES |   CASES_PER_100K |
-|:-------------------|------------------------:|-----------------:|
-| Spain              |                  200210 |        422.816   |
-| France             |                  154402 |        229.112   |
-| China              |                   86382 |          6.12235 |
-| United States      |                  799531 |        242.661   |
-| Iran, Islamic Rep. |                   83505 |         99.4191  |
-
-*... and 2 more rows.*
-
-**OR**
-
-| country_or_region   |   total_confirmed_cases |   cases_per_100k_people |
-|:--------------------|------------------------:|------------------------:|
-| US                  |                  799531 |               242.661   |
-| Germany             |                  141672 |               170.196   |
-| Spain               |                  200210 |               422.816   |
-| France              |                  154402 |               229.112   |
-| China               |                   86382 |                 6.08727 |
-
-*... and 2 more rows.*
-
-**OR**
-
-| country_name   |   total_confirmed |   cases_per_100k_population |
-|:---------------|------------------:|----------------------------:|
-| Spain          |            200210 |                      422.82 |
-| Italy          |            181228 |                      304.31 |
-| United States  |            784326 |                      238.05 |
-| France         |            156480 |                      232.2  |
-| Germany        |            147065 |                      176.67 |
-
-*... and 2 more rows.*
-
-**OR**
-
-| country_region   |   TOTAL_CASES |   CASES_PER_100K |
-|:-----------------|--------------:|-----------------:|
-| US               |        784326 |        238.047   |
-| France           |        156480 |        232.195   |
-| China            |         83817 |          5.94055 |
-| Italy            |        181228 |        304.309   |
-| Spain            |        200210 |        422.816   |
-
-*... and 2 more rows.*
-
-**OR**
-
-| COUNTRY       |   CONFIRMED |   CASES_PER_100K |
-|:--------------|------------:|-----------------:|
-| China         |       83817 |           5.9406 |
-| United States |      784326 |         238.047  |
-| Italy         |      181228 |         304.309  |
-| Spain         |      200210 |         422.816  |
-| France        |      156480 |         232.195  |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| country_or_region   |   total_confirmed_cases |   cases_per_100k |
-|:--------------------|------------------------:|-----------------:|
-| China               |                   86382 |              nan |
-| France              |                  154402 |              nan |
-| Germany             |                  141672 |              nan |
-| Iran                |                   83505 |              nan |
-| Italy               |                  181228 |              nan |
-
-*... and 2 more rows.*
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-| country_or_region   |   total_cases |   cases_per_100k |
-|:--------------------|--------------:|-----------------:|
-| China               |         86382 |           6.1223 |
-| France              |        154402 |         229.112  |
-| Germany             |        141672 |         170.196  |
-| Italy               |        181228 |         304.309  |
-| Spain               |        200210 |         422.816  |
-
-</details>
-
----
-
-### 26. bq130 (DB: `covid19_nyt`)
+### 28. bq130 (DB: `covid19_nyt`)
 **Question**: Analyze daily new COVID-19 case counts from March to May 2020, identifying the top five states by daily increases. Please compile a ranking based on how often each state appears in these daily top fives. Then, examine the state that ranks fourth overall and identify its top five counties based on their frequency of appearing in the daily top five new case counts.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8519,13 +7998,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| county   |   appearance_count |
-|:---------|-------------------:|
-| Cook     |                 91 |
-| Lake     |                 79 |
-| DuPage   |                 76 |
-| Kane     |                 71 |
-| Will     |                 63 |
+| county        |   appearances |
+|:--------------|--------------:|
+| Cook County   |            91 |
+| DuPage County |            90 |
+| Lake County   |            90 |
+| Kane County   |            83 |
+| Will County   |            81 |
+
+*... and 1 more rows.*
 
 </details>
 
@@ -8544,7 +8025,7 @@ N/A
 
 ---
 
-### 27. bq427 (DB: `ncaa_basketball`)
+### 29. bq427 (DB: `ncaa_basketball`)
 **Question**: Could you determine, for each shot type, the average x and y coordinates (adjusted to ensure consistency regarding the left or right basket), the average number of shot attempts, and the average number of successful shots, considering only shots taken before March 15, 2018, excluding those with null shot types or coordinates, ensuring the shots are on the correct side of the court based on the team's basket.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8577,13 +8058,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| shot_type   |   avg_adjusted_x |   avg_adjusted_y |   avg_shot_attempts |   avg_shots_made |
-|:------------|-----------------:|-----------------:|--------------------:|-----------------:|
-| dunk        |          88.8448 |          301.252 |              4.8516 |           4.3027 |
-| hook shot   |         124.422  |          304.648 |              3.8676 |           1.8332 |
-| jump shot   |         213.803  |          297.276 |             71.8796 |          25.6902 |
-| layup       |          94.0711 |          303.417 |             35.3532 |          19.4622 |
-| tip shot    |          92.5385 |          301.581 |              2.1736 |           1.3264 |
+| shot_type   |    avg_x |   avg_y |   avg_attempts |   avg_successes |
+|:------------|---------:|--------:|---------------:|----------------:|
+| dunk        |  90.5023 | 301.203 |              1 |          0.8856 |
+| hook shot   | 124.933  | 304.646 |              1 |          0.478  |
+| jump shot   | 211.411  | 297.769 |              1 |          0.3501 |
+| layup       |  96.3554 | 302.942 |              1 |          0.549  |
+| tip shot    |  93.3186 | 301.792 |              1 |          0.6122 |
 
 </details>
 
@@ -8602,7 +8083,7 @@ N/A
 
 ---
 
-### 28. bq144 (DB: `ncaa_insights`)
+### 30. bq144 (DB: `ncaa_insights`)
 **Question**: Create a dataset by combining NCAA men's basketball tournament game outcomes from the 2014 season onwards, including both the historical tournament games and the 2018 tournament results, with the corresponding pace and efficiency performance metrics for each team and their opponents from the feature_engineering data. The dataset should include the season, game outcome labels (win or loss), team and opponent seeds, school names, pace and efficiency rankings, statistical values, and the differences between the team's and the opponent's metrics to enable a comprehensive analysis of team and opponent dynamics.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8639,17 +8120,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   season | label   |   seed | school_ncaa   |   opponent_seed | opponent_school_ncaa   |   pace_rank |   poss_40min |   pace_rating |   efficiency_rank |
-|---------:|:--------|-------:|:--------------|----------------:|:-----------------------|------------:|-------------:|--------------:|------------------:|
-|     2014 | loss    |     14 | Albany (NY)   |               3 | Oklahoma               |         324 |       61.467 |         8.947 |               128 |
-|     2014 | loss    |      2 | Arizona       |               1 | Wisconsin              |          83 |       66.707 |        74.183 |                 5 |
-|     2014 | win     |      2 | Arizona       |               6 | Xavier                 |          83 |       66.707 |        74.183 |                 5 |
-|     2014 | win     |      2 | Arizona       |              10 | Ohio St.               |          83 |       66.707 |        74.183 |                 5 |
-|     2014 | win     |      2 | Arizona       |              15 | Texas Southern         |          83 |       66.707 |        74.183 |                 5 |
-
-*... and 525 more rows.*
-
-*... truncated to first 10 columns.*
+N/A
 
 </details>
 
@@ -8672,7 +8143,7 @@ N/A
 
 ---
 
-### 29. bq075 (DB: `google_dei`)
+### 31. bq075 (DB: `google_dei`)
 **Question**: Could you provide a combined 2021 report comparing racial (Asian, Black, Hispanic/Latinx, White) and gender (U.S. Women, U.S. Men) distributions across Google’s overall workforce hiring, Google’s overall workforce representation, and the BLS data specifically for the technology sectors defined as Internet publishing and broadcasting and web search portals or Computer systems design and related services?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8784,11 +8255,12 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| source                |   race_asian |   race_black |   race_hispanic_latinx |   race_white |   gender_us_women |   gender_us_men |
-|:----------------------|-------------:|-------------:|-----------------------:|-------------:|------------------:|----------------:|
-| BLS Tech Sectors      |      nan     |      nan     |                nan     |      nan     |           nan     |         nan     |
-| Google Hiring         |        0.428 |        0.088 |                  0.088 |        0.445 |             0.331 |           0.669 |
-| Google Representation |        0.423 |        0.044 |                  0.064 |        0.504 |             0.322 |           0.678 |
+| race            |   google_hiring_women_pct |   google_hiring_men_pct |   google_representation_women_pct |   google_representation_men_pct |   bls_tech_women_pct |   bls_tech_men_pct |
+|:----------------|--------------------------:|------------------------:|----------------------------------:|--------------------------------:|---------------------:|-------------------:|
+| Asian           |                      15   |                    22.5 |                              15   |                            27.2 |                  7.8 |               12.2 |
+| Black           |                       2.1 |                     3   |                               1.6 |                             2.9 |                  3.5 |                4.5 |
+| Hispanic/Latinx |                       3.2 |                     4.8 |                               2.4 |                             4.2 |                  4   |                5.8 |
+| White           |                      16.4 |                    33   |                              15.3 |                            31.4 |                 23.4 |               38.8 |
 
 </details>
 
@@ -8809,7 +8281,7 @@ N/A
 
 ---
 
-### 30. sf_bq416 (DB: `GOOG_BLOCKCHAIN`)
+### 32. sf_bq416 (DB: `GOOG_BLOCKCHAIN`)
 **Question**: Could you retrieve the top three largest USDT transfers on the TRON blockchain by listing the block numbers, source addresses, destination addresses (in TronLink format), and transfer amounts, using the USDT contract address '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c' and the transfer event signature '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', dividing the raw transfer value by 1,000,000 to convert it into the final USDT amount, and then ordering the results by the largest transferred amounts first?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8838,11 +8310,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   block_number | source_address                             | destination_address                        |   transfer_amount |
-|---------------:|:-------------------------------------------|:-------------------------------------------|------------------:|
-|       26554348 | 0x517591d35d313bf6a5e33098284502b045e2bc08 | 0x66426c7ac3d98b29191063833345b6bc540d7278 |             4e+08 |
-|       26554338 | 0x0000000000000000000000000000000000000000 | 0x517591d35d313bf6a5e33098284502b045e2bc08 |             4e+08 |
-|       24993917 | 0x517591d35d313bf6a5e33098284502b045e2bc08 | 0x66426c7ac3d98b29191063833345b6bc540d7278 |             2e+08 |
+N/A
 
 </details>
 
@@ -8859,7 +8327,69 @@ N/A
 
 ---
 
-### 31. bq076 (DB: `chicago`)
+### 33. sf_bq062 (DB: `DEPS_DEV_V1`)
+**Question**: What is the most frequently used license by packages in each system?
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| System   | License      |
+|:---------|:-------------|
+| GO       | MIT          |
+| MAVEN    | Apache-2.0   |
+| NPM      | MIT          |
+| NUGET    | non-standard |
+| PYPI     | MIT          |
+
+**OR**
+
+| System   | License      |   PackageCount |
+|:---------|:-------------|---------------:|
+| GO       | MIT          |          40143 |
+| MAVEN    | APACHE-2.0   |          85135 |
+| NPM      | MIT          |         831975 |
+| NUGET    | NON-STANDARD |          29088 |
+| PYPI     | MIT          |          26598 |
+
+**OR**
+
+| System   | Most_Frequent_License   |   PKG_COUNT |
+|:---------|:------------------------|------------:|
+| GO       | mit                     |       40143 |
+| MAVEN    | apache-2.0              |       85135 |
+| NPM      | mit                     |      831975 |
+| NUGET    | non-standard            |       29088 |
+| PYPI     | mit                     |       26598 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+| System   | most_frequent_license   |
+|:---------|:------------------------|
+| GO       | Apache-2.0              |
+| MAVEN    | Apache-2.0              |
+| NPM      | MIT                     |
+| NUGET    | non-standard            |
+| PYPI     | MIT                     |
+
+</details>
+
+---
+
+### 34. bq076 (DB: `chicago`)
 **Question**: What is the highest number of motor vehicle theft incidents that occurred in any single month during 2016?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8890,9 +8420,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   max_motor_vehicle_theft_monthly |
-|----------------------------------:|
-|                              1069 |
+|   highest_monthly_count |
+|------------------------:|
+|                    1106 |
 
 </details>
 
@@ -8907,7 +8437,7 @@ N/A
 
 ---
 
-### 32. sf_bq350 (DB: `OPEN_TARGETS_PLATFORM_1`)
+### 35. sf_bq350 (DB: `OPEN_TARGETS_PLATFORM_1`)
 **Question**: For the detailed molecule data, Please display the drug id, drug type and withdrawal status for approved drugs with a black box warning and known drug type among 'Keytruda', 'Vioxx', 'Premarin', and 'Humira'
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8927,11 +8457,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| drug_id       | drug_type      | withdrawal_status   |
-|:--------------|:---------------|:--------------------|
-| CHEMBL122     | Small molecule | True                |
-| CHEMBL1201649 | Unknown        | False               |
-| CHEMBL1201580 | Antibody       | False               |
+| TABLE_NAME           | TABLE_SCHEMA   | TABLE_CATALOG           |
+|:---------------------|:---------------|:------------------------|
+| TARGETS              | PLATFORM       | OPEN_TARGETS_PLATFORM_1 |
+| INTERACTION          | PLATFORM       | OPEN_TARGETS_PLATFORM_1 |
+| BASELINEEXPRESSION   | PLATFORM       | OPEN_TARGETS_PLATFORM_1 |
+| DISEASETOPHENOTYPE   | PLATFORM       | OPEN_TARGETS_PLATFORM_1 |
+| TARGETPRIORITISATION | PLATFORM       | OPEN_TARGETS_PLATFORM_1 |
+
+*... and 22 more rows.*
 
 </details>
 
@@ -8948,7 +8482,7 @@ N/A
 
 ---
 
-### 33. bq109 (DB: `open_targets_genetics_1`)
+### 36. bq109 (DB: `open_targets_genetics_1`)
 **Question**: Find the average, variance, max-min difference, and the QTL source(right study) of the maximum log2(h4/h3) for data where right gene id is "ENSG00000169174", h4 > 0.8, h3 < 0.02, reported trait includes "lesterol levels", right biological feature is "IPSC", and the variant is '1_55029009_C_T'.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -8980,7 +8514,7 @@ N/A
 
 ---
 
-### 34. sf_bq325 (DB: `OPEN_TARGETS_GENETICS_2`)
+### 37. sf_bq325 (DB: `OPEN_TARGETS_GENETICS_2`)
 **Question**: Please identify the top 10 genes with the strongest associations across all studies by first selecting, for each gene within each study, the variant with the lowest p-value, and then ranking all such gene–variant pairs to return the 10 genes with the smallest p-values overall.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -9053,15 +8587,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| lead_alt   | trait_efo   |   p_value |   lead_chrom |   lead_pos | lead_ref   |
-|:-----------|:------------|----------:|-------------:|-----------:|:-----------|
-| G          | EFO_0005674 |         0 |           10 |  102559209 | A          |
-| G          | EFO_0005674 |         0 |           10 |  102559209 | A          |
-| G          | EFO_0005674 |         0 |           10 |  102559209 | A          |
-| G          | EFO_0005674 |         0 |           17 |   46212466 | A          |
-| G          | EFO_0005674 |         0 |           17 |   46212466 | A          |
-
-*... and 15 more rows.*
+N/A
 
 </details>
 
@@ -9082,7 +8608,7 @@ N/A
 
 ---
 
-### 35. bq090 (DB: `CYMBAL_INVESTMENTS`)
+### 38. bq090 (DB: `CYMBAL_INVESTMENTS`)
 **Question**: How much higher the average intrinsic value is for trades using the feeling-lucky strategy compared to those using the momentum strategy under long-side trades?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -9107,9 +8633,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   difference |
-|-------------:|
-|       0.0013 |
+N/A
 
 </details>
 
@@ -9124,7 +8648,145 @@ N/A
 
 ---
 
-### 36. sf_bq276 (DB: `NOAA_PORTS`)
+### 39. bq220 (DB: `usfs_fia`)
+**Question**: Based on the condition, plot_tree, and population tables in bigquery-public-data.usfs_fia, for the evaluation_type set to 'EXPCURR' and condition_status_code equal to 1, which states had the largest average subplot size and the largest average macroplot size, respectively, for each of the years 2015, 2016, and 2017? Please include the type of plot (subplot or macroplot), the specific year, the state, and the corresponding average size in your results.
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| PLOT_TYPE   |   YEAR | STATE_NAME   |   MAX_AVG_SIZE |
+|:------------|-------:|:-------------|---------------:|
+| MACROPLOT   |   2015 | California   |        4937.3  |
+| MACROPLOT   |   2016 | California   |        5128.2  |
+| MACROPLOT   |   2017 | California   |        5043.94 |
+| SUBPLOT     |   2015 | Wyoming      |        7634.42 |
+| SUBPLOT     |   2016 | Alaska       |       15679.9  |
+
+*... and 1 more rows.*
+
+**OR**
+
+| PLOT_TYPE   |   YEAR |   STATE |   AVG_SIZE |
+|:------------|-------:|--------:|-----------:|
+| macroplot   |   2015 |       6 |    4937.3  |
+| macroplot   |   2016 |       6 |    5128.2  |
+| macroplot   |   2017 |       6 |    5043.94 |
+| subplot     |   2015 |      56 |    7634.42 |
+| subplot     |   2016 |       2 |   15679.9  |
+
+*... and 1 more rows.*
+
+**OR**
+
+| PLOT_TYPE   |   YEAR | STATE      |   AVERAGE_SIZE |
+|:------------|-------:|:-----------|---------------:|
+| subplot     |   2015 | Wyoming    |        7634.42 |
+| subplot     |   2016 | Alaska     |       15679.9  |
+| subplot     |   2017 | Wyoming    |        6284.79 |
+| macroplot   |   2015 | California |        4937.3  |
+| macroplot   |   2016 | California |        5128.2  |
+
+*... and 1 more rows.*
+
+**OR**
+
+| PLOT_TYPE   |   inventory_year | STATE      |   AVG_SIZE |
+|:------------|-----------------:|:-----------|-----------:|
+| Macroplot   |             2015 | California |    4937.3  |
+| Macroplot   |             2016 | California |    5128.2  |
+| Macroplot   |             2017 | California |    5043.94 |
+| Subplot     |             2015 | Wyoming    |    7634.42 |
+| Subplot     |             2016 | Alaska     |   15679.9  |
+
+*... and 1 more rows.*
+
+**OR**
+
+| Plot Type   |   Year | State      |   Average Size |
+|:------------|-------:|:-----------|---------------:|
+| MACR        |   2015 | California |        4937.3  |
+| MACR        |   2016 | California |        5128.2  |
+| MACR        |   2017 | California |        5043.94 |
+| SUBP        |   2015 | Wyoming    |        7634.42 |
+| SUBP        |   2016 | Alaska     |       15679.9  |
+
+*... and 1 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   inventory_year |   state_code |   avg_size_subplot |   macroplot_state_code |   avg_size_macroplot |
+|-----------------:|-------------:|-------------------:|-----------------------:|---------------------:|
+|             2015 |           56 |            7630.92 |                      6 |              5053.45 |
+|             2016 |           56 |            7032.29 |                      6 |              5133.46 |
+|             2017 |           56 |            6411.35 |                      6 |              5136.96 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+| plot_type   |   year | state      |   avg_size |
+|:------------|-------:|:-----------|-----------:|
+| macroplot   |   2015 | California |    4906.83 |
+| macroplot   |   2016 | California |    5100.07 |
+| macroplot   |   2017 | California |    5024.52 |
+| subplot     |   2015 | Idaho      |    8830.61 |
+| subplot     |   2016 | Idaho      |    7774.11 |
+
+*... and 1 more rows.*
+
+</details>
+
+---
+
+### 40. bq096 (DB: `gbif`)
+**Question**: Determine which year had the earliest date after January on which more than 10 sightings of Sterna paradisaea were recorded north of 40 degrees latitude. For each year, find the first day after January with over 10 sightings of this species in that region, and identify the year whose earliest such date is the earliest among all years.
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   year |
+|-------:|
+|   2023 |
+
+**OR**
+
+|   year |
+|-------:|
+|   1894 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   year | first_date   |
+|-------:|:-------------|
+|   2021 | 2021-02-15   |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+---
+
+### 41. sf_bq276 (DB: `NOAA_PORTS`)
 **Question**: Can you provide a comprehensive list of all ports in region number 6585 that lie within U.S. state boundaries and have been affected by named storms in the North Atlantic basin with wind speeds of at least 35 knots and a Saffir-Simpson classification of at least minimal tropical storm strength, including for each port its name, the state name, the distinct years in which storms occurred, the total count of distinct storms, the distinct storm names, the average storm category, the average wind speed, and the respective geometries for both the port and the tropical storm areas?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20186,7 +19848,7 @@ N/A
 
 ---
 
-### 37. bq277 (DB: `noaa_ports`)
+### 42. bq277 (DB: `noaa_ports`)
 **Question**: Which single port, listed under region number '6585', is located within a U.S. state boundary and appears most frequently inside the geographic areas of named tropical storms with wind speeds of at least 35 knots in the North Atlantic basin, excluding those labeled 'NOT_NAMED'?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20211,9 +19873,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| port_name   |
-|:------------|
-| WILMINGTON  |
+N/A
 
 </details>
 
@@ -20226,7 +19886,7 @@ N/A
 
 ---
 
-### 38. bq278 (DB: `sunroof_solar`)
+### 43. bq278 (DB: `sunroof_solar`)
 **Question**: Please provide a detailed comparison of the solar potential for each state, distinguishing between postal code and census tract levels. For each state, include the total number of buildings available for solar installations, the average percentage of Google Maps area covered by Project Sunroof, the average percentage of that coverage which is suitable for solar, the total potential panel count, the total kilowatt capacity, the energy generation potential, the carbon dioxide offset, the current number of buildings with solar panels, and the gap in potential installations calculated by adjusting the total qualified buildings with the coverage and suitability percentages and subtracting the current installations.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20323,17 +19983,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| state     |   pc_total_buildings |   pc_avg_pct_covered |   pc_avg_pct_qualified |   pc_total_panels |   pc_total_kw_capacity |   pc_energy_kwh |   pc_co2_offset_tons |   pc_existing_installs |   pc_potential_gap |
-|:----------|---------------------:|---------------------:|-----------------------:|------------------:|-----------------------:|----------------:|---------------------:|-----------------------:|-------------------:|
-| Aguadilla |       7624           |              93.1553 |                94.3114 |  432049           |       108012           |     1.59844e+08 |     107575           |                      0 |     5844           |
-| Alabama   |          1.35169e+06 |              65.3636 |                81.883  |       7.72985e+07 |            1.93246e+07 |     2.4647e+10  |          1.57234e+07 |                    544 |   812768           |
-| Alaska    |      84661           |              88.9663 |                78.0098 |       5.44722e+06 |            1.36181e+06 |     1.08909e+09 |     448710           |                     83 |    57055           |
-| Arecibo   |       7228           |              77.8753 |                93.4074 |  345214           |        86303.5         |     1.23957e+08 |      83422.9         |                      0 |     4433           |
-| Arizona   |          2.03372e+06 |              87.4686 |                93.8148 |       1.47238e+08 |            3.68096e+07 |     5.9043e+10  |          2.53576e+07 |                  39696 |        1.71384e+06 |
-
-*... and 67 more rows.*
-
-*... truncated to first 10 columns.*
+N/A
 
 </details>
 
@@ -20356,7 +20006,7 @@ N/A
 
 ---
 
-### 39. bq103 (DB: `gnomAD`)
+### 44. bq103 (DB: `gnomAD`)
 **Question**: Generate summary statistics on genetic variants in the region between positions 55039447 and 55064852 on chromosome 1. This includes the number of variants, the total allele count, the total number of alleles, and distinct gene symbols (using Variant Effect Predictor, VEP, for gene annotation). Additionally, compute the density of mutations by dividing the length of the region by the number of variants.  Using data from the gnomAD v3 version.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20387,9 +20037,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   number_of_variants |   total_allele_count |   total_number_of_alleles |   distinct_gene_symbols |   density_mutations_per_base |
-|---------------------:|---------------------:|--------------------------:|------------------------:|-----------------------------:|
-|                 5604 |          7.90936e+08 |               7.90936e+08 |                     nan |                       4.5335 |
+|   num_variants |   total_allele_count |   total_number_alleles |   distinct_gene_symbols |   density |
+|---------------:|---------------------:|-----------------------:|------------------------:|----------:|
+|              0 |                    0 |                      0 |                       0 |       nan |
 
 </details>
 
@@ -20404,7 +20054,7 @@ N/A
 
 ---
 
-### 40. sf_bq411 (DB: `GOOGLE_TRENDS`)
+### 45. sf_bq411 (DB: `GOOGLE_TRENDS`)
 **Question**: Please retrieve the top three Google Trends search terms (ranks 1, 2, and 3) from top_terms for each weekday (Monday through Friday) between September 1, 2024, and September 14, 2024, grouped by the refresh_date column and ordered in descending order of refresh_date.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20445,7 +20095,9 @@ Empty Gold Result
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-N/A
+| refresh_date   | term            |   rank |
+|:---------------|:----------------|-------:|
+| 2024-09-09     | Great North Run |      2 |
 
 </details>
 
@@ -20466,7 +20118,7 @@ N/A
 
 ---
 
-### 41. bq105 (DB: `nhtsa_traffic_fatalities_plus`)
+### 46. bq105 (DB: `nhtsa_traffic_fatalities_plus`)
 **Question**: According to the 2015 and 2016 accident and driver distraction, and excluding cases where the driver’s distraction status is recorded as 'Not Distracted,' 'Unknown if Distracted,' or 'Not Reported,' how many traffic accidents per 100,000 people were caused by driver distraction in each U.S. state for those two years, based on 2010 census population data, and which five states each year had the highest rates?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20503,13 +20155,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| state_name   |   year |   rate_per_100k |
-|:-------------|-------:|----------------:|
-| Delaware     |   2015 |            2.67 |
-| New Mexico   |   2015 |            2.01 |
-| Kentucky     |   2015 |            1.54 |
-| Oklahoma     |   2015 |            1.53 |
-| Montana      |   2015 |            1.32 |
+| state_name   |   year_of_crash |   rate_per_100k |
+|:-------------|----------------:|----------------:|
+| Delaware     |            2015 |        101.455  |
+| Vermont      |            2015 |         86.4575 |
+| Oklahoma     |            2015 |         37.3465 |
+| Wyoming      |            2015 |         22.8875 |
+| Montana      |            2015 |         20.6182 |
 
 *... and 5 more rows.*
 
@@ -20532,7 +20184,7 @@ N/A
 
 ---
 
-### 42. bq396 (DB: `nhtsa_traffic_fatalities`)
+### 47. bq396 (DB: `nhtsa_traffic_fatalities`)
 **Question**: Which top 3 states had the largest differences in the number of traffic accidents between rainy and clear weather during weekends in 2016? Please also provide the respective differences for each state.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20577,11 +20229,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| state_name           |   difference |
-|:---------------------|-------------:|
-| Virginia             |           18 |
-| Alaska               |           -6 |
-| District of Columbia |           -7 |
+|   state_code |   difference |
+|-------------:|-------------:|
+|           48 |         -827 |
+|           12 |         -750 |
+|           40 |         -339 |
 
 </details>
 
@@ -20598,65 +20250,7 @@ N/A
 
 ---
 
-### 43. bq395 (DB: `sdoh`)
-**Question**: Calculate the percentage change in the total number of unsheltered homeless people from 2015 to 2018 for each state by summing the counts over all Continuums of Care (CoCs) within each state. Then, determine the national average of these state percentage changes. Identify the five states whose percentage change is closest to this national average percentage change. Please provide the state abbreviations.
-
-**Status**: Baseline ❌ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| state_abbrev   |
-|:---------------|
-| MO             |
-| VA             |
-| NH             |
-| KY             |
-| NE             |
-
-**OR**
-
-| State   |
-|:--------|
-| MO      |
-| VA      |
-| DC      |
-| NH      |
-| KY      |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| state_abbr   |
-|:-------------|
-| VI           |
-| VA           |
-| OH           |
-| CA           |
-| NE           |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-| state_abbr   |
-|:-------------|
-| VI           |
-| VA           |
-| OH           |
-| CA           |
-| NE           |
-
-</details>
-
----
-
-### 44. bq116 (DB: `sec_quarterly_financials`)
+### 48. bq116 (DB: `sec_quarterly_financials`)
 **Question**: Which U.S. state reported the highest total annual revenue in billions of dollars during fiscal year 2016, considering companies that provided four quarters of data and reported measure tags in ('Revenues','SalesRevenueNet','SalesRevenueGoodsNet'), excluding any entries where the state field (stprba) is null or empty?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20675,9 +20269,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| state   |   total_revenue_billions |
-|:--------|-------------------------:|
-| TX      |                  21374.4 |
+N/A
 
 </details>
 
@@ -20692,7 +20284,7 @@ N/A
 
 ---
 
-### 45. sf_bq015 (DB: `STACKOVERFLOW_PLUS`)
+### 49. sf_bq015 (DB: `STACKOVERFLOW_PLUS`)
 **Question**: Identify and rank the top 10 tags from Stack Overflow questions that were referenced in Hacker News comments on or after 2014 by counting how many times each question was mentioned, then splitting the questions’ tag strings by the '|' delimiter, grouping by tag
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -20753,15 +20345,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   rank | tag        |   total_mentions |
-|-------:|:-----------|-----------------:|
-|      1 | javascript |           326461 |
-|      2 | java       |           324038 |
-|      3 | c#         |           307880 |
-|      4 | php        |           278413 |
-|      5 | android    |           275285 |
-
-*... and 5 more rows.*
+N/A
 
 </details>
 
@@ -20782,7 +20366,7 @@ N/A
 
 ---
 
-### 46. sf_bq307 (DB: `STACKOVERFLOW`)
+### 50. sf_bq307 (DB: `STACKOVERFLOW`)
 **Question**: Find the top 10 gold badges that users most commonly earn as their first gold badge on Stack Overflow. For each of these badges, display the badge name, the number of users who earned it as their first gold badge, and the average number of days from the user's account creation date to the date they earned the badge, calculated in days without any adjustments for date formats.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21059,15 +20643,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| badge_name      |   user_count |   avg_days_to_badge |
-|:----------------|-------------:|--------------------:|
-| Famous Question |       418856 |            1635.12  |
-| Fanatic         |        27621 |             863.241 |
-| Great Answer    |        25006 |            1969.97  |
-| Unsung Hero     |        21079 |             825.649 |
-| Electorate      |        12124 |            1242.4   |
-
-*... and 5 more rows.*
+N/A
 
 </details>
 
@@ -21088,7 +20664,7 @@ N/A
 
 ---
 
-### 47. bq200 (DB: `mlb`)
+### 51. bq200 (DB: `mlb`)
 **Question**: Using data from both the regular season and the post-season, identify the pitcher who achieved the highest non-zero pitch speed for each team by confirming whether the pitcher’s ID appears in the relevant home or away player lists for that game, then retrieve that pitcher’s full name along with the maximum valid pitch speed they achieved while playing for that specific team.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21137,15 +20713,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| team_name       | pitcher_full_name   |   max_speed |
-|:----------------|:--------------------|------------:|
-| American League | Dellin Betances     |         100 |
-| Angels          | Juan Ramirez        |         100 |
-| Astros          | Kenneth Giles       |         101 |
-| Athletics       | John Axford         |          99 |
-| Blue Jays       | James Happ          |         910 |
-
-*... and 27 more rows.*
+N/A
 
 </details>
 
@@ -21166,7 +20734,7 @@ N/A
 
 ---
 
-### 48. sf_bq460 (DB: `WORD_VECTORS_US`)
+### 52. sf_bq460 (DB: `WORD_VECTORS_US`)
 **Question**: Please process the articles from the 'nature' dataset by first tokenizing the body text into words and removing stopwords. For each remaining word, retrieve its word vector from the glove_vectors table and its frequency from the word_frequencies table, then divide each word vector by the 0.4th power of the word's frequency to weight it. Sum the weighted vectors to obtain an aggregate vector for each article, normalize this aggregate vector to unit length, and then compute the cosine similarity scores between these normalized vectors. Finally, return the IDs, dates, titles, and cosine similarity scores of the top 10 articles most similar to the article with the ID '8a78ef2d-d5f7-4d2d-9b47-5adb25cbd373'.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21224,7 +20792,7 @@ N/A
 
 ---
 
-### 49. bq204 (DB: `eclipse_megamovie`)
+### 53. bq204 (DB: `eclipse_megamovie`)
 **Question**: Find the user with the highest total clicks across all records from all available photo collections.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21243,9 +20811,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| user                             |
-|:---------------------------------|
-| 0bbc1d2d9453456898c02b77f2bc33f3 |
+N/A
 
 </details>
 
@@ -21260,7 +20826,7 @@ N/A
 
 ---
 
-### 50. sf_bq417 (DB: `IDC`)
+### 54. sf_bq417 (DB: `IDC`)
 **Question**: Please provide identification details, study and series information, storage location, and total size in MB for the medical images belonging to male patients who are exactly 18 years old based on the numeric portion of the PatientAge field, where the BodyPartExamined is set to 'MEDIASTINUM' and the study date is strictly after September 1, 2014.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21281,9 +20847,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| PatientID     | StudyInstanceUID                             | StudyDate   | StudyDescription        | SeriesInstanceUID                                 | SeriesDescription        |   SeriesNumber |   StorageLocation |   TotalSizeMB |
-|:--------------|:---------------------------------------------|:------------|:------------------------|:--------------------------------------------------|:-------------------------|---------------:|------------------:|--------------:|
-| MED_LYMPH_007 | 61.7.102432584850582937613178565576727689438 | 2014-09-14  | mediastinal_lymph_nodes | 1.2.276.0.7230010.3.1.3.0.22718.1674506898.326574 | Lymph node segmentations |            300 |               nan |          0.98 |
+| PatientID     | StudyInstanceUID                             | SeriesInstanceUID                                 | StudyDate   | StudyDescription        | SeriesDescription        |   SeriesNumber | Modality   |   AccessionNumber | StorageLocation                                                        |
+|:--------------|:---------------------------------------------|:--------------------------------------------------|:------------|:------------------------|:-------------------------|---------------:|:-----------|------------------:|:-----------------------------------------------------------------------|
+| MED_LYMPH_007 | 61.7.102432584850582937613178565576727689438 | 1.2.276.0.7230010.3.1.3.0.22718.1674506898.326574 | 2014-09-14  | mediastinal_lymph_nodes | Lymph node segmentations |            300 | SEG        |               nan | s3://idc-open-data/1.2.276.0.7230010.3.1.3.0.22718.1674506898.326574/* |
+| MED_LYMPH_007 | 61.7.102432584850582937613178565576727689438 | 61.7.236153238415899774813399005901015124149      | 2014-09-14  | mediastinal_lymph_nodes | mediastinal_lymph_nodes  |            nan | CT         |               nan | s3://idc-open-data/61.7.236153238415899774813399005901015124149/*      |
+| MED_LYMPH_006 | 61.7.200220339504383078914804615756338194012 | 61.7.33825421852962039667152130405229476361       | 2014-09-14  | mediastinal_lymph_nodes | mediastinal_lymph_nodes  |            nan | CT         |               nan | s3://idc-open-data/61.7.33825421852962039667152130405229476361/*       |
+
+*... truncated to first 10 columns.*
 
 </details>
 
@@ -21312,7 +20882,68 @@ N/A
 
 ---
 
-### 51. bq360 (DB: `nppes`)
+### 55. sf_bq346 (DB: `IDC`)
+**Question**: In publicly accessible DICOM data where the Modality is 'SEG' and the SOPClassUID is '1.2.840.10008.5.1.4.1.1.66.4', and each segmentation references its original SOPInstanceUID, which five segmentation categories (by 'SegmentedPropertyCategory.CodeMeaning') occur most frequently?
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| CodeMeaning                        |   frequency |
+|:-----------------------------------|------------:|
+| Anatomical Structure               |         616 |
+| Tissue                             |         491 |
+| Morphological Abnormal Structure   |         279 |
+| Morphologically Altered Structure  |         117 |
+| Morphologically Abnormal Structure |          58 |
+
+**OR**
+
+| FINALCATEGORY                      |   TOTALFREQUENCY |
+|:-----------------------------------|-----------------:|
+| Anatomical Structure               |              622 |
+| Tissue                             |              491 |
+| Morphological Abnormal Structure   |              279 |
+| Morphologically Altered Structure  |              163 |
+| Morphologically Abnormal Structure |               58 |
+
+**OR**
+
+| SegmentedPropertyCategory_CodeMeaning   |   Frequency |
+|:----------------------------------------|------------:|
+| "Anatomical Structure"                  |         622 |
+| "Tissue"                                |         491 |
+| "Morphological Abnormal Structure"      |         279 |
+| "Morphologically Altered Structure"     |         163 |
+| "Morphologically Abnormal Structure"    |          58 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   SegmentedPropertyCategoryCodeMeaning |   frequency |
+|---------------------------------------:|------------:|
+|                                    nan |        1653 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+| category             |   frequency |
+|:---------------------|------------:|
+| Tissue               |           4 |
+| Anatomical Structure |           1 |
+
+</details>
+
+---
+
+### 56. bq360 (DB: `nppes`)
 **Question**: Among healthcare providers whose practice location is in Mountain View, CA, and who have a specified specialization in the field healthcare provider taxonomy, identify the top 10 most common specializations based on the count of distinct NPIs. Then determine which of those top 10 has a count of distinct NPIs closest to the average count across those 10 specializations.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21373,9 +21004,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| specialization   |   npi_count |
-|:-----------------|------------:|
-| Family           |          29 |
+N/A
 
 </details>
 
@@ -21390,7 +21019,7 @@ N/A
 
 ---
 
-### 52. bq143 (DB: `CPTAC_PDC`)
+### 57. bq143 (DB: `CPTAC_PDC`)
 **Question**: Use CPTAC proteomics and RNAseq data for Clear Cell Renal Cell Carcinoma to select 'Primary Tumor' and 'Solid Tissue Normal' samples. Join the datasets on sample submitter IDs and gene symbols. Calculate the correlation between protein abundance (log2 ratio) and gene expression levels (log-transformed+1 FPKM) for each gene and sample type. Filter out correlations with an absolute value greater than 0.5, and compute the average correlation for each sample type.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21410,10 +21039,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| sample_type         |   avg_correlation |
-|:--------------------|------------------:|
-| Primary Tumor       |            0.6465 |
-| Solid Tissue Normal |            0.6649 |
+| case_id                              | sample_id                            | aliquot_id                           | aliquot_submitter_id   | aliquot_run_metadata_id              | study_name                             |   protein_abundance_log2ratio | gene_id                              | gene_symbol   |   NCBI_gene_id |
+|:-------------------------------------|:-------------------------------------|:-------------------------------------|:-----------------------|:-------------------------------------|:---------------------------------------|------------------------------:|:-------------------------------------|:--------------|---------------:|
+| a4300f90-1fb9-11e9-b7f8-0a80fada099c | cb02100c-204d-11e9-b7f8-0a80fada099c | d539e2ef-2053-11e9-b7f8-0a80fada099c | CPT0075170001          | db65d37e-207b-11e9-b7f8-0a80fada099c | CPTAC CCRCC Discovery Study - Proteome |                       -0.3646 | f727e28b-b814-11e8-907f-0a2705229b82 | ATP6          |           4508 |
+
+*... truncated to first 10 columns.*
 
 </details>
 
@@ -21426,7 +21056,7 @@ N/A
 
 ---
 
-### 53. sf_bq150 (DB: `TCGA_HG19_DATA_V0`)
+### 58. sf_bq150 (DB: `TCGA_HG19_DATA_V0`)
 **Question**: Assess whether different genetic variants affect the log10-transformed TP53 expression levels in TCGA-BRCA samples using sequencing and mutation data. Provide the total number of samples, the number of mutation types, the mean square between groups, the mean square within groups, and the F-statistic.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21459,7 +21089,7 @@ N/A
 
 |   TOTAL_SAMPLES |   NUM_MUTATION_TYPES |   MEAN_SQUARE_BETWEEN |   MEAN_SQUARE_WITHIN |   F_STATISTIC |
 |----------------:|---------------------:|----------------------:|---------------------:|--------------:|
-|             115 |                    3 |                0.0611 |               0.0633 |         0.965 |
+|             487 |                  250 |                     0 |                    0 |             0 |
 
 </details>
 
@@ -21474,7 +21104,7 @@ N/A
 
 ---
 
-### 54. sf_bq141 (DB: `TCGA_HG38_DATA_V0`)
+### 59. sf_bq141 (DB: `TCGA_HG38_DATA_V0`)
 **Question**: Using the TCGA-KIRP dataset, select patients from the 'TCGA_bioclin_v0.Clinical' table who have a non-null clinical_stage and a disease_code of 'KIRP.' Retrieve their gene expression data from the 'TCGA_hg38_data_v0.RNAseq_Gene_Expression' table for the genes 'MT-CO3,' 'MT-CO1,' and 'MT-CO2,' and randomly split the patients into a training set (90%) and a test set (10%) based on their case_barcode via the FARM_FINGERPRINT method. For each clinical stage in the training set, calculate the average HTSeq__FPKM_UQ expression of the three genes. For each patient in the test set, compute the Euclidean distance between the patient’s expression values and the stage-specific averages, and assign that patient to the clinical stage whose average is closest. Finally, output the case_barcode and the predicted clinical stage.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21570,11 +21200,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| case_barcode   | predicted_clinical_stage   |
-|:---------------|:---------------------------|
-| TCGA-BQ-5877   | Stage IV                   |
-| TCGA-BQ-5891   | Stage IV                   |
-| TCGA-IZ-A6M8   | Stage IV                   |
+N/A
 
 </details>
 
@@ -21590,7 +21216,65 @@ N/A
 
 ---
 
-### 55. sf_bq158 (DB: `PANCANCER_ATLAS_1`)
+### 60. bq046 (DB: `TCGA_bioclin_v0`)
+**Question**: Find case barcodes and their corresponding GDC file URLs for female patients aged 30 or younger diagnosed with breast cancer (BRCA) in TCGA database. The query should first identify patients from the Annotations table where entity_type is "Patient" and either category is "History of unacceptable prior treatment related to a prior/other malignancy" or classification is "Redaction". Also identify patients from the Clinical table with disease_code "BRCA", age_at_diagnosis less than or equal to 30, and gender "FEMALE". Perform a FULL JOIN between these two sets, but only keep patients where both categoryName and classificationName are NULL in the final result. Use GDC metadata from archive release 14 (specifically rel14_caseData, rel14_fileData_current, and rel14_GDCfileID_to_GCSurl_NEW tables) to get the corresponding file URLs. 
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+| CASE_BARCODE   | file_gdc_url                                                                                                                               |
+|:---------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/1d3113c1-4f40-48d8-9b58-f82ba913f80d/TCGA-AN-A041-01A-11R-A035-13_mirna_gdc_realn.bam                   |
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/32b3fe29-3097-4a1b-bedf-0f9d7014fa0d/32b3fe29-3097-4a1b-bedf-0f9d7014fa0d.vep.vcf.gz                    |
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/4e57ead2-fca7-4803-a699-2dd651a03f98/4e57ead2-fca7-4803-a699-2dd651a03f98.vcf                           |
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/5b68e883-e793-4006-b98e-8d851f6a6534/TCGA-AN-A041-10A-01W-A055-09_IlluminaGA-DNASeq_exome_gdc_realn.bam |
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/6099659e-dbba-482a-b1b2-7477d93985d6/6099659e-dbba-482a-b1b2-7477d93985d6.vcf.gz                        |
+
+*... and 318 more rows.*
+
+**OR**
+
+| case_barcode   | gdc_file_url                                                                                                                       |
+|:---------------|:-----------------------------------------------------------------------------------------------------------------------------------|
+| TCGA-B6-A0RG   | gs://gdc-tcga-phs000178-open/181c0148-e3b5-4739-844e-e5919446581e/74dfc8ec-405b-4ffa-a282-daac57bf4d01.FPKM.txt.gz                 |
+| TCGA-AN-A041   | gs://gdc-tcga-phs000178-controlled/1d3113c1-4f40-48d8-9b58-f82ba913f80d/TCGA-AN-A041-01A-11R-A035-13_mirna_gdc_realn.bam           |
+| TCGA-E9-A1NE   | gs://gdc-tcga-phs000178-open/318dc2ae-ec65-4a08-89d9-3d6717c4c886/TCGA-E9-A1NE-11A-03-TSC.70d3974a-8daf-4276-af52-9e72e7780782.svs |
+| TCGA-AO-A03M   | gs://gdc-tcga-phs000178-open/3f197a51-8e41-4e86-a372-ea24e382308a/nationwidechildrens.org_clinical.TCGA-AO-A03M.xml                |
+| TCGA-AO-A129   | gs://gdc-tcga-phs000178-open/039648fe-aee6-48c2-961e-fb157ad71cfc/03895e36-d4e0-4849-a0f1-26550373338d.htseq.counts.gz             |
+
+*... and 269 more rows.*
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+N/A
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+| case_barcode   | gdc_file_url                                                         |
+|:---------------|:---------------------------------------------------------------------|
+| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/c4980771-b9da-44eb-a4c5-af5f84c3b9e9 |
+| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/3d879fc3-d9fc-45b9-b9da-335e8ef11774 |
+| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/5ea3601c-639a-4e8a-8b71-9586e2d5ea83 |
+| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/7fe80e4a-fe5b-4045-8dea-6f889ef28a75 |
+| TCGA-AN-A041   | https://api.gdc.cancer.gov/data/cd7c236b-2491-4d51-bc54-299206247972 |
+
+*... and 318 more rows.*
+
+</details>
+
+---
+
+### 61. sf_bq158 (DB: `PANCANCER_ATLAS_1`)
 **Question**: Which top five histological types of breast cancer (BRCA) in the PanCancer Atlas exhibit the highest percentage of CDH1 gene mutations?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21623,13 +21307,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| histological_type                |   mutation_percentage |
-|:---------------------------------|----------------------:|
-| Infiltrating Lobular Carcinoma   |               50.2488 |
-| Mixed Histology (please specify) |               16.6667 |
-| Medullary Carcinoma              |               16.6667 |
-| Other  specify                   |                6.5217 |
-| Infiltrating Ductal Carcinoma    |                2.1879 |
+|   histological_type |   percentage |
+|--------------------:|-------------:|
+|                 nan |            0 |
 
 </details>
 
@@ -21648,7 +21328,49 @@ N/A
 
 ---
 
-### 56. bq162 (DB: `HTAN_1`)
+### 62. bq161 (DB: `pancancer_atlas_2`)
+**Question**: Calculate the net difference between the number of pancreatic adenocarcinoma (PAAD) patients in TCGA's dataset who are confirmed to have mutations in both KRAS and TP53 genes, and those without mutations in either gene. Utilize patient clinical and follow-up data alongside genomic mutation details from TCGA’s cancer genomics database, focusing specifically on PAAD studies where the mutations have passed quality filters.
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   T1.VALUE - T2.VALUE |
+|----------------------:|
+|                    40 |
+
+**OR**
+
+|   net_difference |
+|-----------------:|
+|               39 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   net_difference |
+|-----------------:|
+|              121 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+|   net_difference |
+|-----------------:|
+|               50 |
+
+</details>
+
+---
+
+### 63. bq162 (DB: `HTAN_1`)
 **Question**: Based on the 5th revision (r5) of the HTAN data, list the imaging assay types available at the HTAN WUSTL center that have Level2 data and any associated higher-level data (Level3, Level4) derived from them through 'entityId' relationships in the 'id_provenance_r5' table; exclude any records where the 'Component' is NULL or contains 'Auxiliary' or 'OtherAssay'; for each imaging assay type, provide the available data levels (Level2, Level3, Level4), and do not include Level1 data or Electron Microscopy assay types.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21707,15 +21429,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| Imaging_Assay_Type   | Level2   | Level3   | Level4   |
-|:---------------------|:---------|:---------|:---------|
-| CODEX                | True     | False    | False    |
-| CODEX                | True     | False    | False    |
-| CODEX                | True     | False    | False    |
-| CODEX                | True     | False    | False    |
-| CODEX                | True     | False    | False    |
-
-*... and 194 more rows.*
+| imaging_assay_type   | level2_available   | level3_available   | level4_available   |
+|:---------------------|:-------------------|:-------------------|:-------------------|
+| ImagingLevel2        | True               | False              | False              |
 
 </details>
 
@@ -21732,7 +21448,7 @@ N/A
 
 ---
 
-### 57. sf_bq163 (DB: `HTAN_2`)
+### 64. sf_bq163 (DB: `HTAN_2`)
 **Question**: Which 20 genes in the HTAN scRNAseq MSK-SCLC combined samples dataset show the greatest difference in average X_value expression between female and male epithelial cells specifically in cluster 41 of 74-year-old human stage patients? Please calculate the difference by subtracting male average X_value from female average X_value for each gene
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21757,13 +21473,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   FEATURE_NAME |   DIFF_EXPRESSION |
-|---------------:|------------------:|
-|          10592 |            2.595  |
-|           5311 |            1.6914 |
-|          11520 |            1.5002 |
-|          21021 |            1.3549 |
-|           7744 |            1.3214 |
+|   IVAR |   FEMALE_AVG |   MALE_AVG |   DIFF |
+|-------:|-------------:|-----------:|-------:|
+|  10592 |       4.1384 |     1.5434 | 2.595  |
+|   5311 |       2.6445 |     0.953  | 1.6914 |
+|  11520 |       2.0092 |     0.509  | 1.5002 |
+|  21021 |       2.1495 |     0.7946 | 1.3549 |
+|   7744 |       2.1566 |     0.8352 | 1.3214 |
 
 *... and 15 more rows.*
 
@@ -21786,7 +21502,7 @@ N/A
 
 ---
 
-### 58. bq111 (DB: `mitelman`)
+### 65. bq111 (DB: `mitelman`)
 **Question**: Could you compute, by chromosome, the Pearson correlation between the frequency of copy number aberrations (including amplifications, gains, losses, and deletions) from the Mitelman database for cases with morph = 3111 and topo = 0401, and those computed from TCGA data, returning correlation coefficients and corresponding p-values for each aberration type, ensuring only results with at least five matching records are shown.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21872,7 +21588,7 @@ N/A
 
 ---
 
-### 59. bq413 (DB: `dimensions_ai_covid19`)
+### 66. bq413 (DB: `dimensions_ai_covid19`)
 **Question**: Retrieve the venue titles of publications that have a `date_inserted` from the year 2021 onwards and are associated with a grid whose address city is 'Qianjiang'. For each publication, prioritize the venue title by selecting the journal title first if it exists; if not, then the proceedings title; if that's also unavailable, then the book title; and finally, if none of those are available, the book series title.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -21914,15 +21630,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| venue_title                                       |
-|:--------------------------------------------------|
-| Human Vaccines & Immunotherapeutics               |
-| Nephron                                           |
-| Molecular Diversity                               |
-| Structural Chemistry                              |
-| Bio-Inspired Computing: Theories and Applications |
-
-*... and 3 more rows.*
+N/A
 
 </details>
 
@@ -21943,7 +21651,7 @@ N/A
 
 ---
 
-### 60. bq430 (DB: `ebi_chembl`)
+### 67. bq430 (DB: `ebi_chembl`)
 **Question**: Find pairs of different molecules tested in the same assay and standard type, where both have 10–15 heavy atoms, fewer than 5 activities in that assay, fewer than 2 duplicate activities, non-null standard values, and pChEMBL values over 10. For each pair, report the maximum heavy atom count, the latest publication date (calculated based on the document's rank within the same journal and year, and map it to a synthetic month and day), the highest document ID, classify the change in standard values as 'increase', 'decrease', or 'no-change' based on their values and relations, and generate UUIDs from their activity IDs and canonical SMILES.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22016,15 +21724,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   max_heavy_atom_count | latest_publication_date   |   highest_doc_id | change_classification   | pair_uuid                        |
-|-----------------------:|:--------------------------|-----------------:|:------------------------|:---------------------------------|
-|                     15 | 2001-02-23                |            16330 | decrease                | 1e908882330b40d038e963ee9fe22196 |
-|                     13 | 2001-02-23                |            16330 | no-change               | 0b29e3db60fe2252af957419ed15e391 |
-|                     13 | 2001-02-23                |            16330 | increase                | 7bdeba9cbdef1d34fa70c2b6884c15d8 |
-|                     14 | 1998-09-09                |             2811 | increase                | 4b91ecb37e9daae529681f6520da1a26 |
-|                     14 | 1998-09-09                |             2811 | increase                | 8e6308c7bb04a754eb001ac23f2445a7 |
+|   heavy_atom_count |   activity_id_1 |   activity_id_2 | canonical_smiles_1                                                                                | canonical_smiles_2                                                                                  | latest_publication_date   |   highest_doc_id | standard_change   | pair_uuid                        |
+|-------------------:|----------------:|----------------:|:--------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------|:--------------------------|-----------------:|:------------------|:---------------------------------|
+|                 10 |        12091742 |        12091747 | COc1ccc(Nc2ncc(Cc3ccc(S(C)(=O)=O)cc3)cc2-c2nc(C)nc(N)n2)cn1                                       | COc1ccc(Nc2ncc(CC3CCN(S(C)(=O)=O)CC3)cc2-c2nc(C)nc(N)n2)cn1                                         | 2012-06-04                |            65780 | no-change         | 98c3607a14403c45a7c624ec6a16dae9 |
+|                 14 |         1195904 |         1209162 | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)C(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC   | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CCCCC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC | 2001-04-28                |             4755 | decrease          | cb77db9bc4c319e612fb6e2cd442d051 |
+|                 14 |         1194708 |         1209162 | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CCC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CCCCC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC | 2001-04-28                |             4755 | decrease          | 6d32ea43da31ec0da8c513aee4787d5f |
+|                 14 |         1224920 |         1209162 | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC  | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CCCCC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC | 2001-04-28                |             4755 | no-change         | 348ae383bbc7b5e128a408f85da136ec |
+|                 14 |         1215681 |         1209162 | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC        | COC(=O)[C@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)NC(=O)CCCCC(=O)N[C@@H](Cc1ccc(OC(C)=O)c(OC(C)=O)c1)C(=O)OC | 2001-04-28                |             4755 | decrease          | a10d83ec84497aa277da8f738a40694a |
 
-*... and 804 more rows.*
+*... and 150822 more rows.*
 
 </details>
 
@@ -22037,7 +21745,7 @@ N/A
 
 ---
 
-### 61. bq094 (DB: `fec`)
+### 68. bq094 (DB: `fec`)
 **Question**: Please provide a list of all 2016 committees that supported at least one candidate and received a total amount of individual contributions between $0 and $200 (inclusive of more than $0 and less than $200) where these small-dollar contributions sum to more than $0 overall. For each qualifying committee, include its name, the number of unique candidates it supported, the candidates’ names in alphabetical order (separated by commas), and the total sum of these small-dollar donations received by the committee.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22122,15 +21830,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| committee_name                    |   num_candidates | candidate_names      |   total_small_dollar_contributions |
-|:----------------------------------|-----------------:|:---------------------|-----------------------------------:|
-| 101 POLITICAL FUND                |                1 | KANDER, JASON        |                                 60 |
-| 7TH DISTRICT REPUBLICAN COMMITTEE |                1 | BRAT, DAVID ALAN MR. |                                125 |
-| 7TH DISTRICT REPUBLICAN COMMITTEE |                1 | BRAT, DAVID ALAN MR. |                                125 |
-| 7TH DISTRICT REPUBLICAN COMMITTEE |                1 | BRAT, DAVID ALAN MR. |                                125 |
-| 7TH DISTRICT REPUBLICAN COMMITTEE |                1 | BRAT, DAVID ALAN MR. |                                125 |
+| committee_name                                                                          |   number_of_candidates | candidate_names                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |   total_small_donations |
+|:----------------------------------------------------------------------------------------|-----------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------:|
+| 7TH DISTRICT REPUBLICAN COMMITTEE                                                       |                      1 | BRAT, DAVID ALAN MR.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |                     125 |
+| A BRTHD AIMED TOWARD EDUC OF IL FED ELEC DEVICE FOR POLITICALLY ACTIVE MOTORCYCLISTS... |                     14 | BOST, MICHAEL,CULLERTON, TOM,DAVIS, DANNY K. MR.,DAVIS, RODNEY L,DOLD, ROBERT JAMES JR,HULTGREN, RANDY,KINZINGER, ADAM,KIRK, MARK STEVEN,LAHOOD, DARIN MCKAY,MCSWEENEY, DAVID,NOLAND, MICHAEL,ROSKAM, PETER,RUSH, BOBBY LEE,SHIMKUS, JOHN M                                                                                                                                                                                                                                                                                                                    |                     145 |
+| ACCOUNTABLE LEADERSHIP                                                                  |                      1 | SESTAK, JOSEPH A JR                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |                      25 |
+| AK RA FEDERAL PAC                                                                       |                      1 | MILLER, JOSEPH W                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |                     100 |
+| ALAMO PAC                                                                               |                     32 | ARRINGTON, JODEY COOK,AYOTTE, KELLY A,BISHOP, MIKE,BLUNT, ROY,BOOZMAN, JOHN,BURR, RICHARD M,COFFMAN, MIKE REP.,COMSTOCK, BARBARA J HONORABLE,CRAPO, MICHAEL,CURBELO, CARLOS MR.,DENHAM, JEFF,DOLD, ROBERT JAMES JR,HECK, JOE,HOEVEN, JOHN,HURD, WILLIAM,ISAKSON, JOHN HARDY,JOHNSON, RONALD HAROLD,KATKO, JOHN M,KIRK, MARK STEVEN,KNIGHT, STEVE,MURKOWSKI, LISA,PAUL, RAND,POLIQUIN, BRUCE L,PORTMAN, ROB,SCOTT, TIMOTHY E,STEFANIK, ELISE M.,THUNE, JOHN,TOOMEY, PATRICK JOSEPH,VALADAO, DAVID,WALBERG, TIMOTHY L HON.,YOUNG, TODD CHRISTOPHER,ZELDIN, LEE M |                     100 |
 
-*... and 2142 more rows.*
+*... and 232 more rows.*
 
 </details>
 
@@ -22151,7 +21859,7 @@ N/A
 
 ---
 
-### 62. bq432 (DB: `fda`)
+### 69. bq432 (DB: `fda`)
 **Question**: Please provide the food events data where both \"date_created\" and \"date_started\" are between January 1 and January 31, 2015, apply the following data cleansing steps: split reactions and outcomes fields into arrays by commas, handle special numeric patterns in the products_brand_name field (where a digit is followed by comma and another digit) by preserving those numeric patterns while replacing other ", " with " -- ", replace ", " with " -- " in products_industry_code, products_role, and products_industry_name fields, and calculate industry_code_length and brand_name_length as the array lengths after splitting. 
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22351,18 +22059,16 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   report_number | reactions                                                                | outcomes             | date_created   | date_started   | consumer_gender   |   consumer_age | consumer_age_unit   | products_brand_name                                 |   products_industry_code |
-|----------------:|:-------------------------------------------------------------------------|:---------------------|:---------------|:---------------|:------------------|---------------:|:--------------------|:----------------------------------------------------|-------------------------:|
-|          181712 | ['BLISTER' 'PAIN']                                                       | ['Other Outcome']    | 2015-01-02     | 2015-01-01     | Male              |             49 | year(s)             | EXEMPTION 4                                         |                       53 |
-|          181736 | ['BLOOD PRESSURE INCREASED' 'DECREASED APPETITE' 'DIARRHOEA' 'DIZZINESS' | ['Life Threatening'] | 2015-01-05     | 2015-01-02     | Female            |             29 | year(s)             | QUNOL - LIQUID COQ10 ORANGE PINEAPPLE FLAVOR 100 MG |                       54 |
-|                 |  'HEADACHE' 'PHOTOPHOBIA' 'VISION BLURRED' 'VOMITING']                   |                      |                |                |                   |                |                     |                                                     |                          |
-|          181736 | ['BLOOD PRESSURE INCREASED' 'DECREASED APPETITE' 'DIARRHOEA' 'DIZZINESS' | ['Life Threatening'] | 2015-01-05     | 2015-01-02     | Female            |             29 | year(s)             | SOLAR FENUGREEK                                     |                       54 |
-|                 |  'HEADACHE' 'PHOTOPHOBIA' 'VISION BLURRED' 'VOMITING']                   |                      |                |                |                   |                |                     |                                                     |                          |
-|          181736 | ['BLOOD PRESSURE INCREASED' 'DECREASED APPETITE' 'DIARRHOEA' 'DIZZINESS' | ['Life Threatening'] | 2015-01-05     | 2015-01-02     | Female            |             29 | year(s)             | ORGANIC FOLIC ACID                                  |                       54 |
-|                 |  'HEADACHE' 'PHOTOPHOBIA' 'VISION BLURRED' 'VOMITING']                   |                      |                |                |                   |                |                     |                                                     |                          |
-|          181764 | ['DYSPNOEA' 'THROAT IRRITATION' 'THROAT TIGHTNESS']                      | ['Disability']       | 2015-01-06     | 2015-01-05     | Male              |             44 | year(s)             | GALA APPLE                                          |                       20 |
+|   report_number | date_created   | date_started   | consumer_gender   |   consumer_age |   consumer_age_unit | reactions_array                                           | outcomes_array    | products_brand_name_clean                         |   products_industry_code_clean |
+|----------------:|:---------------|:---------------|:------------------|---------------:|--------------------:|:----------------------------------------------------------|:------------------|:--------------------------------------------------|-------------------------------:|
+|          182490 | 2015-01-23     | 2015-01-23     | Male              |            nan |                 nan | ['ABDOMINAL DISCOMFORT' 'DIARRHOEA' 'NAUSEA' 'VOMITING']  | ['Other Outcome'] | GLUCERNA HUNGER SMART SHAKE RICH CHOCOLATE FLAVOR |                             41 |
+|          191031 | 2015-01-20     | 2015-01-07     | Male              |            nan |                 nan | ['ABDOMINAL DISCOMFORT' 'FAECES DISCOLOURED' 'FLATULENCE' | ['Other Outcome'] | GROWING NATURAL ORGANIC RICE PROTEIN POWDER       |                              2 |
+|                 |                |                |                   |                |                     |  'GASTROINTESTINAL DISORDER' 'NAUSEA']                    |                   |                                                   |                                |
+|          182273 | 2015-01-09     | 2015-01-05     | Male              |            nan |                 nan | ['ABDOMINAL DISCOMFORT' 'OROPHARYNGEAL PAIN']             | ['Disability']    | PRICE CHOPPER PASTA AND ALFREDO PACKET            |                              4 |
+|          182264 | 2015-01-09     | 2015-01-05     | Male              |            nan |                 nan | ['ABDOMINAL DISCOMFORT' 'OROPHARYNGEAL PAIN']             | ['Disability']    | PRICE CHOPPER PASTA AND ALFREDO PACKET            |                              4 |
+|          181951 | 2015-01-07     | 2015-01-04     | Female            |            nan |                 nan | ['ABDOMINAL PAIN UPPER']                                  | ['Other Outcome'] | NABISCO EASY CHEESE CHEDDAR                       |                             12 |
 
-*... and 178 more rows.*
+*... and 130 more rows.*
 
 *... truncated to first 10 columns.*
 
@@ -22387,7 +22093,7 @@ N/A
 
 ---
 
-### 63. bq418 (DB: `targetome_reactome`)
+### 70. bq418 (DB: `targetome_reactome`)
 **Question**: Determine which three lowest-level Reactome pathways (with TAS evidence) have the highest chi-squared statistics, considering only Homo sapiens targets associated with sorafenib under the conditions that the median assay value is ≤ 100 and both low and high assay values are ≤ 100 or null. For each of these three pathways, how many of these targets and non-targets lie within the pathway and outside it?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22416,11 +22122,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| pathway_stable_id   |   targets_in |   targets_out |   non_targets_in |   non_targets_out |
-|:--------------------|-------------:|--------------:|-----------------:|------------------:|
-| R-HSA-5250924       |            0 |             0 |               60 |             10540 |
-| R-HSA-8854521       |            0 |             0 |                2 |             10598 |
-| R-HSA-210455        |            0 |             0 |                4 |             10596 |
+N/A
 
 </details>
 
@@ -22437,7 +22139,7 @@ N/A
 
 ---
 
-### 64. bq424 (DB: `world_bank`)
+### 71. bq424 (DB: `world_bank`)
 **Question**: List the top 10 countries with respect to the total amount of long-term external debt in descending order, excluding those without a specified region.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22498,13 +22200,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| country_code   | country_name       | region                    |   total_long_term_external_debt |
-|:---------------|:-------------------|:--------------------------|--------------------------------:|
-| CHN            | China              | East Asia & Pacific       |                     9.32502e+11 |
-| BRA            | Brazil             | Latin America & Caribbean |                     6.05232e+11 |
-| MEX            | Mexico             | Latin America & Caribbean |                     4.36748e+11 |
-| IND            | India              | South Asia                |                     4.02707e+11 |
-| RUS            | Russian Federation | Europe & Central Asia     |                     3.98718e+11 |
+| country_name                                      |   total_long_term_external_debt |
+|:--------------------------------------------------|--------------------------------:|
+| Low & middle income                               |                     6.15068e+13 |
+| Middle income                                     |                     5.9494e+13  |
+| Upper middle income                               |                     3.9502e+13  |
+| Latin America & Caribbean (excluding high income) |                     2.15865e+13 |
+| Lower middle income                               |                     1.9992e+13  |
 
 *... and 5 more rows.*
 
@@ -22519,7 +22221,7 @@ N/A
 
 ---
 
-### 65. bq457 (DB: `libraries_io`)
+### 72. bq457 (DB: `libraries_io`)
 **Question**: Get details of repositories that use specific feature toggle libraries. For each repository, include the full name with owner, hosting platform type, size in bytes, primary programming language, fork source name (if any), last update timestamp, the artifact and library names of the feature toggle used, and the library's programming languages. Include repositories that depend on the specified feature toggle libraries, defined by their artifact names, library names, platforms, and languages.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22572,51 +22274,7 @@ N/A
 
 ---
 
-### 66. bq229 (DB: `open_images`)
-**Question**: Using the bigquery-public-data.open_images dataset, can you provide a count of how many distinct image URLs are categorized as 'cat' (where the image has label '/m/01yrx' with confidence=1) and how many distinct image URLs are categorized as 'other' (meaning they have no cat label '/m/01yrx' at all)?
-
-**Status**: Baseline ❌ | SlayQL ❌
-
-#### 📊 Execution Results Comparison
-
-<details open>
-<summary><b>Gold Standard Result (Expected)</b></summary>
-
-| category   |   url_count |
-|:-----------|------------:|
-| cat        |       40231 |
-| other      |     9122224 |
-
-**OR**
-
-|   cat_count |   other_count |
-|------------:|--------------:|
-|       40231 |   9.12222e+06 |
-
-</details>
-
-<details open>
-<summary><b>SlayQL Execution Result (❌)</b></summary>
-
-| category   |   distinct_url_count |
-|:-----------|---------------------:|
-| cat        |                40243 |
-| other      |              9107259 |
-
-</details>
-
-<details open>
-<summary><b>Baseline Execution Result (❌)</b></summary>
-
-|   cat_image_url_count |   other_image_url_count |
-|----------------------:|------------------------:|
-|                 40231 |             9.13804e+06 |
-
-</details>
-
----
-
-### 67. sf_bq372 (DB: `WIDE_WORLD_IMPORTERS`)
+### 73. sf_bq372 (DB: `WIDE_WORLD_IMPORTERS`)
 **Question**: Among all orders that do not appear in the invoice table, for each customer category calculate the maximum lost order value, then determine which customer category’s maximum lost order value is closest to the overall average of these maximum lost order values across all categories?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22647,9 +22305,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| CUSTOMER_CATEGORY   |
-|:--------------------|
-| Gift Store          |
+N/A
 
 </details>
 
@@ -22664,7 +22320,7 @@ N/A
 
 ---
 
-### 68. bq393 (DB: `hacker_news`)
+### 74. bq393 (DB: `hacker_news`)
 **Question**: I want to identify users who had activity followed by inactivity. Specifically, find the user ID and their corresponding month number (counting from their first activity month) for the user with the highest month number who became inactive (no activity recorded) after their last recorded activity month. For this analysis, only consider data up until September 10, 2024, and ensure the month number represents the count of months since the user's first activity. The user should have at least one month where they were expected to be active (within their activity span) but actually had no records.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22689,9 +22345,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| user_id     |   month_number |
-|:------------|---------------:|
-| gaborcselle |            215 |
+N/A
 
 </details>
 
@@ -22704,7 +22358,7 @@ N/A
 
 ---
 
-### 69. bq403 (DB: `irs_990`)
+### 75. bq403 (DB: `irs_990`)
 **Question**: Which three years in 2012-2017 have the smallest absolute difference between median revenue and median functional expenses for organizations filing IRS 990 forms? Please output three years and respective differences.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22725,11 +22379,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   year |   median_revenue |   median_expenses |   diff |
-|-------:|-----------------:|------------------:|-------:|
-|   2013 |           392053 |            380347 |  11706 |
-|   2015 |           407262 |            383182 |  24080 |
-|   2017 |           420868 |            394439 |  26429 |
+|   year |   median_difference |
+|-------:|--------------------:|
+|   2012 |               20632 |
+|   2013 |               21116 |
+|   2017 |               26037 |
 
 </details>
 
@@ -22746,7 +22400,7 @@ N/A
 
 ---
 
-### 70. ga021 (DB: `firebase`)
+### 76. ga021 (DB: `firebase`)
 **Question**: What is the retention rate for users two weeks after their initial quickplay event, calculated separately for each quickplay event type, within the period from July 2, 2018, to July 16, 2018? Please focus on users who started a session (session_start) during this period.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22783,13 +22437,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| quickplay_type           |   total_users |   retained_users |   retention_rate_pct |
-|:-------------------------|--------------:|-----------------:|---------------------:|
-| level_complete_quickplay |            30 |               21 |                70    |
-| level_end_quickplay      |            49 |               32 |                65.31 |
-| level_fail_quickplay     |            28 |               15 |                53.57 |
-| level_reset_quickplay    |            45 |               17 |                37.78 |
-| level_retry_quickplay    |             7 |                4 |                57.14 |
+| quickplay_type           |   retention_rate |
+|:-------------------------|-----------------:|
+| level_complete_quickplay |         0.695245 |
+| level_end_quickplay      |         0.66967  |
+| level_fail_quickplay     |         0.701023 |
+| level_reset_quickplay    |         0.738126 |
+| level_retry_quickplay    |         0.728029 |
 
 *... and 1 more rows.*
 
@@ -22812,7 +22466,7 @@ N/A
 
 ---
 
-### 71. local004 (DB: `E_commerce`)
+### 77. local004 (DB: `E_commerce`)
 **Question**: Could you tell me the number of orders, average payment per order and customer lifespan in weeks of the 3 custumers with the highest average payment per order, where the lifespan is calculated by subtracting the earliest purchase date from the latest purchase date in days, dividing by seven, and if the result is less than seven days, setting it to 1.0?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22841,11 +22495,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   num_orders |   avg_payment |   lifespan_weeks |
-|-------------:|--------------:|-----------------:|
-|            1 |      13664.1  |                1 |
-|            1 |       7274.88 |                1 |
-|            1 |       6929.31 |                1 |
+N/A
 
 </details>
 
@@ -22862,7 +22512,7 @@ N/A
 
 ---
 
-### 72. local009 (DB: `Airlines`)
+### 78. local009 (DB: `Airlines`)
 **Question**: What is the distance of the longest route where Abakan is either the departure or destination city (in kilometers)?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22881,9 +22531,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   longest_route_distance_km |
-|----------------------------:|
-|                           0 |
+N/A
 
 </details>
 
@@ -22898,7 +22546,43 @@ N/A
 
 ---
 
-### 73. local259 (DB: `IPL`)
+### 79. local018 (DB: `California_Traffic_Collision`)
+**Question**: For the primary collision factor violation category that was the most common cause of traffic accidents in 2021, how many percentage points did its share of annual road incidents in 2021 decrease compared to its share in 2011?
+
+**Status**: Baseline ❌ | SlayQL ❌
+
+#### 📊 Execution Results Comparison
+
+<details open>
+<summary><b>Gold Standard Result (Expected)</b></summary>
+
+|   MAX(CASE WHEN COLLISION_YEAR = 2011 THEN PERCENTAGE_SHARE END) - MAX(CASE WHEN COLLISION_YEAR = 2021 THEN PERCENTAGE_SHARE END) |
+|----------------------------------------------------------------------------------------------------------------------------------:|
+|                                                                                                                         -0.553654 |
+
+</details>
+
+<details open>
+<summary><b>SlayQL Execution Result (❌)</b></summary>
+
+|   percentage_point_change |
+|--------------------------:|
+|                         0 |
+
+</details>
+
+<details open>
+<summary><b>Baseline Execution Result (❌)</b></summary>
+
+|   decrease_percentage_points |
+|-----------------------------:|
+|                          nan |
+
+</details>
+
+---
+
+### 80. local259 (DB: `IPL`)
 **Question**: For each player, list their ID, name, their most frequent role across all matches, batting hand, bowling skill, total runs scored, total matches played, total times they were dismissed, batting average (total runs divided by total dismissals), highest score in a single match, the number of matches in which they scored at least 30 runs, at least 50 runs, and at least 100 runs, total balls faced in their career, strike rate (total runs divided by total balls faced, multiplied by 100), total wickets taken, economy rate (average runs conceded per over), and their best bowling performance in a single match (most wickets taken in a match, formatted as "wickets taken-runs given", where the best performance is the one with the most wickets, and if tied, the fewest runs conceded). Ignore the extra runs data.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -22949,11 +22633,11 @@ N/A
 
 |   player_id | player_name     | most_frequent_role   | batting_hand   | bowling_skill      |   total_runs |   total_matches_played |   total_dismissals |   batting_average |   highest_score |
 |------------:|:----------------|:---------------------|:---------------|:-------------------|-------------:|-----------------------:|-------------------:|------------------:|----------------:|
-|           1 | SC Ganguly      | Captain              | Left-hand bat  | Right-arm medium   |         1303 |                     57 |                 52 |           25.0577 |              91 |
-|           2 | BB McCullum     | Player               | Right-hand bat | Right-arm medium   |         2431 |                     91 |                 86 |           28.2674 |             158 |
-|           3 | RT Ponting      | Captain              | Right-hand bat | Right-arm medium   |           91 |                     10 |                  9 |           10.1111 |              28 |
-|           4 | DJ Hussey       | Player               | Right-hand bat | Right-arm offbreak |         1322 |                     64 |                 49 |           26.9796 |              71 |
-|           5 | Mohammad Hafeez | Player               | Right-hand bat | Right-arm offbreak |           64 |                      8 |                  7 |            9.1429 |              16 |
+|           1 | SC Ganguly      | Captain              | Left-hand bat  | Right-arm medium   |            0 |                     55 |               1291 |                 0 |               0 |
+|           2 | BB McCullum     | Player               | Right-hand bat | Right-arm medium   |            0 |                     91 |               1944 |                 0 |               0 |
+|           3 | RT Ponting      | Captain              | Right-hand bat | Right-arm medium   |            0 |                      9 |                129 |                 0 |               0 |
+|           4 | DJ Hussey       | Player               | Right-hand bat | Right-arm offbreak |            0 |                     61 |               1101 |                 0 |               0 |
+|           5 | Mohammad Hafeez | Player               | Right-hand bat | Right-arm offbreak |            0 |                      8 |                 84 |                 0 |               0 |
 
 *... and 463 more rows.*
 
@@ -22970,7 +22654,7 @@ N/A
 
 ---
 
-### 74. local229 (DB: `IPL`)
+### 81. local229 (DB: `IPL`)
 **Question**: Find the IDs of players who scored the highest number of partnership runs for each match. The output should include the IDs of two players, each with their individual scores and the total partnership score. For each pair, the player with the higher individual score should be listed as player 1, and the player with the lower score as player 2. In cases where both players have the same score, the player with the higher ID should be player 1, and the player with the lower ID should be player 2. There can be multiple rows for a single match.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23007,15 +22691,9 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   player1_id |   player2_id |   player1_score |   player2_score |   partnership_runs |
-|-------------:|-------------:|----------------:|----------------:|-------------------:|
-|            2 |            4 |             158 |              12 |                 57 |
-|           19 |           23 |             116 |              31 |                 73 |
-|           40 |           42 |              58 |              52 |                102 |
-|           11 |            9 |              39 |              25 |                 54 |
-|           56 |           59 |              32 |              14 |                 31 |
-
-*... and 572 more rows.*
+|   match_id |   player1_id |   player2_id |   player1_score |   player2_score |   partnership_runs |
+|-----------:|-------------:|-------------:|----------------:|----------------:|-------------------:|
+|     335987 |            2 |            1 |               0 |               0 |                  0 |
 
 </details>
 
@@ -23036,7 +22714,7 @@ N/A
 
 ---
 
-### 75. local196 (DB: `SQLITE_SAKILA`)
+### 82. local196 (DB: `SQLITE_SAKILA`)
 **Question**: For each rating category of the first movie rented by customers—where the first movie is identified based on the earliest payment date per customer—please provide the average total amount spent per customer and the average number of subsequent rentals (calculated as the total number of rentals minus one) for customers whose first rented movie falls into that rating category.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23072,7 +22750,7 @@ Empty Result (0 rows)
 
 ---
 
-### 76. local253 (DB: `education_business`)
+### 83. local253 (DB: `education_business`)
 **Question**: Using a Salary Dataset where the salary values need to be cleaned by removing non-numeric characters and converting them to a numeric type, write a detailed SQL query that identifies the top 5 companies by average salary in each of Mumbai, Pune, New Delhi, and Hyderabad, then compares each company’s average salary in those cities to the overall national average salary. The final result should display four columns: Location, Company Name, Average Salary in State, and Average Salary in Country, listing only the top 5 companies in each of the specified locations.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23121,13 +22799,13 @@ Empty Result (0 rows)
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| Location   | Company Name        |   Average Salary in State |   Average Salary in Country |
-|:-----------|:--------------------|--------------------------:|----------------------------:|
-| Hyderabad  | Qwerty Concepts     |               5.08188e+06 |                      905103 |
-| Hyderabad  | SetuServ            |               4.9497e+06  |                      905103 |
-| Hyderabad  | Enrich IBS          |               3.77368e+06 |                      905103 |
-| Hyderabad  | Nassau Re           |               3.77368e+06 |                      905103 |
-| Hyderabad  | Government of India |               3.7483e+06  |                      905103 |
+| Location   | CompanyName                    |   AverageSalaryInState |   AverageSalaryInCountry |
+|:-----------|:-------------------------------|-----------------------:|-------------------------:|
+| Hyderabad  | Genpact                        |              128422    |                  844.615 |
+| Hyderabad  | Cognizant Technology Solutions |              117143    |                  844.615 |
+| Hyderabad  | ServiceNow                     |               37083    |                  844.615 |
+| Hyderabad  | Amazon                         |                6131.64 |                  844.615 |
+| Hyderabad  | 2COMS                          |                   0    |                  844.615 |
 
 *... and 15 more rows.*
 
@@ -23150,7 +22828,7 @@ Empty Result (0 rows)
 
 ---
 
-### 77. local064 (DB: `bank_sales_trading`)
+### 84. local064 (DB: `bank_sales_trading`)
 **Question**: For each customer and each month of 2020, first calculate the month-end balance by adding all deposit amounts and subtracting all withdrawal amounts that occurred during that specific month. Then determine which month in 2020 has the highest count of customers with a positive month-end balance and which month has the lowest count. For each of these two months, compute the average month-end balance across all customers and provide the difference between these two averages
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23181,9 +22859,15 @@ Empty Result (0 rows)
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   avg_balance_difference |
-|-------------------------:|
-|                  557.704 |
+| name                |
+|:--------------------|
+| weekly_sales        |
+| shopping_cart_users |
+| bitcoin_members     |
+| interest_metrics    |
+| customer_regions    |
+
+*... and 14 more rows.*
 
 </details>
 
@@ -23198,7 +22882,7 @@ Empty Result (0 rows)
 
 ---
 
-### 78. local098 (DB: `DB_IMDB`)
+### 85. local098 (DB: `DB_IMDB`)
 **Question**: From the first year each actor appeared in a film to the last, how many actors in the database never had a gap longer than three consecutive years without at least one new movie appearance, meaning there is no four-year span anywhere in their active career without at least a single film credit?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23254,7 +22938,7 @@ N/A
 
 ---
 
-### 79. local128 (DB: `BowlingLeague`)
+### 86. local128 (DB: `BowlingLeague`)
 **Question**: List the bowlers (including their ID, first name, and last name), match number, game number, handicap score, tournament date, and location for only those bowlers who have won games with a handicap score of 190 or less at all three venues: Thunderbird Lanes, Totem Lanes, and Bolero Lanes. Only include the specific game records where they won with a handicap score of 190 or less at these three locations.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23279,7 +22963,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   BowlerID | BowlerFirstName   | BowlerLastName   |   MatchID |   GameNumber |   HandiCapScore | TourneyDate   | TourneyLocation   |
+|   BowlerID | BowlerFirstName   | BowlerLastName   |   MatchID |   GameNumber |   HandicapScore | TourneyDate   | TourneyLocation   |
 |-----------:|:------------------|:-----------------|----------:|-------------:|----------------:|:--------------|:------------------|
 |         13 | Elizabeth         | Hallmark         |        10 |            1 |             189 | 2017-09-18    | Bolero Lanes      |
 |         13 | Elizabeth         | Hallmark         |        24 |            3 |             190 | 2017-10-09    | Totem Lanes       |
@@ -23308,7 +22992,7 @@ N/A
 
 ---
 
-### 80. local130 (DB: `school_scheduling`)
+### 87. local130 (DB: `school_scheduling`)
 **Question**: Could you provide a list of last names for all students who have completed English courses (where completion is defined as having a ClassStatus of 2), along with their quintile ranks based on their individual grades in those courses? The quintile should be determined by calculating how many students have grades greater than or equal to each student's grade, then dividing this ranking by the total number of students who completed English courses. The quintiles should be labeled as "First" (top 20%), "Second" (top 21-40%), "Third" (top 41-60%), "Fourth" (top 61-80%), and "Fifth" (bottom 20%). Please sort the results from highest performing quintile to lowest (First to Fifth).
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23333,15 +23017,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| StudLastName   | Quintile   |
-|:---------------|:-----------|
-| Bishop         | First      |
-| Sheskey        | First      |
-| Kennedy        | First      |
-| Jones          | Second     |
-| Galvin         | Second     |
-
-*... and 13 more rows.*
+N/A
 
 </details>
 
@@ -23362,7 +23038,7 @@ N/A
 
 ---
 
-### 81. local131 (DB: `EntertainmentAgency`)
+### 88. local131 (DB: `EntertainmentAgency`)
 **Question**: Could you list each musical style with the number of times it appears as a 1st, 2nd, or 3rd preference in a single row per style?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23387,15 +23063,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| StyleName           |   1st_Preference_Count |   2nd_Preference_Count |   3rd_Preference_Count |
-|:--------------------|-----------------------:|-----------------------:|-----------------------:|
-| 40's Ballroom Music |                      0 |                      1 |                      1 |
-| 60's Music          |                      1 |                      0 |                      0 |
-| 70's Music          |                      0 |                      1 |                      0 |
-| 80's Music          |                      0 |                      0 |                      1 |
-| Chamber Music       |                      1 |                      0 |                      0 |
-
-*... and 15 more rows.*
+| musical_style   |   first_pref_count |   second_pref_count |   third_pref_count |
+|:----------------|-------------------:|--------------------:|-------------------:|
+| first_pref      |                 36 |                   0 |                  0 |
+| second_pref     |                  0 |                  36 |                  0 |
+| third_pref      |                  0 |                   0 |                 36 |
 
 </details>
 
@@ -23416,7 +23088,7 @@ N/A
 
 ---
 
-### 82. local141 (DB: `AdventureWorks`)
+### 89. local141 (DB: `AdventureWorks`)
 **Question**: How did each salesperson's annual total sales compare to their annual sales quota? Provide the difference between their total sales and the quota for each year, organized by salesperson and year.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23453,13 +23125,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   SalespersonID |   Year |   AnnualTotalSales |   AnnualSalesQuota |   SalesVsQuotaDifference |
-|----------------:|-------:|-------------------:|-------------------:|-------------------------:|
-|             274 |   2011 |            28926.2 |              91000 |                -62073.8  |
-|             274 |   2012 |           453525   |             107000 |                346525    |
-|             274 |   2013 |           431089   |              84000 |                347089    |
-|             274 |   2014 |           178584   |             187000 |                 -8415.64 |
-|             275 |   2011 |           875824   |             502000 |                373824    |
+|   salesperson_id |   year |   total_sales |   quota |   difference |
+|-----------------:|-------:|--------------:|--------:|-------------:|
+|              274 |   2011 |       32567.9 |     nan |      32567.9 |
+|              274 |   2012 |      516197   |     nan |     516197   |
+|              274 |   2013 |      485881   |     nan |     485881   |
+|              274 |   2014 |      201289   |     nan |     201289   |
+|              275 |   2011 |      986298   |  300000 |     686298   |
 
 *... and 53 more rows.*
 
@@ -23482,7 +23154,7 @@ N/A
 
 ---
 
-### 83. local152 (DB: `imdb_movies`)
+### 90. local152 (DB: `imdb_movies`)
 **Question**: Can you provide the top 9 directors by movie count, including their ID, name, number of movies, average inter-movie duration (rounded to the nearest integer), average rating (rounded to 2 decimals), total votes, minimum and maximum ratings, and total movie duration? Sort the output first by movie count in descending order and then by total movie duration in descending order.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23507,15 +23179,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| director_id   | director_name     |   movie_count |   avg_inter_movie_duration |   avg_rating |   total_votes |   min_rating |   max_rating |   total_duration |
-|:--------------|:------------------|--------------:|---------------------------:|-------------:|--------------:|-------------:|-------------:|-----------------:|
-| nm1777967     | A.L. Vijay        |             5 |                        177 |         5.42 |          1754 |          3.7 |          6.9 |              613 |
-| nm2096009     | Andrew Jones      |             5 |                        191 |         3.02 |          1989 |          2.7 |          3.2 |              432 |
-| nm0814469     | Sion Sono         |             4 |                        331 |         6.03 |          2972 |          5.4 |          6.4 |              502 |
-| nm0001752     | Steven Soderbergh |             4 |                        254 |         6.47 |        171684 |          6.2 |          7   |              401 |
-| nm0425364     | Jesse V. Johnson  |             4 |                        299 |         5.45 |         14778 |          4.2 |          6.5 |              383 |
+| name             |
+|:-----------------|
+| ERD              |
+| movies           |
+| genre            |
+| director_mapping |
+| role_mapping     |
 
-*... and 4 more rows.*
+*... and 2 more rows.*
 
 </details>
 
@@ -23536,7 +23208,7 @@ N/A
 
 ---
 
-### 84. local212 (DB: `delivery_center`)
+### 91. local212 (DB: `delivery_center`)
 **Question**: Can you find 5 delivery drivers with the highest average number of daily deliveries?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23581,11 +23253,11 @@ N/A
 
 |   driver_id |   avg_daily_deliveries |
 |------------:|-----------------------:|
-|       25651 |                  10801 |
-|         nan |                   8639 |
-|       26223 |                   8509 |
-|       17457 |                    929 |
-|       11063 |                    904 |
+|         nan |                  15886 |
+|       25651 |                  10912 |
+|       26223 |                   8576 |
+|       17457 |                    930 |
+|       11063 |                    905 |
 
 </details>
 
@@ -23604,7 +23276,7 @@ N/A
 
 ---
 
-### 85. local264 (DB: `stacking`)
+### 92. local264 (DB: `stacking`)
 **Question**: Which model category (L1_model) appears the most frequently across all steps and versions when comparing traditional models to the Stack model, and what is the total count of its occurrences?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23637,7 +23309,7 @@ N/A
 
 | L1_model   |   total_count |
 |:-----------|--------------:|
-| regression |           327 |
+| L1_model   |          2872 |
 
 </details>
 
@@ -23652,7 +23324,7 @@ N/A
 
 ---
 
-### 86. local272 (DB: `oracle_sql`)
+### 93. local272 (DB: `oracle_sql`)
 **Question**: For order 423, identify the product IDs, aisles, and positions from which to pick the exact quantities needed for each order line, ensuring that the total picked quantity for each product matches the cumulative quantities ordered without exceeding the available inventory in warehouse 1. Calculate the quantities to be picked from each location by prioritizing inventory with earlier purchased dates and smaller quantities, and ensure that picking respects the sequence and cumulative quantities of the order lines for products with multiple entries.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23674,13 +23346,11 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   product_id | aisle   |   position |   pick_qty |
-|-------------:|:--------|-----------:|-----------:|
-|         4280 | C       |          1 |         36 |
-|         4280 | D       |         18 |         24 |
-|         6520 | A       |         29 |         14 |
-|         6520 | C       |         13 |         20 |
-|         6520 | A       |         16 |          6 |
+|   product_id |   aisle |   position |   line_no |   qty_to_pick_lot |
+|-------------:|--------:|-----------:|----------:|------------------:|
+|            2 |     nan |        nan |         1 |                 5 |
+|            2 |     nan |        nan |         3 |                 4 |
+|            3 |     nan |        nan |         2 |                 3 |
 
 </details>
 
@@ -23699,7 +23369,7 @@ N/A
 
 ---
 
-### 87. local286 (DB: `electronic_sales`)
+### 94. local286 (DB: `electronic_sales`)
 **Question**: Prepare a comprehensive performance report on our sellers, focusing on total sales, average item price, average review scores, and packing times. Ensure that the report includes only those sellers who have sold a quantity of more than 100 products and highlight the product category names in English with the highest sales volume.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23820,15 +23490,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| seller_id                        |   total_sales |   avg_item_price |   avg_review_score |   avg_packing_days | top_category     |
-|:---------------------------------|--------------:|-----------------:|-------------------:|-------------------:|:-----------------|
-| 4869f7a5dfa277a7dca6462dcf3b52b2 |        229238 |          198.474 |             4.1255 |             2.7349 | watches_gifts    |
-| 53243585a1d6dc2643021fd1853d8905 |        220199 |          545.048 |             4.102  |             3.6164 | computers        |
-| 4a3ca9315b744ce9f8e9374361493884 |        202909 |          101.05  |             3.8053 |             2.7702 | bed_bath_table   |
-| fa1c13f2614d7b5c4749cbc52fecda94 |        192553 |          330.28  |             4.3558 |             2.7021 | watches_gifts    |
-| 7c67e1448b00f6e969d365cea6b010ab |        188968 |          137.631 |             3.3487 |            12.1366 | office_furniture |
+| seller_id                        |   total_sales |   avg_item_price |   avg_review_score |   avg_packing_time_days | top_product_category   |
+|:---------------------------------|--------------:|-----------------:|-------------------:|------------------------:|:-----------------------|
+| 001cca7ae9ae17fb1caed9dfb1094831 |       25080   |         104.937  |             3.9025 |                  2.6324 | garden_tools           |
+| 004c9cd9d87a3c30c522c48c4fc07416 |       20467.2 |         116.291  |             4.1329 |                  1.7662 | bed_bath_table         |
+| 00ee68308b45bc5e2660cd833c3f81cc |       20345   |         117.601  |             4.3314 |                  2.0607 | bed_bath_table         |
+| 00fc707aaaad2d31347cf883cd2dfe10 |       13409.9 |          94.4359 |             3.7376 |                  2.8242 | computers_accessories  |
+| 01fdefa7697d26ad920e9e0346d4bd1b |       14921.4 |         113.904  |             4.3462 |                  1.7876 | health_beauty          |
 
-*... and 232 more rows.*
+*... and 233 more rows.*
 
 </details>
 
@@ -23849,7 +23519,7 @@ N/A
 
 ---
 
-### 88. local358 (DB: `log`)
+### 95. local358 (DB: `log`)
 **Question**: How many users are there in each age category (20s, 30s, 40s, 50s, and others)?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23882,13 +23552,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| age_category   |   user_count |
-|:---------------|-------------:|
-| 20s            |           32 |
-| 30s            |           88 |
-| 40s            |           24 |
-| 50s            |           24 |
-| others         |          152 |
+N/A
 
 </details>
 
@@ -23907,7 +23571,7 @@ N/A
 
 ---
 
-### 89. local356 (DB: `f1`)
+### 96. local356 (DB: `f1`)
 **Question**: Provide the full names of drivers who have been overtaken on track more times than they have overtaken others on track during race laps, excluding position changes due to pit stops (both at pit entry and exit), retirements, or position changes that occurred during the first lap of a race (considered as start movements).
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -23968,9 +23632,12 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-| full_name         |
-|:------------------|
-| Markus Winkelhock |
+| driver_full_name   |
+|:-------------------|
+| Charles Leclerc    |
+| Nigel Mansell      |
+| Oscar Piastri      |
+| Valtteri Bottas    |
 
 </details>
 
@@ -23986,7 +23653,7 @@ N/A
 
 ---
 
-### 90. sf001 (DB: `GLOBAL_WEATHER__CLIMATE_DATA_FOR_BI`)
+### 97. sf001 (DB: `GLOBAL_WEATHER__CLIMATE_DATA_FOR_BI`)
 **Question**: Assuming today is April 1, 2024, I would like to know the daily snowfall amounts greater than 6 inches for each U.S. postal code during the week ending after the first two full weeks of the previous year. Show the postal code, date, and snowfall amount.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24026,7 +23693,7 @@ N/A
 
 ---
 
-### 91. sf003 (DB: `GLOBAL_GOVERNMENT`)
+### 98. sf003 (DB: `GLOBAL_GOVERNMENT`)
 **Question**: For each year from 2015 to 2020, which Census Zip Code Tabulation Area had the second-highest annual population growth rate? Include only areas with a population estimate of at least 25,000 people in that year (based on 5-Year American Community Survey estimates). For each year, provide the zip code, state abbreviation, and the annual growth rate percentage.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24051,15 +23718,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   ZIP_CODE |   STATE_ABBREVIATION |   ANNUAL_GROWTH_RATE_PERCENTAGE |
-|-----------:|---------------------:|--------------------------------:|
-|      34119 |                  nan |                         12.2095 |
-|      34785 |                  nan |                         18.9606 |
-|      92618 |                  nan |                         15.9854 |
-|      34785 |                  nan |                         15.9025 |
-|      20105 |                  nan |                         17.69   |
-
-*... and 1 more rows.*
+N/A
 
 </details>
 
@@ -24080,7 +23739,7 @@ N/A
 
 ---
 
-### 92. sf037 (DB: `US_REAL_ESTATE`)
+### 99. sf037 (DB: `US_REAL_ESTATE`)
 **Question**: How can we find the shortest straight-line distance in miles between each 'The Home Depot' store and its nearest 'Lowe's Home Improvement' location? Using the US_REAL_ESTATE.CYBERSYN database, join the point_of_interest_index table with point_of_interest_addresses_relationships and us_addresses tables to get geographic coordinates. For each 'The Home Depot' location (identified by its poi_id), calculate its distance to all 'Lowe's Home Improvement' stores using ST_DISTANCE and ST_MAKEPOINT functions, convert the distance from meters to miles (dividing by 1609), and return only the record with the minimum distance for each 'The Home Depot' store using QUALIFY with ROW_NUMBER().
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24165,7 +23824,15 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-N/A
+| poi_id_home_depot                    | home_depot_name                 | lowe_poi_id                          | lowe_name               |   distance_miles |
+|:-------------------------------------|:--------------------------------|:-------------------------------------|:------------------------|-----------------:|
+| 00183e0c-20cb-4d4e-9084-986ea8db3ad1 | The Home Depot                  | 8bcfa85a-a920-4694-9f3d-98cdaaafcb09 | Lowe's Home Improvement |          76.3773 |
+| 00183ef9-4b3c-47ce-b62a-85a2532e24df | Home Services At The Home Depot | 5f20b410-8cb9-487f-b481-d6a025757f34 | Lowe's Home Improvement |           0.5612 |
+| 0039f560-e75b-4a36-ab9f-550ab713d439 | The Home Depot                  | 0915a5a6-139e-4dfb-95aa-9101e56d9942 | Lowe's Home Improvement |           0.556  |
+| 00422c77-981d-4bd0-822a-1317304436a9 | The Home Depot                  | 21cde5ae-0004-42d7-8716-603ec1734d8c | Lowe's Home Improvement |           3.986  |
+| 0049c74d-e514-47f0-ad2e-024d919d3a2a | The Home Depot                  | 6cd60965-4c09-4138-b7e3-ba9558c97d74 | Lowe's Home Improvement |           3.9596 |
+
+*... and 6598 more rows.*
 
 </details>
 
@@ -24186,7 +23853,7 @@ N/A
 
 ---
 
-### 93. sf012 (DB: `WEATHER__ENVIRONMENT`)
+### 100. sf012 (DB: `WEATHER__ENVIRONMENT`)
 **Question**: Using data from the FEMA National Flood Insurance Program Claim Index, for each year from 2010 through 2019, what were the total building damage amounts and total contents damage amounts reported under the National Flood Insurance Program for the NFIP community named 'City Of New York,' grouped by each year of loss?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24235,13 +23902,13 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   year_of_loss |   total_building_damage_amount |   total_contents_damage_amount |
-|---------------:|-------------------------------:|-------------------------------:|
-|           2010 |               855612           |                37645           |
-|           2011 |                    1.08063e+07 |               573783           |
-|           2012 |                    4.93067e+08 |                    5.71785e+07 |
-|           2013 |                61004           |                  172           |
-|           2014 |                    1.33526e+06 |                78545           |
+|   YEAR_OF_LOSS |   TOTAL_BUILDING_DAMAGE_AMOUNTS |   TOTAL_CONTENTS_DAMAGE_AMOUNTS |
+|---------------:|--------------------------------:|--------------------------------:|
+|           2010 |                735788           |                 24396           |
+|           2011 |                     9.03486e+06 |                388869           |
+|           2012 |                     4.73968e+08 |                     4.89937e+07 |
+|           2013 |                 46396.3         |                     0           |
+|           2014 |                     1.15894e+06 |                 45961.9         |
 
 *... and 5 more rows.*
 
@@ -24264,7 +23931,7 @@ N/A
 
 ---
 
-### 94. sf029 (DB: `AMAZON_VENDOR_ANALYTICS__SAMPLE_DATASET`)
+### 101. sf029 (DB: `AMAZON_VENDOR_ANALYTICS__SAMPLE_DATASET`)
 **Question**: Generate a daily detailed sales report for each product under the 'Manufacturing' distributor view, covering the 30 days leading up to February 6, 2022, by joining the sales, traffic, inventory, and net PPM data on date, ASIN, program, period, and distributor_view. The report must include total ordered units, ordered revenue, average selling price, glance views, conversion rate, shipped units, shipped revenue, average net PPM, average procurable product OOS, total on-hand units and value, net received units and value, open purchase order quantities, unfilled customer ordered units, and average vendor confirmation rate, receive fill rate, sell-through rate, and vendor lead time.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24302,7 +23969,7 @@ N/A
 
 ---
 
-### 95. sf040 (DB: `US_ADDRESSES__POI`)
+### 102. sf040 (DB: `US_ADDRESSES__POI`)
 **Question**: Find the top 10 northernmost addresses in Florida's largest zip code area. What are their address numbers, street names, and types?
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24387,9 +24054,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   ADDRESS_NUMBER | STREET_NAME   | STREET_TYPE   |
-|-----------------:|:--------------|:--------------|
-|              101 | Main          | Street        |
+N/A
 
 </details>
 
@@ -24404,7 +24069,7 @@ N/A
 
 ---
 
-### 96. sf013 (DB: `NETHERLANDS_OPEN_MAP_DATA`)
+### 103. sf013 (DB: `NETHERLANDS_OPEN_MAP_DATA`)
 **Question**: Compare the total road lengths in Amsterdam and Rotterdam by creating a side-by-side analysis of both cities. For each combination of road class and subclass, calculate the total length of roads (in meters) specifically for QUADKEY segments '12020210' and '12020211'. Present the results with columns for class, subclass, Amsterdam's road lengths, and Rotterdam's road lengths.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24478,7 +24143,7 @@ N/A
 
 ---
 
-### 97. sf014 (DB: `CENSUS_GALAXY__AIML_MODEL_DATA_ENRICHMENT_SAMPLE`)
+### 104. sf014 (DB: `CENSUS_GALAXY__AIML_MODEL_DATA_ENRICHMENT_SAMPLE`)
 **Question**: What is the New York State ZIP code with the highest number of commuters traveling over one hour, according to 2021 ACS data? Include the zip code, the total commuters, state benchmark for this duration, and state population.
 
 **Status**: Baseline ❌ | SlayQL ❌
@@ -24503,9 +24168,7 @@ N/A
 <details open>
 <summary><b>SlayQL Execution Result (❌)</b></summary>
 
-|   ZipCode |   TOTAL_COMMUTERS |   STATE_COMMUTERS_OVER_1HR |   STATE_POPULATION |
-|----------:|------------------:|---------------------------:|-------------------:|
-|     11385 |           14076.1 |                     935745 |                nan |
+N/A
 
 </details>
 

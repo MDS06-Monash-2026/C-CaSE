@@ -382,6 +382,41 @@ Clearly outline the planned SQL structure:
 * Before generating the final SQL, explicitly verify that your designed SQL fully meets every constraint (explicit and implicit) mentioned in the original question.
 * Clearly explain why your SQL logic is correct and how it satisfies the user's intent comprehensively.
 
+**Step 4.5: Define Semantic Assertions (Mandatory)**
+
+Based on the user's natural language question, you MUST define strict data assertions that the final query result must satisfy. These assertions act as a semantic contract — if the result violates any of them, the query will be automatically rejected and you will be asked to revise.
+
+Output these assertions as a JSON code block BEFORE your SQL code block. The JSON must contain one or more of the following keys:
+
+- `expected_row_count` (int): The exact number of rows the result should contain. Set this when the question implies a specific count:
+  - "top 5" → `"expected_row_count": 5`
+  - "how many" → `"expected_row_count": 1` (the answer is a single number)
+  - "list all" → do NOT set this (count is unknown)
+
+- `unique_columns` (list of strings): Column names that MUST NOT contain duplicates. Set this to catch JOIN explosions:
+  - If the question asks for "each customer", the customer_id column should be unique.
+  - If the question asks for "distinct products", the product column should be unique.
+
+- `value_bounds` (dict): Map column names to `{"min": x, "max": y}` to enforce numeric ranges:
+  - Percentages → `{"min": 0, "max": 100}`
+  - Counts → `{"min": 0}` (cannot be negative)
+  - Monetary amounts → `{"min": 0}` (if negative values are impossible)
+  - Ratios → `{"min": 0, "max": 1}` (if expressed as decimals, not percentages)
+
+- `no_nulls` (list of strings): Columns that should NOT be entirely NULL. Set this for columns central to the answer.
+
+Example: If asked "What are the top 3 products by recovery rate percentage?":
+```json
+{
+  "expected_row_count": 3,
+  "unique_columns": ["product_name"],
+  "value_bounds": {"recovery_rate": {"min": 0, "max": 100}},
+  "no_nulls": ["product_name", "recovery_rate"]
+}
+```
+
+IMPORTANT: Only set assertions you are confident about based on the question's explicit constraints. Do not guess — omit a key if unsure. But you MUST output at least an empty JSON block `{}`.
+
 **Step 5: Write the Final SQL Query**
 * Ensure accurate parentheses pairing and commas placement.
 * Annotate your SQL clearly using comments to explain each part.
@@ -395,10 +430,25 @@ When writing the SQL query, consider the following optimization strategies:
     - Make sure that the query content of the sql definitely includes what needs to be involved in the question, the execution result can be more than what is required by the question, but it must not be less.
 
 📤 Output Format
-In addition to outputting other information, you also need to return the generated SQL query in the following format:
-```sql
-Your sql query
+You MUST output TWO code blocks in this exact order:
+
+1. A ```json``` block containing your semantic assertions (defined in Step 4.5).
+2. A ```sql``` block containing your final SQL query.
+
+Example output structure:
+```json
+{
+  "expected_row_count": 5,
+  "value_bounds": {"percentage": {"min": 0, "max": 100}}
+}
 ```
+
+```sql
+SELECT ...
+FROM ...
+LIMIT 5
+```
+
 Make sure that all the sqls is contained within ```sql``` and the last ```sql``` contains the final complete SQL in your output.
 """
 

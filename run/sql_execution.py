@@ -14,6 +14,9 @@ import threading
 import numpy as np
 import argparse
 
+from semantic_validator import validate as semantic_validate
+from semantic_validator import load_assertions, format_errors_for_llm
+
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
 credential_usage_count = {}
@@ -195,6 +198,52 @@ def execute_sql(candidate_idx, log_path, task, data_file, max_workers=4):
         ]
         for _ in tqdm(as_completed(futures), total=len(futures), desc=f"Processing candidate {candidate_idx}"):
             pass
+
+    # -----------------------------------------------------------------------
+    # SGSA: Semantic Validation Pass (post-execution middleware)
+    # For each instance that executed successfully (CSV exists), load the
+    # frozen assertions and validate.  If assertions fail, delete the CSV
+    # and write a synthetic error file — this triggers sql_revise.py.
+    # -----------------------------------------------------------------------
+    result_dir = f"{log_path}/sql_gen/{task}_execution_result_{candidate_idx}"
+    error_dir = f"{log_path}/sql_gen/{task}_execution_error_{candidate_idx}"
+    sql_dir = f"{log_path}/sql_gen/{task}_sql_{candidate_idx}"
+    semantic_count = 0
+
+    for csv_file in sorted(os.listdir(result_dir)):
+        if not csv_file.endswith(".csv"):
+            continue
+        instance_id = csv_file[:-4]  # strip .csv
+
+        # Load frozen assertions from the sql_gen output
+        assertions_path = f"{sql_dir}/{instance_id}/assertions.json"
+        assertions = load_assertions(assertions_path)
+        if not assertions:
+            continue  # No assertions defined — nothing to validate
+
+        # Load the result DataFrame
+        csv_path = os.path.join(result_dir, csv_file)
+        try:
+            df = pd.read_csv(csv_path)
+        except Exception:
+            continue  # Corrupted CSV — leave for revise to handle
+
+        # Run semantic validation
+        errors = semantic_validate(df, assertions)
+        if errors:
+            semantic_count += 1
+            # Delete the CSV — this instance is NOT a true success
+            os.remove(csv_path)
+            # Write synthetic error file (triggers sql_revise.py pickup)
+            err_path = os.path.join(error_dir, f"{instance_id}.txt")
+            with open(err_path, "w", encoding="utf-8") as f:
+                f.write(format_errors_for_llm(errors))
+            print(f"[SGSA] Semantic validation FAILED for {instance_id} "
+                  f"(candidate {candidate_idx}): {len(errors)} error(s)")
+
+    if semantic_count > 0:
+        print(f"[SGSA] {semantic_count} instance(s) failed semantic validation "
+              f"for candidate {candidate_idx} — routed to sql_revise.py")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

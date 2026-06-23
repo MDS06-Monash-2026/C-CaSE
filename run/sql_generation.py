@@ -143,6 +143,8 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
     os.makedirs(out_dir, exist_ok=True)
 
     import re
+    from semantic_validator import parse_assertions_from_output
+
     for name in os.listdir(in_dir):
         if not name.endswith(".txt"):
             continue
@@ -150,6 +152,7 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
         with open(f"{in_dir}/{name}", "r", encoding="utf-8") as f:
             content = f.read()
         
+        # --- Extract SQL (existing logic) ---
         blocks = re.findall(r"```sql\s*\n(.*?)\n\s*```", content, re.DOTALL)
         if not blocks:
             blocks = re.findall(r"```\s*\n(.*?)\n\s*```", content, re.DOTALL)
@@ -167,9 +170,17 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
             else:
                 sql = content.strip()
         
+        # --- Extract Semantic Assertions (SGSA) ---
+        assertions = parse_assertions_from_output(content)
+
         instance_dir = f"{out_dir}/{iid}"
         os.makedirs(instance_dir, exist_ok=True)
         with open(f"{instance_dir}/selected.sql", "w", encoding="utf-8") as f:
+            f.write(sql)
+        with open(f"{instance_dir}/assertions.json", "w", encoding="utf-8") as f:
+            json.dump(assertions, f, indent=2, ensure_ascii=False)
+        # Also write flat .sql for sql_execution.py / sql_revise.py compat
+        with open(f"{out_dir}/{iid}.sql", "w", encoding="utf-8") as f:
             f.write(sql)
 
 def main():

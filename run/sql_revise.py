@@ -16,6 +16,11 @@ from google.cloud import bigquery
 import snowflake.connector
 
 from config import *
+from semantic_validator import (
+    validate as semantic_validate,
+    load_assertions,
+    format_errors_for_llm,
+)
 
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
@@ -182,7 +187,17 @@ class SQLReviser:
         self.model=os.environ.get("MODEL_NAME")
         self.loader = DataLoader()
 
-    def revise(self, instance_id, info, schema, sql, execution):
+    def revise(self, instance_id, info, schema, sql, execution, assertions=None):
+        """Iterative SQL correction loop with SGSA semantic validation.
+
+        Parameters
+        ----------
+        assertions : dict or None
+            Frozen semantic assertions (Immutable Semantic Contract).
+            If provided, successful SQL executions are also validated
+            against these assertions.  Violations are fed back to the
+            LLM as synthetic errors within the same attempt budget.
+        """
         question = info["question"]
         db_name = info["db_name"]
 
@@ -243,6 +258,22 @@ class SQLReviser:
                     sql = model_output.strip()
             exec_status, exec_result = thread_safe_sql_execution(instance_id, sql, db_name)
             if exec_status == "success":
+                # ----- SGSA: Semantic Validation (Immutable Contract) -----
+                if assertions and isinstance(exec_result, pd.DataFrame):
+                    sem_errors = semantic_validate(exec_result, assertions)
+                    if sem_errors:
+                        error_msg = format_errors_for_llm(sem_errors)
+                        print(
+                            f"[SGSA-REVISE] Semantic validation FAILED for "
+                            f"{instance_id} (attempt {attempt + 1}): "
+                            f"{len(sem_errors)} error(s)"
+                        )
+                        messages.append({
+                            "role": "user",
+                            "content": error_msg
+                        })
+                        continue  # consume another attempt
+                # ----- End SGSA -----
                 return sql, exec_result, exec_status, messages
             else:
                 if "Quota" in exec_result:
@@ -279,7 +310,14 @@ def run_task(reviser, data, schema_dir, log_path, task, instance_id, cid):
     sql = open(sql_path).read()
     execution = open(err_path).read()
 
-    new_sql, df, exec_status, messages = reviser.revise(instance_id, data[instance_id], schema, sql, execution)
+    # Load frozen assertions (Immutable Semantic Contract)
+    assertions_path = f"{log_path}/sql_gen/{task}_sql_{cid}/{instance_id}/assertions.json"
+    assertions = load_assertions(assertions_path)
+
+    new_sql, df, exec_status, messages = reviser.revise(
+        instance_id, data[instance_id], schema, sql, execution,
+        assertions=assertions
+    )
     out_dir = f"{log_path}/sql_revise/{task}_sql_{cid}"
     out_dir_me = f"{log_path}/sql_revise/{task}_messages_{cid}"
     os.makedirs(out_dir, exist_ok=True)
