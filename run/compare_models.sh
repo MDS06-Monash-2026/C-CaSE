@@ -1,65 +1,274 @@
 #!/bin/bash
+# =============================================================================
+# compare_models.sh — SlayQL (C-CaSE) vs AutoLink Baseline Full Pipeline
+# =============================================================================
+# This script runs the complete end-to-end pipeline for the SlayQL enhanced
+# system and then generates a side-by-side comparison against the AutoLink
+# baseline (assumed already evaluated in BASELINE_LOG).
+#
+# Pipeline stages:
+#   1.  Offline BM25 Value Index Building
+#   2.  Schema Retrieval + IT-EE + RBP  (retrieve_topk_schema.py)
+#   3.  ID Injection                    (add_id.py)
+#   4.  Initial Schema Prompt Gen       (generate_schema.py --is_initial)
+#   5.  Agentic Schema Completion       (complete_schema.py)
+#   6.  Schema Postprocessing           (postprocess.py)
+#   7.  Final Schema Prompt Gen         (generate_schema.py)
+#   8.  SQL Generation (candidates)     (sql_generation.py)
+#   9.  SQL Execution (candidate eval)  (sql_execution.py)
+#  10.  SQL Revision (error correction) (sql_revise.py)
+#  11.  SQL Selection (consistency)     (sql_selection.py)
+#  12.  Evaluation — SlayQL             (evaluate.py)
+#  13.  Evaluation — Baseline           (evaluate.py, if available)
+#  14.  Token Metrics                   (parse_tokens.py)
+#  15.  Side-by-Side SQL Comparison     (generate_comparison.py)
+#  16.  CSV-only Comparison             (generate_csv_comparison.py)
+# =============================================================================
+
 set -e
 
-# Configuration
+# ---------------------------------------------------------------------------
+# 0.  Load environment variables (API keys, model names, etc.)
+# ---------------------------------------------------------------------------
 if [ -f ".env" ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
 DATA_FILE="subset_diverse_20_evaluation.json"
-BASELINE_LOG="log_v3_topn100"
+BASELINE_LOG="log_subset_diverse_20_evaluation_autolink_baseline"
 ENHANCED_LOG="log_subset_diverse_20_evaluation_slayql_ccase"
 TOP_N=100
 NUM_CANDIDATES=5
 TASK="r1_lite"
+SCHEMA_DIR="$ENHANCED_LOG/final_schema_prompts"
+NUM_GEN_WORKERS=32
+NUM_EXEC_WORKERS=4
+NUM_REVISE_WORKERS=8
+NUM_SELECTION_WORKERS=32
 
-echo "=== Building Value Indices for Enhanced Pipeline (Offline Phase) ==="
-python build_value_indices.py
+echo ""
+echo "============================================================"
+echo "  SlayQL (C-CaSE) Full Pipeline"
+echo "  Data file  : $DATA_FILE"
+echo "  Output dir : $ENHANCED_LOG"
+echo "  Candidates : $NUM_CANDIDATES"
+echo "  Task       : $TASK"
+echo "============================================================"
+echo ""
 
-echo "=== Running Enhanced Pipeline (SlayQL) ==="
-# Since the python scripts have been injected with the new module logic, 
-# running this sequence automatically executes the IT-EE, RBP, and Value Grounding logic.
-python retrieve_topk_schema.py --log_path $ENHANCED_LOG --top_n $TOP_N --data_file $DATA_FILE
-python add_id.py --log_path $ENHANCED_LOG --data_file $DATA_FILE
-python generate_schema.py --log_path $ENHANCED_LOG --is_initial --data_file $DATA_FILE
-python complete_schema.py --log_path $ENHANCED_LOG --data_file $DATA_FILE
-python postprocess.py --log_path $ENHANCED_LOG
-python generate_schema.py --log_path $ENHANCED_LOG --data_file $DATA_FILE
+# ---------------------------------------------------------------------------
+# Stage 1: Offline BM25 Value Index Building
+#   Builds per-database BM25 indices of cell values for the ValueGrounder.
+#   Skips DBs that have already been indexed (idempotent).
+# ---------------------------------------------------------------------------
+echo "=== [1/16] Building BM25 Value Indices (Offline Phase) ==="
+python build_value_indices.py --data_file "$DATA_FILE"
 
+# ---------------------------------------------------------------------------
+# Stage 2: Schema Retrieval (Dense + RBP + IT-EE)
+# ---------------------------------------------------------------------------
+echo "=== [2/16] Running Dense Retrieval + RBP + IT-EE ==="
+python retrieve_topk_schema.py \
+    --log_path "$ENHANCED_LOG" \
+    --top_n "$TOP_N" \
+    --data_file "$DATA_FILE"
+
+# ---------------------------------------------------------------------------
+# Stage 3: Inject instance IDs into schema candidates
+# ---------------------------------------------------------------------------
+echo "=== [3/16] Injecting instance IDs ==="
+python add_id.py --log_path "$ENHANCED_LOG" --data_file "$DATA_FILE"
+
+# ---------------------------------------------------------------------------
+# Stage 4: Generate initial schema prompts (before agentic expansion)
+# ---------------------------------------------------------------------------
+echo "=== [4/16] Generating initial schema prompts ==="
+python generate_schema.py \
+    --log_path "$ENHANCED_LOG" \
+    --is_initial \
+    --data_file "$DATA_FILE"
+
+# ---------------------------------------------------------------------------
+# Stage 5: Agentic schema completion (IT-EE safe-exit + value hints)
+# ---------------------------------------------------------------------------
+echo "=== [5/16] Running agentic schema completion ==="
+python complete_schema.py \
+    --log_path "$ENHANCED_LOG" \
+    --data_file "$DATA_FILE"
+
+# ---------------------------------------------------------------------------
+# Stage 6: Postprocess schema candidates (dedup, format)
+# ---------------------------------------------------------------------------
+echo "=== [6/16] Postprocessing schema candidates ==="
+python postprocess.py --log_path "$ENHANCED_LOG"
+
+# ---------------------------------------------------------------------------
+# Stage 7: Generate final schema prompts (used for SQL generation)
+# ---------------------------------------------------------------------------
+echo "=== [7/16] Generating final schema prompts ==="
+python generate_schema.py \
+    --log_path "$ENHANCED_LOG" \
+    --data_file "$DATA_FILE"
+
+# ---------------------------------------------------------------------------
+# Stage 8: SQL Generation (multi-candidate)
+# ---------------------------------------------------------------------------
+echo "=== [8/16] Generating SQL candidates ==="
 python sql_generation.py \
-  --num_workers 32 \
-  --num_candidates $NUM_CANDIDATES \
-  --data_file $DATA_FILE \
-  --schema_dir $ENHANCED_LOG/final_schema_prompts \
-  --log_path $ENHANCED_LOG \
-  --task $TASK
+    --num_workers "$NUM_GEN_WORKERS" \
+    --num_candidates "$NUM_CANDIDATES" \
+    --data_file "$DATA_FILE" \
+    --schema_dir "$SCHEMA_DIR" \
+    --log_path "$ENHANCED_LOG" \
+    --task "$TASK"
 
-echo "=== Evaluating Enhanced Pipeline ==="
+# ---------------------------------------------------------------------------
+# Stage 9: SQL Execution (execute each candidate to obtain results / errors)
+# ---------------------------------------------------------------------------
+echo "=== [9/16] Executing SQL candidates ==="
+python sql_execution.py \
+    --num_workers "$NUM_EXEC_WORKERS" \
+    --num_candidates "$NUM_CANDIDATES" \
+    --data_file "$DATA_FILE" \
+    --log_path "$ENHANCED_LOG" \
+    --task "$TASK"
+
+# ---------------------------------------------------------------------------
+# Stage 10: SQL Revision (self-correction on failed executions)
+# ---------------------------------------------------------------------------
+echo "=== [10/16] Revising failed SQL candidates ==="
+python sql_revise.py \
+    --num_workers "$NUM_REVISE_WORKERS" \
+    --num_candidates "$NUM_CANDIDATES" \
+    --data_file "$DATA_FILE" \
+    --schema_dir "$SCHEMA_DIR" \
+    --log_path "$ENHANCED_LOG" \
+    --task "$TASK"
+
+# ---------------------------------------------------------------------------
+# Stage 11: SQL Selection (self-consistency voting)
+# ---------------------------------------------------------------------------
+echo "=== [11/16] Selecting final SQL via self-consistency ==="
+python sql_selection.py \
+    --log_path "$ENHANCED_LOG" \
+    --num_candidates "$NUM_CANDIDATES" \
+    --workers "$NUM_SELECTION_WORKERS" \
+    --task "$TASK"
+
+# ---------------------------------------------------------------------------
+# Stage 12: Evaluate SlayQL (Enhanced Pipeline)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [12/16] Evaluating SlayQL Pipeline ==="
 cd ../evaluation_suite
-python evaluate.py --mode sql --result_dir ../run/$ENHANCED_LOG/sql_gen/${TASK}_sql_0 --data_file ../run/$DATA_FILE
 
-# Evaluate baseline if exists
-if [ -d "../run/$BASELINE_LOG/sql_selection/final" ]; then
-    echo "=== Evaluating Baseline Pipeline ==="
-    python evaluate.py --mode sql --result_dir ../run/$BASELINE_LOG/sql_selection/final --data_file ../run/$DATA_FILE
+SLAYQL_RESULT_DIR="../run/$ENHANCED_LOG/sql_selection/final"
+if [ -d "$SLAYQL_RESULT_DIR" ]; then
+    python evaluate.py \
+        --mode exec_result \
+        --result_dir "$SLAYQL_RESULT_DIR" \
+        --gold_dir gold \
+        --data_file "../run/$DATA_FILE"
 else
-    echo "Baseline SQL output not found in $BASELINE_LOG/sql_selection/final. Skipping baseline evaluation."
-    echo "If you need to run the baseline, revert the python scripts to their original state and run the pipeline into $BASELINE_LOG."
+    echo "[WARN] SlayQL sql_selection/final not found — trying sql_gen fallback."
+    python evaluate.py \
+        --mode sql \
+        --result_dir "../run/$ENHANCED_LOG/sql_gen/${TASK}_sql_0" \
+        --data_file "../run/$DATA_FILE"
 fi
+
+# ---------------------------------------------------------------------------
+# Stage 13: Evaluate Baseline (AutoLink)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [13/16] Evaluating Baseline (AutoLink) ==="
+BASELINE_RESULT_DIR="../run/$BASELINE_LOG/sql_selection/final"
+if [ -d "$BASELINE_RESULT_DIR" ]; then
+    python evaluate.py \
+        --mode exec_result \
+        --result_dir "$BASELINE_RESULT_DIR" \
+        --gold_dir gold \
+        --data_file "../run/$DATA_FILE"
+else
+    echo "[WARN] Baseline sql_selection/final not found — trying sql_gen fallback."
+    if [ -d "../run/$BASELINE_LOG/sql_gen/${TASK}_sql_0" ]; then
+        python evaluate.py \
+            --mode sql \
+            --result_dir "../run/$BASELINE_LOG/sql_gen/${TASK}_sql_0" \
+            --data_file "../run/$DATA_FILE"
+    else
+        echo "[SKIP] Baseline results not found in $BASELINE_LOG. Skipping baseline evaluation."
+    fi
+fi
+
 cd ../run
 
-echo "=== Extracting Token Metrics ==="
-python parse_tokens.py --log_path $ENHANCED_LOG --data_file $DATA_FILE
+# ---------------------------------------------------------------------------
+# Stage 14: Token Metrics
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [14/16] Extracting Token Metrics ==="
+python parse_tokens.py --log_path "$ENHANCED_LOG" --data_file "$DATA_FILE"
 if [ -d "$BASELINE_LOG/input" ] || [ -d "$BASELINE_LOG/inputs" ]; then
-    echo "Baseline Token Metrics:"
-    python parse_tokens.py --log_path $BASELINE_LOG --data_file $DATA_FILE
+    echo "--- Baseline Token Metrics ---"
+    python parse_tokens.py --log_path "$BASELINE_LOG" --data_file "$DATA_FILE"
 fi
 
-echo "=== Generating Side-by-Side Comparison Report ==="
-python generate_comparison.py --data_file $DATA_FILE --slayql_dir "$ENHANCED_LOG/sql_gen/${TASK}_sql_0" --baseline_dir "$BASELINE_LOG/sql_selection/final" --output_path "comparison_report.md"
+# ---------------------------------------------------------------------------
+# Stage 15: Side-by-side SQL + result comparison report
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [15/16] Generating Side-by-Side SQL Comparison Report ==="
+
+# Determine best available SlayQL result directory for comparison.
+if [ -d "$ENHANCED_LOG/sql_selection/final" ]; then
+    SLAYQL_COMPARE_DIR="$ENHANCED_LOG/sql_selection/final"
+else
+    SLAYQL_COMPARE_DIR="$ENHANCED_LOG/sql_gen/${TASK}_sql_0"
+fi
+
+if [ -d "$BASELINE_LOG/sql_selection/final" ]; then
+    BASELINE_COMPARE_DIR="$BASELINE_LOG/sql_selection/final"
+else
+    BASELINE_COMPARE_DIR="$BASELINE_LOG/sql_gen/${TASK}_sql_0"
+fi
+
+python generate_comparison.py \
+    --data_file "$DATA_FILE" \
+    --slayql_dir "$SLAYQL_COMPARE_DIR" \
+    --baseline_dir "$BASELINE_COMPARE_DIR" \
+    --output_path "comparison_report.md"
+
 if [ -f "comparison_report.md" ]; then
-    cp -f "comparison_report.md" "C:\Users\ASUS ROG\.gemini\antigravity-ide\brain\ca786be0-2761-41c0-9119-b525140ee272\comparison_report.md"
-    echo "Side-by-side comparison report updated at C:\Users\ASUS ROG\.gemini\antigravity-ide\brain\ca786be0-2761-41c0-9119-b525140ee272\comparison_report.md"
+    echo "Side-by-side comparison report saved to: comparison_report.md"
 fi
 
-echo "Comparison complete! Check the terminal output above for the accuracy scores."
+# ---------------------------------------------------------------------------
+# Stage 16: CSV-only offline comparison (no live execution needed)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== [16/16] Generating CSV-Only Offline Comparison Report ==="
+python generate_csv_comparison.py \
+    --data_file "$DATA_FILE" \
+    --slayql_dir "$SLAYQL_COMPARE_DIR" \
+    --baseline_dir "$BASELINE_COMPARE_DIR" \
+    --output_path "csv_only_comparison_report.md"
+
+if [ -f "csv_only_comparison_report.md" ]; then
+    echo "CSV comparison report saved to: csv_only_comparison_report.md"
+fi
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+echo ""
+echo "============================================================"
+echo "  Pipeline complete!"
+echo "  Check the terminal output above for Execution Accuracy."
+echo "  Reports:"
+echo "    comparison_report.md          (full SQL side-by-side)"
+echo "    csv_only_comparison_report.md (offline CSV comparison)"
+echo "============================================================"

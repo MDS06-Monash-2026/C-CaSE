@@ -260,18 +260,37 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
             sim = 1.0 / (1.0 + float(res["distance"]))
             col_path = f"{res['metadata']['table']}.{res['metadata']['column']}"
             initial_similarities[col_path] = sim
-            
-        S_propagated = propagate_relevance(initial_similarities, db_metadata, alpha=0.7)
+
+        # ------------------------------------------------------------------
+        # Compute entropy BEFORE propagation so RBP can use it to set
+        # a dynamic alpha (high confidence → minimal propagation).
+        # ------------------------------------------------------------------
+        top_n_scores_raw = [1.0 / (1.0 + float(res["distance"])) for res in results[:top_k]]
+        entropy = calculate_retrieval_entropy(top_n_scores_raw, temp=0.1)
+
+        # RBP: pass entropy and question so propagate_relevance can apply
+        # dynamic alpha and skip hub-table propagation where appropriate.
+        S_propagated = propagate_relevance(
+            initial_similarities,
+            db_metadata,
+            entropy=entropy,
+            query=question,
+        )
 
         for res in results:
             col_path = f"{res['metadata']['table']}.{res['metadata']['column']}"
             res["propagated_score"] = S_propagated.get(col_path, 0.0)
-            
+
         results = sorted(results, key=lambda x: x["propagated_score"], reverse=True)
 
-        top_n_scores = [res["propagated_score"] for res in results[:top_k]]
-        entropy = calculate_retrieval_entropy(top_n_scores, temp=0.1)
-        should_early_exit, dynamic_t_max = determine_budget(entropy, base_turns=10, threshold=0.4)
+        # IT-EE: pass the question string so ComplexityAnalyzer can override
+        # the early-exit decision for temporal / aggregation / structural queries.
+        should_early_exit, dynamic_t_max = determine_budget(
+            entropy,
+            query=question,
+            base_turns=10,
+            threshold=0.4,
+        )
 
         table_candidates = []
         column_candidates = []

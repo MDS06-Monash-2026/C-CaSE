@@ -258,36 +258,56 @@ def process_instance_batch(batch_instances, log_path, data_file="spider2_data.js
             SQL_OPTIMIZATION=sql_optimization,
         )
         
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": USER_INPUT.format(
-                RETRIEVED_SCHEMA=json.dumps(retrieved_schemas, ensure_ascii=False),
-                USER_QUESTION=question,
-                EXTERNAL_KNOWLEDGE=knowledge_data,
-                ALL_TABLES=json.dumps(all_tables, ensure_ascii=False),
-            )}
-        ]
+
 
         is_finished = False
         is_error = False
 
-        if info.get("should_early_exit", False):
-            column_candidates = info.get("column_candidates", [])
-            table_candidates = info.get("table_candidates", [])
-            column_type_candidates = info.get("column_types", [])
-            column_value_candidates = info.get("column_values", [])
-            description_candidates = info.get("descriptions", [])
-            all_model_output = "Early exit triggered based on Information-Theoretic Early Exit module.\n"
-            all_inputs = "Skipped input due to early exit.\n"
-            all_calls = {}
-        else:
-            column_candidates = []
-            table_candidates = []
-            column_type_candidates = []
-            column_value_candidates = []
-            description_candidates = []
+        # ------------------------------------------------------------------
+        # SlayQL Safe-Exit Mode (replaces the hard early-exit bypass).
+        #
+        # Previously, when should_early_exit=True, the entire LLM loop was
+        # skipped, causing EX degradation on all complex queries.
+        #
+        # Now: should_early_exit is ALWAYS False (see it_ee.py).  The
+        # dynamic_t_max value encodes the intent:
+        #   - dynamic_t_max == SAFE_EXIT_MIN_TURNS (2): low-entropy query,
+        #     run a minimal 2-turn loop for format/alias verification.
+        #   - dynamic_t_max  > SAFE_EXIT_MIN_TURNS: high-entropy or
+        #     complexity-override — run the full exploration loop.
+        # ------------------------------------------------------------------
+        column_candidates = []
+        table_candidates = []
+        column_type_candidates = []
+        column_value_candidates = []
+        description_candidates = []
 
-        loop_max = 0 if info.get("should_early_exit", False) else info.get("dynamic_t_max", 10)
+        # ------------------------------------------------------------------
+        # Inject BM25 Value Hints into the user message if available.
+        # Imported here to avoid circular dependency at module level.
+        # ------------------------------------------------------------------
+        try:
+            from value_grounder import get_value_hints
+            value_hints_text = get_value_hints(question, db_name)
+        except Exception:
+            value_hints_text = ""
+
+        # Append value hints to the initial user message if we found any.
+        initial_user_content = USER_INPUT.format(
+            RETRIEVED_SCHEMA=json.dumps(retrieved_schemas, ensure_ascii=False),
+            USER_QUESTION=question,
+            EXTERNAL_KNOWLEDGE=knowledge_data,
+            ALL_TABLES=json.dumps(all_tables, ensure_ascii=False),
+        )
+        if value_hints_text:
+            initial_user_content = initial_user_content + "\n" + value_hints_text
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": initial_user_content},
+        ]
+
+        loop_max = info.get("dynamic_t_max", 10)
         for i in range(loop_max):
             
             all_inputs += f"Turn {i}\n" + str(messages) + "\n" + "=" * 50 + "\n\n"
