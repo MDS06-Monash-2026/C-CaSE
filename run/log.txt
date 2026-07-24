@@ -1,5 +1,1 @@
-Gold IDs loaded: 547
-Evaluating IDs found: 109
-Evaluating sql:   0%|          | 0/109 [00:00<?, ?it/s]Evaluating sql: 100%|##########| 109/109 [00:00<00:00, 237990.18it/s]
-
-Results: 0/109 correct. Score: 0.0000
+CSV Comparison report written successfully to csv_only_comparison_report.md

@@ -16,67 +16,9 @@ import snowflake.connector
 import pandas as pd
 import shutil
 import argparse
-import re
-import math
 from dotenv import load_dotenv
 
 load_dotenv()
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="google.cloud.bigquery")
-
-def calculate_conformal_confidence(client, model, question, current_schema_text, M=5):
-    """
-    Generates M stochastic SQL samples to compute Sub-clause Frequency vectors 
-    and applies Platt Scaling to calibrate state confidence.
-    """
-    # Sample multi-path draft SQL candidates using high temperature nucleus sampling
-    sampled_columns = []
-    
-    # Simple prompt extraction format targeting raw candidate strings
-    sample_prompt = f"Context Schema:\n{current_schema_text}\nQuestion: {question}\nGenerate a draft SQL query."
-    
-    for _ in range(M):
-        try:
-            res = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": sample_prompt}],
-                temperature=0.7
-            )
-            sql_text = res.choices[0].message.content.lower()
-            # pyrefly: ignore [missing-import]
-            import sqlglot
-            # pyrefly: ignore [missing-import]
-            import sqlglot.expressions as exp
-            try:
-                parsed = sqlglot.parse_one(sql_text)
-                cols = set([col.name.lower() for col in parsed.find_all(exp.Column) if col.name])
-                sampled_columns.append(cols)
-            except sqlglot.errors.ParseError:
-                continue
-        except Exception:
-            continue
-            
-    if not sampled_columns:
-        return 0.0, {}
-
-    # Compute individual Sub-clause Frequencies (SCF)
-    scf_registry = {}
-    all_elements = set().union(*sampled_columns)
-    
-    for element in all_elements:
-        occurrence = sum(1 for sample in sampled_columns if element in sample)
-        scf_registry[element] = occurrence / len(sampled_columns)
-        
-    # Multivariate Platt Scaling implementation using optimized configuration parameters
-    # logit mapping: sigmoid(w0 + sum(w_j * SCF_j))
-    w0 = -1.5  # Calibration model bias anchor
-    w_j = 2.0  # Weight modifier for sub-clause consensus stability
-    
-    scf_sum = sum(scf_registry.values()) / (len(scf_registry) if scf_registry else 1)
-    z = w0 + (w_j * scf_sum)
-    
-    c_state = 1.0 / (1.0 + math.exp(-max(min(z, 20.0), -20.0)))
-    return c_state, scf_registry
 
 model = os.environ.get("MODEL_NAME")
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), base_url=os.environ.get("OPENAI_BASE_URL"))
@@ -247,7 +189,7 @@ def remove_column_values(schema_text):
             
     return '\n'.join(processed_lines)
 
-def process_instance_batch(batch_instances, log_path):
+def process_instance_batch(batch_instances, log_path, data_file="spider2_data.json"):
     cache_path = os.path.join(log_path, "cache")
     status_path = os.path.join(log_path, "status")
     schema_path = os.path.join(log_path, "schema_prompts")
@@ -257,11 +199,7 @@ def process_instance_batch(batch_instances, log_path):
     candidates_path = os.path.join(log_path, "candidates")
     error_path = os.path.join(log_path, "error")
 
-    import time
-    pbar = tqdm(batch_instances.items(), leave=False, desc=f"Thread {os.getpid()}")
-    for instance_id, info in pbar:
-        tqdm.write(f"[{time.strftime('%H:%M:%S')}] [PID {os.getpid()}] Starting schema completion for {instance_id}...")
-        pbar.set_description(f"Thread {os.getpid()} - {instance_id}")
+    for instance_id, info in tqdm(batch_instances.items(), leave=False, desc=f"Thread {os.getpid()}"):
         
         restore_instance_state(instance_id, log_path)
         
@@ -283,10 +221,10 @@ def process_instance_batch(batch_instances, log_path):
             sql_optimization = SQLITE_DIALECT_OPTIMIZATION
 
         with open(documents_path, "r", encoding="utf-8") as f:
-            documents = json.load(f)
+            documents = json.loads(f.read(), strict=False)
 
-        with open("spider2_data.json", "r", encoding="utf-8") as f:
-            spider2_data = json.load(f)
+        with open(data_file, "r", encoding="utf-8") as f:
+            spider2_data = json.loads(f.read(), strict=False)
         
         if instance_id not in spider2_data:
             raise ValueError(f"Instance ID {instance_id} not found in spider2_data.json")
@@ -320,28 +258,65 @@ def process_instance_batch(batch_instances, log_path):
             SQL_OPTIMIZATION=sql_optimization,
         )
         
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": USER_INPUT.format(
-                RETRIEVED_SCHEMA=json.dumps(retrieved_schemas, ensure_ascii=False),
-                USER_QUESTION=question,
-                EXTERNAL_KNOWLEDGE=knowledge_data,
-                ALL_TABLES=json.dumps(all_tables, ensure_ascii=False),
-            )}
-        ]
+
 
         is_finished = False
         is_error = False
 
+        # ------------------------------------------------------------------
+        # SlayQL Safe-Exit Mode (replaces the hard early-exit bypass).
+        #
+        # Previously, when should_early_exit=True, the entire LLM loop was
+        # skipped, causing EX degradation on all complex queries.
+        #
+        # Now: should_early_exit is ALWAYS False (see it_ee.py).  The
+        # dynamic_t_max value encodes the intent:
+        #   - dynamic_t_max == SAFE_EXIT_MIN_TURNS (2): low-entropy query,
+        #     run a minimal 2-turn loop for format/alias verification.
+        #   - dynamic_t_max  > SAFE_EXIT_MIN_TURNS: high-entropy or
+        #     complexity-override — run the full exploration loop.
+        # ------------------------------------------------------------------
         column_candidates = []
         table_candidates = []
         column_type_candidates = []
         column_value_candidates = []
         description_candidates = []
-        
-        oscillation_tracker = {}
 
-        for i in range(10):
+        # ------------------------------------------------------------------
+        # Inject BM25 Value Hints into the user message if available.
+        # Imported here to avoid circular dependency at module level.
+        #
+        # ABLATION FLAG: ABLATION_NO_BM25=1 disables value hints entirely,
+        # isolating the contribution of BM25 grounding to EX accuracy.
+        # ------------------------------------------------------------------
+        no_bm25 = os.environ.get("ABLATION_NO_BM25", "0") == "1"
+        if no_bm25:
+            print(f"[ABLATION] BM25 grounding disabled for {instance_id}.")
+            value_hints_text = ""
+        else:
+            try:
+                from value_grounder import get_value_hints
+                value_hints_text = get_value_hints(question, db_name)
+            except Exception:
+                value_hints_text = ""
+
+        # Append value hints to the initial user message if we found any.
+        initial_user_content = USER_INPUT.format(
+            RETRIEVED_SCHEMA=json.dumps(retrieved_schemas, ensure_ascii=False),
+            USER_QUESTION=question,
+            EXTERNAL_KNOWLEDGE=knowledge_data,
+            ALL_TABLES=json.dumps(all_tables, ensure_ascii=False),
+        )
+        if value_hints_text:
+            initial_user_content = initial_user_content + "\n" + value_hints_text
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": initial_user_content},
+        ]
+
+        loop_max = info.get("dynamic_t_max", 10)
+        for i in range(loop_max):
             
             all_inputs += f"Turn {i}\n" + str(messages) + "\n" + "=" * 50 + "\n\n"
 
@@ -352,7 +327,10 @@ def process_instance_batch(batch_instances, log_path):
                 model=model,
                 messages=messages,
             )
-            model_output = response.choices[0].message.content or "No response from model"
+            model_output = response.choices[0].message.content
+            if model_output is None:
+                model_output = ""
+
 
             all_model_output += (f"Turn {i}\n" +
                                  # "=============MODEL REASONING=============" +
@@ -376,12 +354,6 @@ def process_instance_batch(batch_instances, log_path):
             for line, func in zip(full_lines, tool_calls):
                 
                 if func["tool"] == "stop":
-                    if os.environ.get("USE_CONFORMAL_GATE") == "TRUE":
-                        current_schema_text = "\n".join([f"{t}.{c}" for t, c in zip(table_candidates, column_candidates)])
-                        c_state, scf_registry = calculate_conformal_confidence(client, model, question, current_schema_text)
-                        if c_state < 0.85:
-                            func_messages += f"Tool: {line} \n The tool returns the following results:\n[SYSTEM]: Conformal confidence calibration ({c_state:.2f}) is below threshold 0.85. Halting blocked. Please evaluate and prune irrelevant context using @prune_schema or perform counterfactual simulation.\n"
-                            continue
                     is_finished = True
                     break
                 elif func["tool"] == "schema_retrieval":
@@ -412,8 +384,7 @@ def process_instance_batch(batch_instances, log_path):
                         top_k=3,
                         cache_dir=cache_path,
                         status_dir=status_path,
-                        device="cuda:0",
-                        active_tables=table_candidates)
+                        device="cuda:0")
 
                     new_results = ""
                     for result in semantic_results:
@@ -437,7 +408,7 @@ def process_instance_batch(batch_instances, log_path):
                     func["result"] = new_results
                     func_messages += "\n"
 
-                elif func["tool"] == "sql_execution" or func["tool"] == "sql_draft" or func["tool"] == "counterfactual_simulate":
+                elif func["tool"] == "sql_execution" or func["tool"] == "sql_draft":
 
                     query = func["query"]
 
@@ -447,38 +418,6 @@ def process_instance_batch(batch_instances, log_path):
                     exec_status, results = thread_safe_sql_execution(instance_id, query, db_name)         
                     func_messages += f"{results}\n\n"
                     func["result"] = str(results)
-                    
-                elif func["tool"] == "prune_schema":
-                    table_to_remove = func["table"]
-                    column_to_remove = func["column"]
-                    
-                    # Oscillation dampening tracking
-                    key = f"{table_to_remove}.{column_to_remove}"
-                    oscillation_tracker[key] = oscillation_tracker.get(key, 0) + 1
-                    
-                    indices_to_drop = []
-                    for idx, col in enumerate(column_candidates):
-                        if col == column_to_remove and table_candidates[idx] == table_to_remove:
-                            indices_to_drop.append(idx)
-                            
-                    for idx in sorted(indices_to_drop, reverse=True):
-                        column_candidates.pop(idx)
-                        table_candidates.pop(idx)
-                        column_type_candidates.pop(idx)
-                        column_value_candidates.pop(idx)
-                        description_candidates.pop(idx)
-                        
-                    # Autoregressive Context Cleansing (Ghost Element hallucination fix)
-                    for msg in messages:
-                        if msg["role"] == "assistant" and table_to_remove in msg["content"] and column_to_remove in msg["content"]:
-                            msg["content"] += f"\n[SYSTEM UPDATE]: NOTE, {table_to_remove}.{column_to_remove} HAS BEEN PRUNED AND IS NO LONGER VALID."
-                            
-                    func_messages += f"Tool: {line} \n The tool returns the following results:\n[SYSTEM]: Element {table_to_remove}.{column_to_remove} has been successfully pruned from S_linked.\n"
-                    
-                    if oscillation_tracker[key] > 2:
-                        func_messages += f"[SYSTEM ALERT]: Investigative deadlock detected. You are oscillating on element {key}. Choose an alternative join tree node.\n"
-                        
-                    func["result"] = f"[SYSTEM]: Element {table_to_remove}.{column_to_remove} pruned."
                     
             all_calls[f"turn_{i}"] = tool_calls
             func_messages += "\nFor `@sql_execution`, if the results return column names or table names including the missing tables or columns you think, in this turn, you must use the @schema_retrieval tool to retrieve the missing tables or columns.\nBecause we will use initial schema and the results of `@sql_execution` tool as the final schema. Please do not think that the columns obtained by @sql_execution will be recalled. Only the columns obtained by `@schema_retrieval` can be considered to be recalled correctly.\nPlease also pay attention to the column name like `*id`, `*name`, `*text`, `*code` and so on. These columns are often crucial for final SQL construction, especially for joins, filtering, and output.\nYou also need to pay attention that Some important columns may exist in more than one table, but the initial schema may include only one instance. This can cause critical tables to be omitted if you're not careful. Always check whether a column name is shared across tables, and whether the other tables containing it also provide relevant context for the question."
@@ -513,7 +452,7 @@ def process_instance_batch(batch_instances, log_path):
             json.dump(each_candidates, f, ensure_ascii=False, indent=2)
 
 
-def complete_schema(log_path, num_threads=3):
+def complete_schema(log_path, num_threads=3, data_file="spider2_data.json"):
     
     status_dir = os.path.join(log_path, "status")
     
@@ -535,9 +474,9 @@ def complete_schema(log_path, num_threads=3):
 
     
     with open(os.path.join(log_path, "initial_candidates.json"), "r", encoding="utf-8") as f:
-        initial_candidates = json.load(f)
-    with open("spider2_data.json", "r", encoding="utf-8") as f:
-        spider2_data = json.load(f)
+        initial_candidates = json.loads(f.read(), strict=False)
+    with open(data_file, "r", encoding="utf-8") as f:
+        spider2_data = json.loads(f.read(), strict=False)
     
     instance_ids = list(spider2_data.keys())
     
@@ -575,27 +514,41 @@ def complete_schema(log_path, num_threads=3):
 
     num_threads = min(num_threads, len(batches))
 
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = []
-        for i in range(num_threads):
-            if i < len(batches):
-                futures.append(executor.submit(process_instance_batch, batches[i], log_path))
-        
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                print(f"Thread failed with exception: {e}")
+    mp.set_start_method('spawn', force=True)
+
+    # Start processes
+    processes = []
+    target_function = process_instance_batch
+    for i in range(num_threads):
+        if i < len(batches):
+            p = mp.Process(
+                target=target_function,
+                args=(batches[i], log_path, data_file)
+            )
+            processes.append(p)
+            p.start()
+
+    # Wait for all processes to finish
+    for p in processes:
+        p.join()
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
+    parser.add_argument('--data_file', type=str, default="spider2_data.json")
+
+    # -----------------------------------------------------------------------
+    # Ablation study flag
+    # --no_bm25: disable BM25 value hint injection (Ablation Study 1)
+    # -----------------------------------------------------------------------
+    parser.add_argument('--no_bm25', action='store_true',
+                        help="[Ablation 1] Disable BM25 value grounding hints.")
     args = parser.parse_args()
+
+    # Wire flag into environment for sub-processes
+    if args.no_bm25:
+        os.environ["ABLATION_NO_BM25"] = "1"
+
     print("Starting schema completion...")
-    complete_schema(args.log_path, num_threads=8)
-    print("Schema completion finished.")
-    args = parser.parse_args()
-    print("Starting schema completion...")
-    complete_schema(args.log_path, num_threads=8)
+    complete_schema(args.log_path, num_threads=3, data_file=args.data_file)
     print("Schema completion finished.")

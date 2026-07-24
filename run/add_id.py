@@ -3,8 +3,8 @@ import os
 import argparse
 import glob
 
-def fill_rule(initial_candidates):
-    with open("spider2_data.json", "r", encoding="utf-8") as f:
+def fill_rule(initial_candidates, data_file="spider2_data.json"):
+    with open(data_file, "r", encoding="utf-8") as f:
             spider2_data = json.load(f)
 
     final_schemas =  {}
@@ -74,12 +74,12 @@ def fill_rule(initial_candidates):
         
     return final_schemas
 
-def add_pre_rule(log_path):
+def add_pre_rule(log_path, data_file="spider2_data.json"):
     cache_path = os.path.join(log_path, "cache")
     status_path = os.path.join(log_path, "status")
     
     with open(f"{log_path}/initial_candidates.json", "r", encoding="utf-8") as f:
-        initial_candidates = json.load(f)
+        initial_candidates = json.loads(f.read(), strict=False)
         
     add_id_candidates = {}
     
@@ -108,10 +108,10 @@ def add_pre_rule(log_path):
             raise ValueError(f"Unknown instance_id: {instance_id}")
         
         with open(f"{status_path}/{instance_id}.json", "r", encoding="utf-8") as f:
-            status = json.load(f)
+            status = json.loads(f.read(), strict=False)
         
         with open(f"{cache_path}/{instance_id}.json", "r", encoding="utf-8") as f:
-            cache = json.load(f)
+            cache = json.loads(f.read(), strict=False)
         
         if status["is_complete"]:
             continue
@@ -127,7 +127,7 @@ def add_pre_rule(log_path):
                 continue
                 
             with open(f"{embedding_path}/{db_name}/metadata.json", "r", encoding="utf-8") as f:
-                metadata = json.load(f)
+                metadata = json.loads(f.read(), strict=False)
                 
             for index, all_columns in enumerate(metadata):
                 if all_columns["table"] != table:
@@ -171,7 +171,7 @@ def add_pre_rule(log_path):
     with open(f"{log_path}/unfilled_pre_rule.json", "w", encoding="utf-8") as f:
         json.dump(add_id_candidates, f, ensure_ascii=False, indent=4)
     
-    filled_pre_rule = fill_rule(add_id_candidates)
+    filled_pre_rule = fill_rule(add_id_candidates, data_file=data_file)
     
     with open(f"{log_path}/filled_pre_rule.json", "w", encoding="utf-8") as f:
         json.dump(filled_pre_rule, f, ensure_ascii=False, indent=4)
@@ -180,6 +180,7 @@ def add_pre_rule(log_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
+    parser.add_argument('--data_file', type=str, default="spider2_data.json")
     args = parser.parse_args()
 
-    add_pre_rule(args.log_path)
+    add_pre_rule(args.log_path, args.data_file)

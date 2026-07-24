@@ -14,12 +14,9 @@ from func_timeout import func_timeout, FunctionTimedOut
 from openai import OpenAI
 from google.cloud import bigquery
 import snowflake.connector
-import re
 
 from config import *
-from dotenv import load_dotenv
 
-load_dotenv()
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
 credential_usage_count = {}
@@ -28,7 +25,8 @@ credential_lock = threading.Lock()
 class Config:
     INITIAL_RETRY_DELAY = 1
     MAX_RETRY_DELAY = 30
-    REVISE_NUM_ATTEMPTS = 1 # SlayQL 2.0 does 1 single rollback
+    REVISE_NUM_ATTEMPTS = 5
+
 
 class DataLoader:
     _instance = None
@@ -55,9 +53,6 @@ def get_least_used_credential():
             if path not in credential_usage_count:
                 credential_usage_count[path] = 0
 
-        if not credential_usage_count:
-            return None
-
         min_usage = min(credential_usage_count.values(), default=0)
         least_used_credentials = [path for path, count in credential_usage_count.items() if count == min_usage]
 
@@ -80,11 +75,12 @@ def query_sqlite(db_name, sql):
         conn.close()
         return "error", f"Error occurred while fetching data: {e}"
 
+
 def query_snowflake(sql):
+    cred = json.load(open("snowflake_credential/snowflake_credential.json"))
+    conn = snowflake.connector.connect(**cred)
+    cursor = conn.cursor()
     try:
-        cred = json.load(open("snowflake_credential/snowflake_credential.json"))
-        conn = snowflake.connector.connect(**cred)
-        cursor = conn.cursor()
         cursor.execute(sql)
         results = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
@@ -98,14 +94,16 @@ def query_snowflake(sql):
             conn.close()
             return "success", df
     except Exception as e:
+        cursor.close()
+        conn.close()
         return "error", f"Error occurred while fetching data: {e}"
+
 
 def query_bigquery(sql, instance_id):
     used_credential = []
     bigquery_credential_path = get_least_used_credential()
-    if bigquery_credential_path:
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = bigquery_credential_path
-        used_credential.append(bigquery_credential_path)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = bigquery_credential_path
+    used_credential.append(bigquery_credential_path)
     client = bigquery.Client()
     try:
         query_job = client.query(sql)
@@ -137,10 +135,12 @@ def query_bigquery(sql, instance_id):
                         return "success", results
                 except Exception as e:
                     if "403 Quota exceeded" in str(e):
+                        print(f"403 Quota exceeded again, trying next credential {instance_id}")
                         continue
                     else:
                         return "error", f"Error occurred while fetching data: {e}"
         return "error", f"Error occurred while fetching data: {e}"
+
 
 def execute_sql(instance_id, sql, db_name):
     if instance_id.startswith("bq") or instance_id.startswith("ga"):
@@ -163,8 +163,6 @@ def execute_sql(instance_id, sql, db_name):
             print(f"Execute timeout: exceed 10min  {instance_id}")
             state = "error"
             result = "Execute timeout: exceed 10min"
-    else:
-        state, result = "error", "Unknown DB"
     return state, result
 
 def thread_safe_sql_execution(instance_id, sql, db_name):
@@ -181,90 +179,78 @@ class SQLReviser:
             api_key=os.environ.get("OPENAI_API_KEY"),
             base_url=os.environ.get("OPENAI_BASE_URL"),
         )
-        self.model = os.environ.get("MODEL_NAME")
+        self.model=os.environ.get("MODEL_NAME")
         self.loader = DataLoader()
 
     def revise(self, instance_id, info, schema, sql, execution):
-        """
-        SlayQL 2.0 Verifier Agent: 
-        1. Analyzes the failure.
-        2. Applies SEMANTIC_DISAMBIGUATION.
-        3. Prunes the schema and executes SINGLE_PASS_SQL_GENERATION again.
-        """
         question = info["question"]
         db_name = info["db_name"]
 
         if instance_id.startswith("bq"):
             dialect = "BigQuery"
+            sql_type = BIGQUERY_DIALECT_OPTIMIZATION_SQL_GEN
         elif instance_id.startswith("sf"):
             dialect = "SnowFlake"
+            sql_type = SNOWFLAKE_DIALECT_OPTIMIZATION_SQL_GEN
         else:
             dialect = "SQLite"
+            sql_type = SQLITE_DIALECT_OPTIMIZATION_SQL_GEN
 
-        # 1. Ask Verifier to diagnose and prune
-        disambig_prompt = SEMANTIC_DISAMBIGUATION
-        disambig_prompt = disambig_prompt.replace("{user_question}", question)
-        disambig_prompt = disambig_prompt.replace("{suspect_column_A}", "Unknown_Col_1")
-        disambig_prompt = disambig_prompt.replace("{desc_A}", "Potentially ambiguous column")
-        disambig_prompt = disambig_prompt.replace("{suspect_column_B}", "Unknown_Col_2")
-        disambig_prompt = disambig_prompt.replace("{desc_B}", "Another ambiguous column")
-        
-        # We also pass the error message and schema so it knows context
-        disambig_prompt += f"\n\n[ERROR MESSAGE]\n{execution}\n\n[SCHEMA]\n{schema}"
+        prompt = (
+            REVISE_ERROR
+            .replace("{PROMPT}", schema[:200000])
+            .replace("{QUESTION}", question)
+            .replace("{SQL}", sql)
+            .replace("{ERROR_MESSAGE}", execution)
+            .replace("{SQL_DIALECT_OPTIMIZATION}", sql_type)
+            .replace("{SQL_TYPE}", dialect)
+        )
 
-        messages = [{"role": "user", "content": disambig_prompt}]
-        model_output = ""
-        
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-            )
-            model_output = response.choices[0].message.content
-        except Exception as e:
-            model_output = f"Failed to diagnose: {e}"
+        messages = [{"role": "user", "content": prompt}]
 
-        messages.append({"role": "assistant", "content": model_output})
-        
-        # Extract Prune Target
-        prune_target = None
-        match = re.search(r'<prune_target>(.*?)</prune_target>', model_output)
-        if match:
-            prune_target = match.group(1).strip()
+        for attempt in range(Config.REVISE_NUM_ATTEMPTS):
+            while True:
+                try:
+                    response = self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                    )
+                    reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
+                    model_output = response.choices[0].message.content
+                    if model_output:
+                        break
+                except Exception as e:
+                    print(f"empty output: {e}  ID: {instance_id}")
             
-        # 2. Prune schema
-        new_schema = schema
-        if prune_target:
-            # Simple string removal of the column line from TSCG schema
-            lines = new_schema.split("\n")
-            pruned_lines = [l for l in lines if prune_target.lower() not in l.lower()]
-            new_schema = "\n".join(pruned_lines)
-
-        # 3. Single-Pass SQL Generation again
-        gen_prompt = SINGLE_PASS_SQL_GENERATION.replace("{tscg_distilled_steiner_tree_schema}", new_schema)
-        gen_prompt = gen_prompt.replace("{user_question}", question)
-        gen_prompt = gen_prompt.replace("{SQL_DIALECT}", dialect)
-        gen_prompt += "\n\n[STRICT JSON OUTPUT FORMAT]\nYou must output valid JSON containing exactly one key 'sql'.\n{\n  \"sql\": \"SELECT ...\"\n}"
-        
-        try:
-            response2 = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": gen_prompt}],
-                response_format={"type": "json_object"},
-                temperature=0.0
-            )
-            content = response2.choices[0].message.content
-            parsed = json.loads(content)
-            new_sql = parsed.get("sql", sql)
-        except Exception as e:
-            new_sql = sql
-
-        messages.append({"role": "system", "content": f"Regenerated SQL: {new_sql}"})
-        
-        # 4. Execute new SQL
-        exec_status, exec_result = thread_safe_sql_execution(instance_id, new_sql, db_name)
-        
-        return new_sql, exec_result, exec_status, messages
+            messages.append({"role": "assistant", "content": model_output})
+            import re
+            blocks = re.findall(r"```sql\s*\n(.*?)\n\s*```", model_output, re.DOTALL)
+            if not blocks:
+                blocks = re.findall(r"```\s*\n(.*?)\n\s*```", model_output, re.DOTALL)
+            if blocks:
+                non_empty_blocks = [b.strip() for b in blocks if b.strip()]
+                if non_empty_blocks:
+                    sql = max(non_empty_blocks, key=len)
+                else:
+                    sql = ""
+            else:
+                sql_end = model_output.rfind("```")
+                sql_start = model_output.rfind("```sql", 0, sql_end)
+                if sql_start != -1 and sql_end != -1 and sql_end > sql_start:
+                    sql = model_output[sql_start + 6:sql_end].strip()
+                else:
+                    print(f"parse sql error: {instance_id}")
+                    sql = model_output.strip()
+            exec_status, exec_result = thread_safe_sql_execution(instance_id, sql, db_name)
+            if exec_status == "success":
+                return sql, exec_result, exec_status, messages
+            else:
+                if "Quota" in exec_result:
+                    print(f"Quota exceeded for {instance_id}, skipping...")
+                    break
+                messages.append({"role": "user", "content": "Execution error:\n" + exec_result + "\nPlease revise the SQL again."})
+                continue
+        return sql, exec_result, exec_status, messages
 
 
 def collect_tasks(schema_dir, log_path, task, num_candidates):
@@ -287,13 +273,13 @@ def run_task(reviser, data, schema_dir, log_path, task, instance_id, cid):
     err_path = f"{log_path}/sql_gen/{task}_execution_error_{cid}/{instance_id}.txt"
 
     if not os.path.exists(sql_path) or not os.path.exists(err_path):
+        print(f"[SKIP] missing sql or err: {instance_id} cid={cid}")
         return
 
     sql = open(sql_path).read()
     execution = open(err_path).read()
 
     new_sql, df, exec_status, messages = reviser.revise(instance_id, data[instance_id], schema, sql, execution)
-    
     out_dir = f"{log_path}/sql_revise/{task}_sql_{cid}"
     out_dir_me = f"{log_path}/sql_revise/{task}_messages_{cid}"
     os.makedirs(out_dir, exist_ok=True)
@@ -302,12 +288,10 @@ def run_task(reviser, data, schema_dir, log_path, task, instance_id, cid):
     with open(f"{out_dir_me}/{instance_id}.json", "w", encoding="utf-8") as f:
         json.dump(messages, f, ensure_ascii=False, indent=2)
     
-    with open(f"{out_dir}/{instance_id}.sql", "w", encoding="utf-8") as f:
-        f.write(new_sql)
-        
+    open(f"{out_dir}/{instance_id}.sql", "w").write(new_sql)
     if exec_status == "error" or exec_status == "empty":
         with open(f"{out_dir}/{instance_id}.txt", "w", encoding="utf-8") as f:
-            f.write(str(df))
+            f.write(df)
     elif exec_status == "success":
         df.to_csv(f"{out_dir}/{instance_id}.csv", index=False)
 
@@ -317,9 +301,9 @@ def main():
     parser.add_argument("--data_file", required=True)
     parser.add_argument("--schema_dir", required=True)
     parser.add_argument("--log_path", required=True)
-    parser.add_argument("--task", default="test")
+    parser.add_argument("--task", default="r1_lite")
     parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--num_candidates", type=int, default=1)
+    parser.add_argument("--num_candidates", type=int, default=5)
     args = parser.parse_args()
 
     os.makedirs(args.log_path, exist_ok=True)
@@ -328,7 +312,7 @@ def main():
     reviser = SQLReviser()
 
     tasks = collect_tasks(args.schema_dir, args.log_path, args.task, args.num_candidates)
-    print(f"Total pending Verifier tasks: {len(tasks)}")
+    print(f"Total pending tasks: {len(tasks)}")
 
     with ThreadPoolExecutor(max_workers=args.num_workers) as executor:
         futures = [
@@ -348,7 +332,7 @@ def main():
         for future in tqdm(
             as_completed(futures),
             total=len(futures),
-            desc="SlayQL 2.0 SQL Revision",
+            desc="SQL Revision",
             dynamic_ncols=True,
         ):
             try:

@@ -250,19 +250,19 @@ def get_column_type(column_type: str):
     return is_dict, is_array, is_variant
 
 
-def generate_schema_prompt(log_path: str, is_initial: bool = False):
+def generate_schema_prompt(log_path: str, is_initial: bool = False, data_file="spider2_data.json"):
     if is_initial:
         print("Generating initial schema prompts...")
         with open(f"{log_path}/unfilled_pre_rule.json", "r", encoding="utf-8") as f:
-            candidates = json.load(f)
+            candidates = json.loads(f.read(), strict=False)
         
         os.makedirs(f"{log_path}/schema_prompts", exist_ok=True)
     else:
         print("Generating final schema prompts...")
-        with open("spider2_data.json", "r", encoding="utf-8") as f:
-            spider2_data = json.load(f)
+        with open(data_file, "r", encoding="utf-8") as f:
+            spider2_data = json.loads(f.read(), strict=False)
         with open(f"{log_path}/unfilled_schema.json", "r", encoding="utf-8") as f:
-            candidates = json.load(f)
+            candidates = json.loads(f.read(), strict=False)
         os.makedirs(f"{log_path}/final_schema_prompts", exist_ok=True)
     
     with open("documents/bigquery.json", "r", encoding="utf-8") as f:
@@ -391,9 +391,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
     parser.add_argument('--is_initial', action='store_true', default=False)
+    parser.add_argument('--data_file', type=str, default="spider2_data.json")
     args = parser.parse_args()
 
-    generate_schema_prompt(args.log_path, args.is_initial)
+    generate_schema_prompt(args.log_path, args.is_initial, args.data_file)
     if args.is_initial:
         all_prompts = os.listdir(f"{args.log_path}/schema_prompts")
     else:

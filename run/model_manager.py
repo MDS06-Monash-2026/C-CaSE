@@ -1,5 +1,14 @@
 import threading
 import os
+
+# Redirect HuggingFace cache to D: drive to avoid filling up C: drive
+# Uses a subfolder inside the project dir where write access is already available
+_HF_CACHE_DIR = r"D:\C-CaSE\hf_cache"
+os.makedirs(_HF_CACHE_DIR, exist_ok=True)
+os.environ.setdefault("HF_HOME", _HF_CACHE_DIR)
+os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(_HF_CACHE_DIR, "hub"))
+os.environ.setdefault("TRANSFORMERS_CACHE", os.path.join(_HF_CACHE_DIR, "hub"))
+
 from sentence_transformers import SentenceTransformer
 import torch
 
@@ -24,22 +33,23 @@ class ModelManager:
     def load_model(self, model_path: str = None, device: str = "cuda:0"):
         if model_path is None:
             model_path = "BAAI/bge-large-en-v1.5"
-            
-        if device.startswith("cuda") and not torch.cuda.is_available():
-            device = "cpu"
+        
+        resolved_device = device
+        if resolved_device.startswith("cuda") and not torch.cuda.is_available():
+            resolved_device = "cpu"
                     
         with self.model_lock:
-            if self.model is None or self.device != device:
-                print(f"Loading model from {model_path} to {device}")
-                if device == "cpu":
-                    print("CUDA not available, using CPU")
+            if self.model is None or self.device != resolved_device:
+                if resolved_device == "cpu" and device.startswith("cuda"):
+                    print("CUDA not available, falling back to CPU")
+                print(f"Loading model from {model_path} to {resolved_device}")
                 
-                self.model = SentenceTransformer(model_path, device=device)
-                self.device = device
-                print(f"Model loaded successfully on {device}")
+                self.model = SentenceTransformer(model_path, device=resolved_device)
+                self.device = resolved_device
+                print(f"Model loaded successfully on {resolved_device}")
                 
-                if device.startswith("cuda"):
-                    gpu_id = int(device.split(":")[-1])
+                if resolved_device.startswith("cuda"):
+                    gpu_id = int(resolved_device.split(":")[-1])
                     memory_allocated = torch.cuda.memory_allocated(gpu_id) / 1024**3
                     memory_reserved = torch.cuda.memory_reserved(gpu_id) / 1024**3
                     print(f"GPU {gpu_id} Memory - Allocated: {memory_allocated:.2f}GB, Reserved: {memory_reserved:.2f}GB")
