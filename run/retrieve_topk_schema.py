@@ -268,14 +268,41 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
         top_n_scores_raw = [1.0 / (1.0 + float(res["distance"])) for res in results[:top_k]]
         entropy = calculate_retrieval_entropy(top_n_scores_raw, temp=0.1)
 
-        # RBP: pass entropy and question so propagate_relevance can apply
-        # dynamic alpha and skip hub-table propagation where appropriate.
-        S_propagated = propagate_relevance(
-            initial_similarities,
-            db_metadata,
-            entropy=entropy,
-            query=question,
-        )
+        # ------------------------------------------------------------------
+        # ABLATION FLAGS  (set by ablation scripts via environment variables)
+        #   ABLATION_NO_RBP=1        → skip graph propagation entirely
+        #   ABLATION_RBP_ALPHA=0.7   → override static alpha (bypasses dynamic)
+        #   ABLATION_NO_ITEE=1       → force full-turn budget (max tokens)
+        #   ABLATION_ITEE_THRESHOLD=0.4 → override IT-EE threshold
+        # ------------------------------------------------------------------
+        no_rbp       = os.environ.get("ABLATION_NO_RBP", "0") == "1"
+        rbp_alpha_ov = os.environ.get("ABLATION_RBP_ALPHA", None)
+        no_itee      = os.environ.get("ABLATION_NO_ITEE", "0") == "1"
+        itee_thresh  = float(os.environ.get("ABLATION_ITEE_THRESHOLD", "0.4"))
+
+        if no_rbp:
+            # w/o RBP: use raw cosine similarity ordering (no graph propagation)
+            print(f"[ABLATION] RBP disabled — using raw cosine similarity ordering.")
+            S_propagated = initial_similarities
+        elif rbp_alpha_ov is not None:
+            # Hyperparameter sweep: override alpha with a fixed static value
+            static_alpha = float(rbp_alpha_ov)
+            print(f"[ABLATION] RBP static alpha override = {static_alpha}")
+            S_propagated = propagate_relevance(
+                initial_similarities,
+                db_metadata,
+                alpha=static_alpha,
+                entropy=None,   # suppress dynamic alpha when sweeping
+                query=question,
+            )
+        else:
+            # Normal SlayQL: RBP with dynamic alpha derived from entropy
+            S_propagated = propagate_relevance(
+                initial_similarities,
+                db_metadata,
+                entropy=entropy,
+                query=question,
+            )
 
         for res in results:
             col_path = f"{res['metadata']['table']}.{res['metadata']['column']}"
@@ -283,14 +310,18 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
 
         results = sorted(results, key=lambda x: x["propagated_score"], reverse=True)
 
-        # IT-EE: pass the question string so ComplexityAnalyzer can override
-        # the early-exit decision for temporal / aggregation / structural queries.
-        should_early_exit, dynamic_t_max = determine_budget(
-            entropy,
-            query=question,
-            base_turns=10,
-            threshold=0.4,
-        )
+        if no_itee:
+            # w/o IT-EE: always allocate the full 10-turn budget (never exits early)
+            print(f"[ABLATION] IT-EE disabled — forcing full 10-turn budget.")
+            should_early_exit, dynamic_t_max = False, 10
+        else:
+            # Normal SlayQL: entropy-based budget with optional threshold override
+            should_early_exit, dynamic_t_max = determine_budget(
+                entropy,
+                query=question,
+                base_turns=10,
+                threshold=itee_thresh,
+            )
 
         table_candidates = []
         column_candidates = []
@@ -428,6 +459,30 @@ if __name__ == "__main__":
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
     parser.add_argument('--top_n', type=int, default=100)
     parser.add_argument('--data_file', type=str, default="spider2_data.json")
+
+    # -----------------------------------------------------------------------
+    # Ablation study flags — passed via environment variables to sub-processes.
+    # These args set the corresponding env vars so process_batch_with_device
+    # inherits them automatically via os.environ.
+    # -----------------------------------------------------------------------
+    parser.add_argument('--no_itee', action='store_true',
+                        help="[Ablation 1] Disable IT-EE — always use max turns.")
+    parser.add_argument('--no_rbp', action='store_true',
+                        help="[Ablation 1] Disable RBP — use raw cosine similarity.")
+    parser.add_argument('--itee_threshold', type=float, default=None,
+                        help="[Ablation 3] Override IT-EE entropy threshold (θ).")
+    parser.add_argument('--rbp_alpha', type=float, default=None,
+                        help="[Ablation 3] Override RBP static damping factor (α).")
     args = parser.parse_args()
+
+    # Wire ablation flags into environment before spawning child processes
+    if args.no_itee:
+        os.environ["ABLATION_NO_ITEE"] = "1"
+    if args.no_rbp:
+        os.environ["ABLATION_NO_RBP"] = "1"
+    if args.itee_threshold is not None:
+        os.environ["ABLATION_ITEE_THRESHOLD"] = str(args.itee_threshold)
+    if args.rbp_alpha is not None:
+        os.environ["ABLATION_RBP_ALPHA"] = str(args.rbp_alpha)
 
     retrieve(args.log_path, top_n=args.top_n, data_file=args.data_file)

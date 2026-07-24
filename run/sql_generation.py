@@ -39,7 +39,7 @@ class SQLGenerator:
         self.loader = DataLoader()
         self.model = os.environ.get("MODEL_NAME")
 
-    def generate(self, instance_id: str, info: Dict, schema: str) -> Dict:
+    def generate(self, instance_id: str, info: Dict, schema: str, no_qoc: bool = False) -> Dict:
         question = info["question"]
 
         if instance_id.startswith("bq"):
@@ -59,6 +59,18 @@ class SQLGenerator:
         prompt = prompt.replace("{QUESTION}", question)
         prompt = prompt.replace("{SQL_DIALECT_OPTIMIZATION}", sql_type)
         prompt = prompt.replace("{SQL_TYPE}", dialect)
+
+        # ------------------------------------------------------------------
+        # QOC (Strict Output Contracts): If no_qoc=True, remove the strict
+        # ```sql``` output format requirement from the prompt, simulating
+        # the original unconstrained generation that caused the Silent
+        # Execution Trap (15.2% EX in the ablation study).
+        # ------------------------------------------------------------------
+        if no_qoc:
+            prompt = prompt.replace(
+                "📤 Output Format\nIn addition to outputting other information, you also need to return the generated SQL query in the following format:\n```sql\nYour sql query\n```\nMake sure that all the sqls is contained within ```sql``` and the last ```sql``` contains the final complete SQL in your output.",
+                "📤 Output Format\nReturn the SQL query that answers the question. Make sure to output valid SQL."
+            )
 
         messages = [
             {"role": "user", "content": prompt}
@@ -115,17 +127,30 @@ def run_task(
     with open(schema_path, "r", encoding="utf-8") as f:
         schema = f.read()
 
-    from value_grounder import get_value_hints
-    db_name = data[instance_id].get("db_name", "")
-    question = data[instance_id].get("question", "")
-    try:
-        value_hints_block = get_value_hints(query=question, db_id=db_name, indices_dir="bm25_indices")
-        if value_hints_block:
-            schema += f"\n{value_hints_block}\n"
-    except Exception as e:
-        pass
+    # ------------------------------------------------------------------
+    # ABLATION FLAGS
+    #   ABLATION_NO_BM25=1  → skip BM25 value hint injection into schema
+    #   ABLATION_NO_QOC=1   → use a relaxed (non-strict) output format,
+    #                          simulating the "Silent Execution Trap"
+    # ------------------------------------------------------------------
+    no_bm25 = os.environ.get("ABLATION_NO_BM25", "0") == "1"
+    no_qoc  = os.environ.get("ABLATION_NO_QOC", "0") == "1"
 
-    result = generator.generate(instance_id, data[instance_id], schema)
+    if not no_bm25:
+        from value_grounder import get_value_hints
+        db_name = data[instance_id].get("db_name", "")
+        question = data[instance_id].get("question", "")
+        try:
+            value_hints_block = get_value_hints(query=question, db_id=db_name, indices_dir="bm25_indices")
+            if value_hints_block:
+                schema += f"\n{value_hints_block}\n"
+        except Exception as e:
+            pass
+    else:
+        db_name = data[instance_id].get("db_name", "")
+        question = data[instance_id].get("question", "")
+
+    result = generator.generate(instance_id, data[instance_id], schema, no_qoc=no_qoc)
 
     os.makedirs(f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}", exist_ok=True)
     os.makedirs(f"{log_path}/sql_gen/{task}_reasoning_{candidate_idx}", exist_ok=True)
@@ -180,7 +205,23 @@ def main():
     parser.add_argument("--schema_dir", type=str, required=True)
     parser.add_argument("--log_path", type=str, required=True)
     parser.add_argument("--task", type=str, default="r1_lite")
+
+    # -----------------------------------------------------------------------
+    # Ablation study flags
+    # --no_qoc  : disable strict ```sql``` output contracts (Ablation 1)
+    # --no_bm25 : disable BM25 value hints in SQL generation (Ablation 1)
+    # -----------------------------------------------------------------------
+    parser.add_argument('--no_qoc', action='store_true',
+                        help="[Ablation 1] Disable strict SQL output contracts (QOC).")
+    parser.add_argument('--no_bm25', action='store_true',
+                        help="[Ablation 1] Disable BM25 value hints in SQL generation.")
     args = parser.parse_args()
+
+    # Wire flags into environment
+    if args.no_qoc:
+        os.environ["ABLATION_NO_QOC"] = "1"
+    if args.no_bm25:
+        os.environ["ABLATION_NO_BM25"] = "1"
 
     os.makedirs(args.log_path, exist_ok=True)
 

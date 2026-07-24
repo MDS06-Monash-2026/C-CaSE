@@ -1,5 +1,14 @@
 import threading
 import os
+
+# Redirect HuggingFace cache to D: drive to avoid filling up C: drive
+# Uses a subfolder inside the project dir where write access is already available
+_HF_CACHE_DIR = r"D:\C-CaSE\hf_cache"
+os.makedirs(_HF_CACHE_DIR, exist_ok=True)
+os.environ.setdefault("HF_HOME", _HF_CACHE_DIR)
+os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(_HF_CACHE_DIR, "hub"))
+os.environ.setdefault("TRANSFORMERS_CACHE", os.path.join(_HF_CACHE_DIR, "hub"))
+
 from sentence_transformers import SentenceTransformer
 import torch
 

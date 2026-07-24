@@ -285,12 +285,20 @@ def process_instance_batch(batch_instances, log_path, data_file="spider2_data.js
         # ------------------------------------------------------------------
         # Inject BM25 Value Hints into the user message if available.
         # Imported here to avoid circular dependency at module level.
+        #
+        # ABLATION FLAG: ABLATION_NO_BM25=1 disables value hints entirely,
+        # isolating the contribution of BM25 grounding to EX accuracy.
         # ------------------------------------------------------------------
-        try:
-            from value_grounder import get_value_hints
-            value_hints_text = get_value_hints(question, db_name)
-        except Exception:
+        no_bm25 = os.environ.get("ABLATION_NO_BM25", "0") == "1"
+        if no_bm25:
+            print(f"[ABLATION] BM25 grounding disabled for {instance_id}.")
             value_hints_text = ""
+        else:
+            try:
+                from value_grounder import get_value_hints
+                value_hints_text = get_value_hints(question, db_name)
+            except Exception:
+                value_hints_text = ""
 
         # Append value hints to the initial user message if we found any.
         initial_user_content = USER_INPUT.format(
@@ -528,7 +536,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
     parser.add_argument('--data_file', type=str, default="spider2_data.json")
+
+    # -----------------------------------------------------------------------
+    # Ablation study flag
+    # --no_bm25: disable BM25 value hint injection (Ablation Study 1)
+    # -----------------------------------------------------------------------
+    parser.add_argument('--no_bm25', action='store_true',
+                        help="[Ablation 1] Disable BM25 value grounding hints.")
     args = parser.parse_args()
+
+    # Wire flag into environment for sub-processes
+    if args.no_bm25:
+        os.environ["ABLATION_NO_BM25"] = "1"
+
     print("Starting schema completion...")
     complete_schema(args.log_path, num_threads=3, data_file=args.data_file)
     print("Schema completion finished.")

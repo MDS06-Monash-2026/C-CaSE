@@ -27,3 +27,6 @@ subset*
 run/.env
 run/detailed_analysis
 run/bm25_indices
+
+run/ablation1*
+*.log

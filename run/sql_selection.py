@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument("--max_chars", type=int, default=10000)
     parser.add_argument("--workers", type=int, default=32)
     parser.add_argument("--task", default="r1_lite")
+    parser.add_argument("--data_file", type=str, default="spider2_data.json")
     return parser.parse_args()
 
 def read_sql(path):
@@ -184,7 +185,11 @@ def model_vote(instance_id, tied_clusters, args, schema, question):
             messages=[{"role": "user", "content": prompt}]
         )
 
-        out = resp.choices[0].message.content.lower()
+        content = resp.choices[0].message.content
+        if content is None:
+            print(f"Warning: model returned None content for pair ({a['cid']}, {b['cid']}), skipping vote.")
+            continue
+        out = content.lower()
         if "sql1" in out:
             scores[a["cid"]] += 1
         elif "sql2" in out:
@@ -197,10 +202,14 @@ def dump_final_selection(instance_id, selected, args):
     base_dir = f"{args.log_path}/sql_selection/final/{instance_id}"
     os.makedirs(base_dir, exist_ok=True)
 
-    with open(os.path.join(base_dir, "selected.sql"), "w", encoding="utf-8") as f:
-        f.write(selected["sql"])
+    sql_text = selected.get("sql") or ""
+    if not sql_text:
+        print(f"[WARN] {instance_id}: selected SQL is None/empty — writing empty file")
 
-    if selected["status"] == "success" and selected["df"] is not None:
+    with open(os.path.join(base_dir, "selected.sql"), "w", encoding="utf-8") as f:
+        f.write(sql_text)
+
+    if selected.get("status") == "success" and selected.get("df") is not None:
         selected["df"].to_csv(
             os.path.join(base_dir, "result.csv"),
             index=False,
@@ -208,7 +217,7 @@ def dump_final_selection(instance_id, selected, args):
         )
     else:
         with open(os.path.join(base_dir, "error.txt"), "w", encoding="utf-8") as f:
-            f.write(selected.get("error", "Unknown execution error"))
+            f.write(selected.get("error") or "Unknown execution error")
 
 def process_instance(name, args, lock):
     instance_id = name.replace(".txt", "")
@@ -216,7 +225,6 @@ def process_instance(name, args, lock):
     clusters = cluster_by_execution(candidates)
     if not clusters:
         fallback = min(candidates, key=lambda x: x["cid"])
-
         fallback["fallback"] = "all_failed"
 
         with lock:
@@ -228,7 +236,12 @@ def process_instance(name, args, lock):
                     "fallback": "all_failed"
                 }) + "\n")
 
-        dump_final_selection(instance_id, fallback, args)
+        # Only dump if we have something to write — sql may be None when
+        # no .sql file was generated at all (e.g. sql_generation timed out).
+        if fallback.get("sql") is not None:
+            dump_final_selection(instance_id, fallback, args)
+        else:
+            print(f"[WARN] {instance_id}: no SQL file found for any candidate — skipping dump")
         return
 
     selected = select_by_consistency(clusters)
@@ -236,8 +249,8 @@ def process_instance(name, args, lock):
     if isinstance(selected, list):
         with open(f"{args.log_path}/final_schema_prompts/{instance_id}.txt", "r" , encoding="utf-8") as f:
             schema = f.read()
-        with open("spider2_data.json", "r", encoding="utf-8") as f:
-            spider2 = json.load(f)
+        with open(args.data_file, "r", encoding="utf-8") as f:
+            spider2 = json.loads(f.read(), strict=False)
         question = spider2[instance_id]["question"]
         selected = model_vote(instance_id, selected, args, schema, question)
 
