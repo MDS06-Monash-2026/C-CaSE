@@ -1,0 +1,179 @@
+# C-CaSE / SlayQL — Session Handoff Memory
+# Last updated: 2026-07-22
+# User: MDS06 FYP group member, taking over from Kian Lok Chin
+# Branch: slayql-1 | Remote: https://github.com/MDS06-Monash-2026/C-CaSE
+
+================================================================================
+## 1. PROJECT IN ONE PARAGRAPH
+================================================================================
+Text-to-SQL FYP based on AutoLink paper, enhanced as **SlayQL** with 4 modules:
+RBP (graph propagation), IT-EE (dynamic turn budget), BM25 value grounding, QOC (strict SQL output).
+Evaluated on Spider 2.0-Lite subset `subset_diverse_20_evaluation.json` (178 instances, NOT 20).
+Goal: AAAI-style ablation studies + fair Baseline vs SlayQL comparison.
+
+================================================================================
+## 2. ENVIRONMENT (DONE ✅)
+================================================================================
+- OS: Windows 11 — **NO bash/WSL** → always use `.ps1` scripts, not `.sh`
+- Python: 3.11.9 (system pip, conda NOT installed)
+- GPU: RTX 4060 — CUDA PyTorch installed: `torch 2.6.0+cu124` ✅
+- Config: `run/.env` (OpenRouter + deepseek/deepseek-v4-flash) — DO NOT COMMIT
+- Resources in place: embeddings/, documents/, credentials, spider2-localdb (32 sqlite)
+- HF cache redirected to `D:\C-CaSE\hf_cache` in model_manager.py
+- Missing dep installed: `rank_bm25`
+
+Key entry scripts (Windows):
+  run/run_autolink_baseline.ps1
+  run/ablation1_component_dropout.ps1
+  run/ablation1_fix_failed.ps1      ← rerun failed no_itee + no_qoc only
+  run/ablation_smoke_test.ps1       ← quick 2-instance validation
+
+================================================================================
+## 3. RESULTS SO FAR
+================================================================================
+### Main comparison (178-instance subset)
+| Model    | EX (evaluable) | Full subset report |
+|----------|----------------|-------------------|
+| Baseline | 71/171 (41.5%) | 71/178 (39.9%)    |
+| SlayQL   | 72/163 (44.2%) | 72/178 (40.4%)    |
+Reports: run/comparison_report.md, run/csv_only_comparison_report.md
+
+NOTE: 178 total questions; eval denominator <178 when SQL execution fails (no result.csv).
+108/178 was OLD pipeline progress (uncompleted schema), NOT accuracy — don't confuse.
+
+### Ablation 1 (component dropout) — PARTIAL
+| Variant      | EX           | Status |
+|--------------|--------------|--------|
+| Full SlayQL  | 72/163 44.2% | ✅ log_subset_diverse_20_evaluation_slayql_ccase |
+| w/o RBP      | 4/178  2.25% | ✅ ablation1_no_rbp |
+| w/o BM25     | 3/178  1.69% | ✅ ablation1_no_bm25 |
+| w/o IT-EE    | —            | ❌ NEED RERUN ablation1_no_itee |
+| w/o QOC      | —            | ❌ NEED RERUN ablation1_no_qoc |
+Report: run/ablation1_component_dropout_report.md (3/5 variants parsed)
+
+### Ablation 2/3/4 — NOT STARTED
+Scripts exist: ablation2_scalability.sh, ablation3_hyperparameter.sh, ablation4_model_agnostic.sh
+(Need .ps1 ports for Windows)
+
+================================================================================
+## 4. BUGS FIXED THIS SESSION (important for next LLM)
+================================================================================
+1. **sql_clean path bug** (ROOT CAUSE of no_itee/no_qoc eval failure):
+   - sql_generation.py wrote `{id}/selected.sql` but sql_execution/sql_selection expect `{id}.sql`
+   - FIXED: write flat `{out_dir}/{iid}.sql`
+
+2. **sql_generation crash on None API content**:
+   - OpenRouter sometimes returns content=None → TypeError killed entire batch at ~203/890
+   - FIXED: Fail Fast → Retry(5, exp backoff+jitter) → record failed ID → continue batch → rerun failed
+   - Failed IDs saved to: `{log_path}/sql_gen_failed_tasks.json`
+   - Flags: --max_retries 5, --no_rerun_failed
+
+3. **eval_result.txt UTF-16** from PowerShell Tee-Object broke report parser
+   - FIXED: Out-File -Encoding utf8 in .ps1; generate_ablation_report.py multi-encoding read
+
+4. **no_qoc incomplete copy** from FULL_LOG (missing cache/, json files)
+   - FIXED in ablation1_fix_failed.ps1: full copy of cache/status/candidates/json
+
+5. **main.sh / sql_gen.sh** now load run/.env automatically
+
+================================================================================
+## 5. IMMEDIATE NEXT STEP (highest priority)
+================================================================================
+**Rerun Ablation 1 failed variants with NEW resilient sql_generation.py:**
+
+```powershell
+cd d:\C-CaSE\run
+powershell -ExecutionPolicy Bypass -File ablation1_fix_failed.ps1 `
+  *>&1 | Tee-Object -FilePath ablation1_fix_run.log
+```
+
+This runs stages 8–12 for:
+- ablation1_no_itee  (--no_itee flag on retrieve, not sql gen)
+- ablation1_no_qoc   (--no_qoc on sql_generation)
+
+Expected runtime: several hours (LLM + BigQuery). Monitor:
+```powershell
+Get-Content d:\C-CaSE\run\ablation1_fix_run.log -Tail 30 -Wait
+```
+
+After success, regenerate report:
+```powershell
+python generate_ablation_report.py --ablation_type component_dropout `
+  --data_file subset_diverse_20_evaluation.json --task r1_lite `
+  --variants "Full SlayQL:log_subset_diverse_20_evaluation_slayql_ccase" `
+             "w/o IT-EE:ablation1_no_itee" "w/o RBP:ablation1_no_rbp" `
+             "w/o BM25:ablation1_no_bm25" "w/o QOC:ablation1_no_qoc" `
+  --output_path ablation1_component_dropout_report.md
+```
+
+Smoke test before full rerun (optional, ~2 min):
+```powershell
+powershell -ExecutionPolicy Bypass -File ablation_smoke_test.ps1
+```
+
+================================================================================
+## 6. PIPELINE STAGES (12-stage ablation)
+================================================================================
+ 1 BM25 index   2 Retrieval   3 add_id   4 initial schema prompts
+ 5 schema completion   6 postprocess   7 final schema prompts
+ 8 SQL generation   9 SQL execution   10 SQL revision   11 SQL selection   12 eval
+
+Checkpoint file: `{log_dir}/.pipeline_ckpt` (STAGE_N=done)
+Resume-safe: re-run .ps1 script skips completed stages.
+
+Full SlayQL log dir: log_subset_diverse_20_evaluation_slayql_ccase
+Baseline log dir:    log_subset_diverse_20_evaluation_autolink_baseline_v2
+
+================================================================================
+## 7. KEY FILES MODIFIED (uncommitted, on slayql-1)
+================================================================================
+Core fixes:
+  run/sql_generation.py          ← sql_clean fix + resilient batch/retry
+  run/generate_ablation_report.py
+  run/main.sh, run/sql_gen.sh
+  run/model_manager.py             ← HF cache on D:
+  run/ablation1_component_dropout.ps1
+  run/ablation1_fix_failed.ps1
+  run/ablation_smoke_test.ps1
+  run/run_autolink_baseline.ps1
+
+Tracking:
+  task.txt     ← human todo checklist (keep updated)
+  memory.txt   ← this file (LLM handoff)
+
+Logs (large, gitignored):
+  run/ablation1_run.log, run/ablation1_fix_run.log
+  run/autolink_baseline_run.log
+
+================================================================================
+## 8. BRANCH WARNINGS
+================================================================================
+- Stay on **slayql-1** (best EX ~40%). DO NOT merge slayql-2 (SGSA regression to 15.2%).
+- main branch = different SlayQL v2 architecture (Steiner tree), not same stack.
+- Local ablation code NOT pushed to GitHub yet — coordinate with Kian Lok before push.
+
+================================================================================
+## 9. METRIC INTERPRETATION CHEAT SHEET
+================================================================================
+- 72/163 = eval on instances WITH result.csv only (strict eval.py mode)
+- 72/178 = comparison report denominator (missing exec = counted wrong)
+- 108/178 = was uncompleted schema linking count, NOT accuracy
+- slayql-1 comparison: SlayQL +1 over baseline on 178 subset (modest gain)
+
+================================================================================
+## 10. TASK CHECKLIST SUMMARY (see task.txt for details)
+================================================================================
+[✅] Task 0: Environment setup
+[✅] Task 1: Baseline re-run + eval + comparison report
+[🔄] Task 2: Ablation 1 — 3/5 variants done; no_itee + no_qoc pending rerun
+[ ] Task 3: Ablation 2/3/4
+[ ] Task 4: Git commit/push local scripts
+[ ] Task 5: Final numbers + docs
+
+================================================================================
+## 11. CONTACT / RESOURCES
+================================================================================
+- Teammate: Kian Lok Chin — embeddings, credentials, spider2-localdb if missing
+- Paper: AutoLink arXiv 2511.17190
+- Eval: evaluation_suite/evaluate.py --mode exec_result
+- Test BigQuery: python test.py (repo root)

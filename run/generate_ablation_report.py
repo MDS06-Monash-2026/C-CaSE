@@ -73,8 +73,17 @@ def parse_eval_result(log_dir: str) -> dict:
         else:
             return result
 
-    with open(eval_path, "r", encoding="utf-8", errors="replace") as f:
-        content = f.read()
+    content = None
+    for enc in ("utf-8-sig", "utf-16", "utf-16-le", "utf-8"):
+        try:
+            with open(eval_path, "r", encoding=enc) as f:
+                content = f.read()
+            break
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    if content is None:
+        with open(eval_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
 
     result["found"] = True
 
