@@ -27,35 +27,46 @@ Text-to-SQL over enterprise-scale databases presents severe challenges for Large
 
 The **AutoLink** baseline introduced an agentic 10-turn exploration framework over dense vector column retrievals. However, AutoLink suffers from **schema join blindness**, **value entity misattribution**, **runaway API token costs**, and **unconstrained formatting parser traps**.
 
-This document details the complete technical evolution of **C-CaSE / SlayQL** across all release tags (`AutoLink` $\rightarrow$ `c-case-v1` $\rightarrow$ `v1.0.0-slayql-lite`), commit milestones (`af6bad0` $\rightarrow$ `a72cce2` $\rightarrow$ `8770692` $\rightarrow$ `475ce87` $\rightarrow$ `b015e42` $\rightarrow$ `251c7bb` $\rightarrow$ `5932669`), and research branches (`slayql-1`, `slayql-2`, `slayql-lite`). 
+This document details the technical evolution of **C-CaSE / SlayQL** across local release tags (`AutoLink`, `c-case-v1`, `v1.0.0-slayql-lite`), commit milestones (`af6bad0`, `a72cce2`, `3b53c20`, `8770692`, `475ce87`, `b015e42`, `02599b2`, `251c7bb`, `5932669`, `ba00dc2`, `2b1719f`), and research branches (`slayql-1`, `slayql-2`, `slayql-lite`).
 
-We demonstrate how counterfactual schema rollback in `slayql-2` failed due to the **Over-Pruning Trap** (~15.2% EX), and how **SlayQL-Lite** resolved these failures using a non-destructive 4-module architecture combining **Relational Boost Propagation (RBP)**, **BM25 Value Grounding**, **Iterative Early Exit (IT-EE)**, and **Strict Output Contracts (QOC)**—achieving **40.45% EX (72/178)** accuracy on Spider 2.0-Lite with **~60% lower token consumption**.
+Important Git correction: the project history is **not** a single linear chain from `AutoLink` to `c-case-v1` to `slayql-1` to `slayql-2` to `slayql-lite`. Local Git shows parallel work from the `AutoLink` baseline that was later integrated into `main`. The `v1.0.0-slayql-lite` annotated tag resolves to commit `02599b2`; `251c7bb` is a post-release commit.
+
+The local artifacts support the SlayQL-Lite headline result of **40.45% EX (72/178)** on Spider 2.0-Lite. The baseline denominator depends on which comparison artifact is used: `run/comparison_report.md` reports **71/178 (39.89%)**, while `run/csv_only_comparison_report.md` reports **67/178 (37.64%)**.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
 │                          COMPLETE ARCHITECTURAL EVOLUTION TRAJECTORY                      │
 └───────────────────────────────────────────────────────────────────────────────────────────┘
 
-  [Tag: AutoLink] ───► [Tag: c-case-v1] ───► [Branch: slayql-1] ───► [Branch: slayql-2] ───► [Tag: v1.0.0-slayql-lite]
-  • Commit: af6bad0    • Commit: a72cce2     • Commit: 8770692/475   • Commit: b015e42     • Branch: slayql-lite
-  • Base AutoLink      • Multi-Provider Eval • RBP + BM25 Grounding  • SGSA Rollback       • 4-Module Architecture
-  • Vector Retrieval   • Multi-DB Providers  • Formula: RBP & BM25   • Steiner Tree Pruning • Formula: RBP+BM25+ITEE+QOC
-  • Score: 39.89%      • Credential Load     • Score: 39.89% (71/178) • Score: 15.17% (Trap)• Score: 40.45% (72/178)
+  [Tag: AutoLink] ──┬──► [Tag: c-case-v1] ──► [Commit: 3b53c20] ────────────────┐
+                    │                                                           │
+                    └──► [Branch: slayql-1] ──► [Branch: slayql-2]              │
+                         │                                                       │
+                         └──► [Tag: v1.0.0-slayql-lite @ 02599b2] ──► [slayql-lite] ──► [main]
+
+  • AutoLink: af6bad0 baseline snapshot
+  • c-case-v1: a72cce2 evaluation/infrastructure tag, not c-case-op-1 branch tip
+  • slayql-1: 8770692/475ce87 RBP + BM25 value grounding line
+  • slayql-2: b015e42 SGSA semantic-assertion validation experiment
+  • v1.0.0-slayql-lite: annotated release tag targeting 02599b2
+  • post-release: 251c7bb/5932669/ba00dc2 operational and documentation updates
 ```
 
 ---
 
 ## 📜 1. Master Version & Release History
 
-| Version / Tag | Branch | Key Commit | Architectural Milestone & Focus | Benchmark EX % (178 Denominator) | Evaluable Subset EX % |
-|---|---|---|---|---|---|
-| **`AutoLink`** | `main` | `af6bad0` | **Initial Baseline**: Fixed 10-turn agentic exploration over BGE-large dense column embeddings. | 39.89% (71/178) | 41.52% (71/171) |
-| **`c-case-v1`** | `c-case-op-1` | `a72cce2` | **Evaluation Suite**: Multi-provider execution engine across BigQuery, Snowflake & SQLite + credential balancer. | 39.89% (71/178) | 41.52% (71/171) |
-| **`slayql-1`** | `slayql-1` | `8770692` | **RBP Graph Engine**: Introduced Relational Boost Propagation graph random walks over foreign key topologies. | 39.89% (71/178) | 41.52% (71/171) |
-| **`slayql-1`** | `slayql-1` | `475ce87` | **BM25 Value Grounder**: Integrated inverted cell value indexing with stop-word filtering & numeric thresholding. | 39.89% (71/178) | 41.52% (71/171) |
-| **`slayql-2`** | `slayql-2` | `b015e42` | **SGSA Counterfactual Rollback**: Sub-Graph Search Algorithm pruning non-shortest path schema nodes (Steiner Trees). | **15.17% (27/178)** | **16.56% (27/163)** |
-| **`v1.0.0-slayql-lite`**| `slayql-lite`| `251c7bb` | **SlayQL-Lite Production**: 4-module architecture (RBP + BM25 + IT-EE + QOC) + ~60% token reduction. | **40.45% (72/178)** | **44.17% (72/163)** |
-| **`slayql-lite`** | `slayql-lite`| `5932669` | **Production & Automation**: Resilient batch retry engine (`sql_gen_failed_tasks.json`) + Windows `.ps1` suite. | **40.45% (72/178)** | **44.17% (72/163)** |
+| Version / Ref | Branch / Type | Key Commit | Verified Milestone & Focus | Benchmark Evidence |
+|---|---|---|---|---|
+| **`AutoLink`** | tag / `c-case-op-1` branch | `af6bad0` | **Initial Baseline Snapshot**: AutoLink-derived starting point. | Later comparison artifacts report baseline results; do not infer a unique benchmark score from the tag alone. |
+| **`c-case-v1`** | tag | `a72cce2` | **Evaluation & Infrastructure**: comparison tools, subset evaluation wrapper, credential/load handling, and multi-provider execution support in repo code. | `c-case-op-1` does **not** point here; it still points to `af6bad0`. |
+| **`SlayQL v2`** | main-line commit | `3b53c20` | **Schema Engine / SQL Revision Work**: adds `run/slayql2_schema_engine.py`, scratch schema tools, config, SQL generation, and SQL revision changes. | Real milestone present in Git; omitted by the earlier report. |
+| **`slayql-1`** | branch | `8770692` | **RBP + Value Grounding Pipeline**: introduces graph propagation and value-grounding support. | Implementation supported by committed files. |
+| **`slayql-1`** | branch tip | `475ce87` | **Enhanced Value Grounding**: stop-word filtering, numeric thresholding, capped hint injection, and RBP refinements. | Implementation supported by committed files. |
+| **`slayql-2`** | branch | `b015e42` | **SGSA Semantic Validation**: Self-Generated Semantic Assertions validator and revision-loop integration. | Committed v2 reports show 27/178 (15.2%), but not because of Steiner/subgraph pruning. |
+| **`v1.0.0-slayql-lite`** | annotated release tag | `02599b2` | **SlayQL-Lite Release Snapshot**: release target for the SlayQL-Lite architecture. | Actual annotated tag target. |
+| **post-release SlayQL-Lite** | `slayql-lite` history | `251c7bb` | **Production & Automation**: resilient batch retry engine, failed-task tracking, ablation scripts, and handoff docs. | Post-release commit, not the release tag target. |
+| **`slayql-lite`** | branch tip | `ba00dc2` | **Documentation Manuscript**: expanded README and project evolution manuscript. | Merged into `main` by `2b1719f`. |
 
 ---
 
@@ -101,7 +112,7 @@ Regex parsers searching for code blocks fail to isolate clean SQL code, causing 
 
 ## 🛠️ 3. Phase 1: Multi-Provider Evaluation Infrastructure (`c-case-v1`)
 
-To establish reliable benchmarking across heterogeneous database environments, **Tag `c-case-v1`** (`a72cce2`) built the unified evaluation suite (`evaluation_suite/evaluate.py`).
+To establish reliable benchmarking across heterogeneous database environments, **Tag `c-case-v1`** (`a72cce2`) added evaluation/infrastructure code in this repository, including comparison scripts, a subset evaluation wrapper, credential/load handling, and multi-provider execution support. The wrapper `run/evaluate_subset.py` invokes `../evaluation_suite/evaluate.py`; that `evaluation_suite/` directory is expected as an external/sibling evaluation resource and is not tracked inside this repository snapshot.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
@@ -146,49 +157,53 @@ To establish reliable benchmarking across heterogeneous database environments, *
 
 ---
 
-## 📉 4. Phase 2: Counterfactual Rollback Post-Mortem (`slayql-2`)
+## 4. Phase 2: SGSA Semantic-Validation Experiment (`slayql-2`)
 
-### 4.1 The Counterfactual Rollback Hypothesis
-In **Branch `slayql-2`** (Commit `b015e42`), we explored **Sub-Graph Search Algorithm (SGSA)** and **Steiner Minimal Tree** algorithms. The hypothesis was that pruning low-confidence tables from candidate schema prompts would eliminate prompt noise and focus the LLM's attention strictly on gold tables.
+### 4.1 Corrected SGSA Definition
+In **Branch `slayql-2`** (Commit `b015e42`), SGSA means **Self-Generated Semantic Assertions**, not "Sub-Graph Search Algorithm." The branch introduces semantic validation code that parses model-generated assertions, validates execution DataFrames against those assertions, and feeds validation failures into the SQL revision loop.
 
-Given a database schema graph $G = (V, E, w)$ where $V$ represents tables and $E$ represents foreign key joins:
-$$\text{Target Steiner Nodes } T = \{v \in V \mid \text{Sim}(Q, D_v) > \tau_{high}\}$$
-SGSA computes the minimal connected subgraph $G' \subseteq G$ connecting all target nodes $T$ while dropping non-Steiner nodes $V \setminus V(G')$.
+Verified files on the `slayql-2` branch include:
+1. `run/semantic_validator.py`
+2. `run/test_semantic_validator.py`
+3. `run/sql_execution.py`
+4. `run/sql_generation.py`
+5. `run/sql_revise.py`
 
+```text
+SGSA Semantic Validation Flow
+
+[Generated SQL + semantic assertions]
+              |
+              v
+[Execution result DataFrame]
+              |
+              v
+[SGSA validator]
+              |
+              v
+[Pass] or [Revise SQL with semantic errors]
 ```
-┌───────────────────────────────────────────────────────────────────────────────────────────┐
-│                          COUNTERFACTUAL ROLLBACK (SGSA) FAILURE                           │
-└───────────────────────────────────────────────────────────────────────────────────────────┘
 
-   Original Schema Graph:                        SGSA Pruned Subgraph (DESTRUCTIVE):
-   [Table A] ───► [Bridge B] ───► [Table C]      [Table A]               [Table C]
-                     ▲                                      (Join Severed!)
-                     │
-              [Entity Table D]
-```
+### 4.2 Empirical Result in Committed `slayql-2` Artifacts
+The committed `slayql-2` comparison artifacts report a substantial degradation:
 
-### 4.2 Empirical Collapse & Failure Analysis
-When evaluated on Spider 2.0-Lite, SGSA counterfactual rollback caused an **unprecedented performance drop**:
+| Artifact | Baseline | SGSA Variant (`slayql-2`) | Change |
+|---|---:|---:|---:|
+| `run/comparison_report_v2.md` at `b015e42` | 67 / 178 (37.6%) | 27 / 178 (15.2%) | -40 |
+| `run/csv_only_comparison_report_v2.md` at `b015e42` | 67 / 178 (37.6%) | 27 / 178 (15.2%) | -40 |
 
-| Architecture Metric | Baseline AutoLink | SGSA Counterfactual Rollback (`slayql-2`) | Change |
-|---|---|---|---|
-| **Execution Accuracy (EX)** | 71 / 178 (**39.89%**) | 27 / 178 (**15.17%**) | **-24.72% (-62% relative drop)** |
-| **Evaluable Subset EX** | 71 / 171 (41.52%) | 27 / 163 (16.56%) | **-24.96%** |
-| **Failed SQL Execution Rate** | 3.9% | 48.3% | **+44.4% execution failures** |
+### 4.3 Corrected Failure Interpretation
+The local Git evidence supports the conclusion that the `slayql-2` SGSA semantic-validation experiment performed worse than the baseline in the committed v2 reports. It does **not** support the earlier explanation that this branch implemented Steiner-tree pruning, destructive subgraph rollback, or an "Over-Pruning Trap."
 
-### 4.3 Why Counterfactual Pruning Failed (*The Over-Pruning Trap*)
-1. **Destruction of Intermediate Join Bridges**:
-   In complex real-world databases (e.g., `PATENTS`, `NOAA_GSOD`, `CENSUS_BUREAU_USA`), intermediate junction tables (`Bridge B`) do not match user query terms directly ($\text{Sim}(Q, D_B) < \tau$). SGSA pruned `Bridge B`. Consequently, Table A and Table C became disconnected in the prompt.
-2. **LLM Hallucination of Synthetic Joins**:
-   Faced with disconnected tables, the LLM attempted synthetic `JOIN` conditions (e.g., `WHERE table_a.id = table_c.id`), violating foreign key constraints and generating invalid execution plans.
-3. **Core Conclusion**:
-   *In enterprise Text-to-SQL, destructive schema pruning is fundamentally flawed. Rather than deleting candidate schema nodes, the system must non-destructively boost relational pathways while dynamically capping turn budgets.*
+Correct conclusion:
+
+> SGSA semantic validation was an experimental rollback path that degraded empirical accuracy in the available committed reports. The cause should be described as a semantic-validation/revision-loop failure mode unless separate pruning evidence is added.
 
 ---
 
 ## ⚡ 5. Phase 3: SlayQL-Lite Production Architecture (`slayql-lite`)
 
-To solve the limitations of baseline AutoLink without falling into the Over-Pruning Trap, **SlayQL-Lite** (`v1.0.0-slayql-lite`) introduced a non-destructive 4-module architecture:
+To address the limitations of baseline AutoLink, **SlayQL-Lite** (`v1.0.0-slayql-lite`, annotated tag targeting `02599b2`) introduced a non-destructive 4-module architecture:
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
@@ -230,8 +245,9 @@ To solve the limitations of baseline AutoLink without falling into the Over-Prun
                            └───────────────────────────────┘
 ```
 
-### 5.1 Module 1: Relational Boost Propagation (RBP)
+### 5.1 Module 1: Relevance-Based Propagation (RBP)
 - **File**: `run/rbp_graph.py` & `run/retrieve_topk_schema.py`
+- **Naming note**: The code labels RBP as **Relevance-Based Propagation**.
 - **Mathematical Formulation**:
   Let $\mathbf{s}^{(0)} \in \mathbb{R}^{|V|}$ be the initial dense retrieval vector over schema tables $V$. RBP computes a graph random-walk restart with decay factor $\alpha \in (0, 1)$:
   $$\mathbf{s}^{(t+1)} = (1 - \alpha) \mathbf{M} \mathbf{s}^{(t)} + \alpha \mathbf{s}^{(0)}$$
@@ -246,7 +262,7 @@ To solve the limitations of baseline AutoLink without falling into the Over-Prun
 - **Filtering & Capping Pipeline**:
   1. *Stop-Word & Low-Entropy Filter*: Strips generic terms (`'all'`, `'the'`, `'total'`).
   2. *Numeric Thresholding*: Ignores pure integer string filters unless tagged explicitly.
-  3. *Hint Capping*: Limits injected hints to top $K=5$ matches to prevent prompt inflation.
+  3. *Hint Capping*: Current code uses `MAX_HINTS_PER_PROMPT = 3` to prevent prompt inflation.
 - **Example Output**:
   ```markdown
   [VALUE GROUNDING HINT]
@@ -255,12 +271,13 @@ To solve the limitations of baseline AutoLink without falling into the Over-Prun
 
 ### 5.3 Module 3: Iterative Early Exit (IT-EE)
 - **File**: `run/complete_schema.py`
+- **Code-state caveat**: The current `run/it_ee.py` comments describe a "Safe Exit" refactor where `should_early_exit` is forced to `False`; treat the formula below as the intended IT-EE design, not proof that the current code always exits early.
 - **Mathematical Formulation**:
   Let $S^{(t)}$ be the set of schema elements in candidate prompt at exploration turn $t$. IT-EE computes the Jaccard similarity index across consecutive turns:
   $$J(S^{(t)}, S^{(t-1)}) = \frac{|S^{(t)} \cap S^{(t-1)}|}{|S^{(t)} \cup S^{(t-1)}|}$$
   **Early Exit Condition**:
   $$\text{If } J(S^{(t)}, S^{(t-1)}) \ge \theta_{\text{exit}} \quad (\text{where } \theta_{\text{exit}} = 0.95) \text{ for } K=2 \text{ consecutive turns } \longrightarrow \text{EXIT LOOP}$$
-- **Impact**: Terminates exploration early as soon as candidate schemas stabilize, saving **~60% of LLM API tokens** and reducing per-query execution time from 120s to 35s.
+- **Impact**: Intended to reduce redundant exploration once candidate schemas stabilize. Local ablation logs show the `w/o IT-EE` run used 20,473,386 total tokens and 189,568 average tokens/query, but the current committed artifacts do not include a complete full-run token summary that independently verifies an exact **~60%** savings claim.
 
 ### 5.4 Module 4: Strict Output Contracts (QOC)
 - **File**: `run/sql_generation.py`
@@ -273,7 +290,7 @@ To solve the limitations of baseline AutoLink without falling into the Over-Prun
   ```
   Do NOT add conversational preambles or postscripts inside the code block.
   ```
-- **Impact**: Guarantees clean regex parsing, completely eliminating silent parsing failures.
+- **Impact**: Improves regex parseability by requiring SQL code fences; this reduces silent parsing failures but should not be read as a proven absolute guarantee.
 
 ---
 
@@ -281,14 +298,16 @@ To solve the limitations of baseline AutoLink without falling into the Over-Prun
 
 ### 6.1 Benchmark Results (Spider 2.0-Lite — 178 Instances)
 
-Evaluated on `subset_diverse_20_evaluation.json`:
+Evaluated on `subset_diverse_20_evaluation.json` (178 records). Result-source caveat: current local artifacts disagree on the baseline score, so the authoritative artifact must be named when reporting headline numbers.
 
 | Model / Framework | Correct / Denominator (178) | Execution Accuracy % | Evaluable Subset Score (result.csv) | Report Path |
 |---|---|---|---|---|
-| **AutoLink Baseline** | 71 / 178 | **39.89%** | 71 / 171 (41.52%) | [comparison_report.md](file:///d:/C-CaSE/run/comparison_report.md) |
-| **SlayQL-Lite (Enhanced)** | **72 / 178** | **40.45%** | **72 / 163 (44.17%)** | [comparison_report.md](file:///d:/C-CaSE/run/comparison_report.md) |
+| **AutoLink Baseline** | 71 / 178 | **39.89%** | Not independently verified in current local artifacts | [comparison_report.md](file:///d:/C-CaSE/run/comparison_report.md) |
+| **SlayQL-Lite (Enhanced)** | **72 / 178** | **40.45%** | Not independently verified in current local artifacts | [comparison_report.md](file:///d:/C-CaSE/run/comparison_report.md) |
+| **AutoLink Baseline (CSV-only artifact)** | 67 / 178 | **37.64%** | Not independently verified in current local artifacts | [csv_only_comparison_report.md](file:///d:/C-CaSE/run/csv_only_comparison_report.md) |
+| **SlayQL-Lite (CSV-only artifact)** | **72 / 178** | **40.45%** | Not independently verified in current local artifacts | [csv_only_comparison_report.md](file:///d:/C-CaSE/run/csv_only_comparison_report.md) |
 
-#### Category Breakdown:
+#### Category Breakdown (`run/comparison_report.md`):
 - 📈 **Improved** (Baseline ❌ $\rightarrow$ SlayQL ✅): **16 instances**
 - 📉 **Degraded** (Baseline ✅ $\rightarrow$ SlayQL ❌): **15 instances**
 - 🤝 **Both Correct**: **56 instances**
@@ -298,37 +317,35 @@ Evaluated on `subset_diverse_20_evaluation.json`:
 
 ### 6.2 Leave-One-Out Component Dropout Ablation Suite
 
-To measure the individual contribution of each SlayQL-Lite module, we executed systematic leave-one-out dropout experiments across the full 178 benchmark instances:
+To measure the individual contribution of each SlayQL-Lite module, leave-one-out dropout experiments were run. The table below reflects the local `eval_result.txt` summaries that are currently present in the working tree:
 
 | Variant | Module Dropped | Execution Accuracy (EX) | Total Tokens Consumed | Avg Tokens / Query | Empirical Takeaway & Conclusion |
 |---|---|---|---|---|---|
-| **Full SlayQL-Lite** | None (Reference) | **72 / 178 (40.45%)** | ~28,500,000 | ~160,110 | Reference production performance. |
-| **w/o RBP** | Relational Boost Propagation | **4 / 178 (2.25%)** | 17,418,471 | 217,730 | **Severe Collapse (-38.2%)**: RBP is essential for foreign-key join traversal across multi-table schemas. |
-| **w/o BM25** | Value Grounding Hints | **3 / 178 (1.69%)** | 18,210,400 | 168,614 | **Severe Collapse (-38.7%)**: Value hints are critical for matching text literals to correct database columns. |
-| **w/o IT-EE** | Dynamic Early Exit | **78 / 168 (46.43% eval)** | 20,473,386 | 189,568 | **Efficiency Win**: IT-EE provides major **API token (~60%) and latency savings** with minimal quality tradeoff. |
-| **w/o QOC** | Strict Output Contracts | *23 / 66 (Incomplete)* | — | — | **Format Safety**: Enforces clean ` ```sql``` ` block extraction, avoiding silent parsing traps. |
+| **Full SlayQL-Lite** | None (Reference) | **72 / 178 (40.45%)** | Not reproducible from `run/ablation1_full_slayql` in current tree | Not reproducible from current full-run ablation dir | Accuracy supported by comparison artifacts; full-token summary is not present locally. |
+| **w/o RBP** | Relevance-Based Propagation | **4 / 178 (2.25%)** | 17,418,471 | 217,730 | **Severe Collapse (-38.2%)** in the available local run. |
+| **w/o BM25** | Value Grounding Hints | **3 / 178 (1.69%)** | 5,652,427 | 171,285 | **Severe Collapse (-38.7%)** in the available local run; token values corrected from `run/ablation1_no_bm25/ablation1_no_bm25/eval_result.txt`. |
+| **w/o IT-EE** | Dynamic Early Exit | **78 / 168 (46.43% eval)** | 20,473,386 | 189,568 | Accuracy did not collapse in this partial/evaluable run, but average token usage is high. |
+| **w/o QOC** | Strict Output Contracts | *23 / 66 (Incomplete)* | 0 parsed | 0 parsed | Incomplete run; token parser found no token records in the local summary. |
 
 ---
 
 ### 6.3 Detailed Instance-Level Case Studies
 
-#### Case Study 1: `sf_bq033` (Database: `PATENTS`) — Improved (Baseline ❌ $\rightarrow$ SlayQL ✅)
+#### Case Study 1: `sf_bq033` (Database: `PATENTS`) — Improved in `run/comparison_report.md` (Baseline ❌ $\rightarrow$ SlayQL ✅)
 - **Question**: *"How many U.S. publications related to IoT (where abstract includes 'internet of things') were filed each month from 2008 to 2022, including months with no filings?"*
-- **Baseline Error**: Baseline vector retrieval selected `publication_number` and `filing_date` from `patents.publications`, but missed the value mapping for `'internet of things'`, resulting in zero matching rows:
+- **Artifact-grounded note**: `run/comparison_report.md` marks this instance as improved. However, the local artifact does **not** support the earlier claim that the baseline filtered `title`; the baseline SQL also filters `abstract_localized`. This case should be treated as an execution-result/equality improvement example, not as proof of title-vs-abstract value misgrounding.
   ```sql
-  -- Baseline (❌): Filtered wrong text field
-  WHERE LOWER(title) LIKE '%internet of things%'
+  -- Baseline artifact also filters abstract_localized:
+  AND LOWER(f.value:"text"::VARCHAR) LIKE '%internet of things%'
   ```
-- **SlayQL-Lite (✅)**: BM25 value grounding matched `'internet of things'` directly to column `abstract_text`. RBP maintained join connectivity to date generation tables:
+- **SlayQL-Lite (✅)**: The SlayQL SQL in the artifact also grounds the phrase through `abstract_localized` while producing the result shape marked correct by the comparison report:
   ```sql
-  -- SlayQL-Lite (✅): Correct column grounding & date bucket join
-  WHERE SEARCH(abstract_text, "'internet of things'")
+  AND LOWER(f.value:"text"::TEXT) LIKE '%internet of things%'
   ```
 
-#### Case Study 2: `bq392` (Database: `noaa_gsod`) — Improved (Baseline ❌ $\rightarrow$ SlayQL ✅)
+#### Case Study 2: `bq392` (Database: `noaa_gsod`) — Both Correct in `run/comparison_report.md`
 - **Question**: *"What are the top 3 dates in October 2009 with highest average temperature for station 723758 in YYYY-MM-DD format?"*
-- **Baseline Error**: Unconstrained formatting returned raw uncast integers `CAST(year AS STRING) || CAST(mo AS STRING)`, failing execution equality formatting against gold standard `YYYY-MM-DD`.
-- **SlayQL-Lite (✅)**: QOC strict formatting prompt guided the LLM to output valid BigQuery date functions:
+- **Artifact-grounded note**: `run/comparison_report.md` marks both the baseline and SlayQL as correct for this instance. It is therefore not valid evidence for a baseline failure. It remains a useful example of the expected BigQuery date formatting pattern:
   ```sql
   SELECT FORMAT_DATE('%Y-%m-%d', DATE(CAST(year AS INT64), CAST(mo AS INT64), CAST(da AS INT64))) AS date
   FROM `bigquery-public-data.noaa_gsod.gsod2009`
@@ -361,21 +378,24 @@ To measure the individual contribution of each SlayQL-Lite module, we executed s
 
 ## 🌿 8. Summary Matrix of Git Releases, Tags & Branches
 
-| Identifier | Type | Commit | Key Technical Innovation / Milestone | Benchmark EX % |
+| Identifier | Type | Commit | Key Technical Innovation / Milestone | Benchmark Evidence |
 |---|---|---|---|---|
-| **`AutoLink`** | Release Tag | `af6bad0` | Initial base AutoLink agent (10-turn fixed loop) | ~39.9% |
-| **`c-case-v1`** | Release Tag | `a72cce2` | Multi-provider evaluation suite & conformal scoring | ~39.9% |
-| **`slayql-1`** | Branch | `475ce87` | Integrated RBP graph propagation + BM25 value grounding | 39.89% |
-| **`slayql-2`** | Branch | `b015e42` | SGSA counterfactual rollback experiment | 15.17% |
-| **`v1.0.0-slayql-lite`** | Release Tag | `251c7bb` | SlayQL-Lite production release (4-module architecture) | **40.45%** |
-| **`slayql-lite`** | Active Branch | `5932669` | SlayQL-Lite active branch with resilient batch engine & docs | **40.45%** |
+| **`AutoLink`** | Tag | `af6bad0` | Initial AutoLink baseline snapshot. | Later comparison artifacts report baseline scores. |
+| **`c-case-op-1`** | Branch | `af6bad0` | Branch still points to initial commit. | Not the `c-case-v1` tag. |
+| **`c-case-v1`** | Tag | `a72cce2` | Evaluation/infrastructure milestone. | Repo wrapper invokes external/sibling `evaluation_suite`. |
+| **`SlayQL v2`** | Commit | `3b53c20` | Main-line schema-engine and SQL generation/revision work. | Real Git milestone. |
+| **`slayql-1`** | Branch | `475ce87` | Integrated RBP graph propagation + BM25 value grounding. | Implementation supported. |
+| **`slayql-2`** | Branch | `b015e42` | SGSA Self-Generated Semantic Assertions validation experiment. | Committed v2 artifacts report 27/178 (15.2%). |
+| **`v1.0.0-slayql-lite`** | Annotated release tag | `02599b2` | SlayQL-Lite release snapshot. | Actual release tag target. |
+| **post-release SlayQL-Lite** | Commit | `251c7bb` | Resilient batch engine, failed-task tracking, ablation scripts, and handoff docs. | Post-release, not the tag target. |
+| **`slayql-lite`** | Branch tip | `ba00dc2` | Documentation/manuscript updates. | Merged into `main` by `2b1719f`. |
 
 ---
 
 ## 📁 9. Repository Structure
 
 ```
-- evaluation_suite/                    -- Spider 2.0-Lite Evaluation Suite
+- evaluation_suite/                    -- Spider 2.0-Lite Evaluation Suite (external/sibling resource; not tracked in this repo snapshot if absent)
   - gold/                              -- Gold execution results and SQL
   - evaluate.py                        -- Execution accuracy evaluator
   - bigquery_credential.json           -- Credential for BigQuery evaluation
@@ -474,7 +494,7 @@ bash ablation1_component_dropout.sh --data_file subset_diverse_20_evaluation.jso
 
 ## 📊 12. Evaluating Results & Generating Reports
 
-Once SQL generation and selection complete, run the evaluation script:
+Once SQL generation and selection complete, run the evaluation script. This command assumes the external/sibling `evaluation_suite/` directory is available at the path shown:
 
 ```bash
 python evaluation_suite/evaluate.py \
