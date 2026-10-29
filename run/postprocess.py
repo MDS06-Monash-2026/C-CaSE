@@ -2,6 +2,7 @@ import os
 import json
 from tqdm import tqdm
 import argparse
+from artifact_store import atomic_write_json
 import glob
 
 def extract_description(description_text):
@@ -33,8 +34,7 @@ def merge(log_path, is_preprocess=False):
             schema_info["column_values"] += step2_schema["column_values"]
             schema_info["descriptions"] += step2_schema["descriptions"]
 
-    with open(f"{log_path}/unfilled_schema.json", "w", encoding="utf-8") as f:
-        json.dump(initial_candidates, f, indent=4, ensure_ascii=False)
+    atomic_write_json(f"{log_path}/unfilled_schema.json", initial_candidates)
     
     with open(f"{log_path}/unfilled_schema.json", "r", encoding="utf-8") as f:
         initial_candidates = json.load(f)
@@ -104,8 +104,7 @@ def merge(log_path, is_preprocess=False):
         final_schemas[instance_id]["table_candidates"] = filled_table_candidates
         final_schemas[instance_id]["column_candidates"] = filled_column_candidates
         
-    with open(f"{log_path}/merge_candidates.json", "w") as f:
-        json.dump(final_schemas, f, indent=4, ensure_ascii=False)
+    atomic_write_json(f"{log_path}/merge_candidates.json", final_schemas)
 
 
 if __name__ == "__main__":

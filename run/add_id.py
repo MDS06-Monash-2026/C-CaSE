@@ -2,6 +2,7 @@ import json
 import os
 import argparse
 import glob
+from artifact_store import atomic_write_json
 
 def fill_rule(initial_candidates, data_file="spider2_data.json"):
     with open(data_file, "r", encoding="utf-8") as f:
@@ -168,13 +169,11 @@ def add_pre_rule(log_path, data_file="spider2_data.json"):
             with open(f"{cache_path}/{instance_id}.json", "w", encoding="utf-8") as f:
                 json.dump(cache, f, ensure_ascii=False, indent=4)
                 
-    with open(f"{log_path}/unfilled_pre_rule.json", "w", encoding="utf-8") as f:
-        json.dump(add_id_candidates, f, ensure_ascii=False, indent=4)
+    atomic_write_json(f"{log_path}/unfilled_pre_rule.json", add_id_candidates)
     
     filled_pre_rule = fill_rule(add_id_candidates, data_file=data_file)
     
-    with open(f"{log_path}/filled_pre_rule.json", "w", encoding="utf-8") as f:
-        json.dump(filled_pre_rule, f, ensure_ascii=False, indent=4)
+    atomic_write_json(f"{log_path}/filled_pre_rule.json", filled_pre_rule)
     
     
 if __name__ == "__main__":

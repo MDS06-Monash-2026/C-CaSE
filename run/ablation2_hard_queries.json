@@ -1,0 +1,652 @@
+{
+  "ga004": {
+    "db_name": "ga4",
+    "question": "Can you figure out the average difference in pageviews between users who bought something and those who didn’t in December 2020? Just label anyone who was involved in purchase events as a purchaser.",
+    "external_knowledge": null
+  },
+  "bq011": {
+    "db_name": "ga4",
+    "question": "How many distinct pseudo users had positive engagement time  in the 7-day period ending on January 7, 2021 at 23:59:59, but had no positive engagement time in the 2-day period ending on the same date (January 7, 2021 at 23:59:59) ?",
+    "external_knowledge": "ga4_obfuscated_sample_ecommerce.events.md"
+  },
+  "bq008": {
+    "db_name": "ga360",
+    "question": "In January 2017, among visitors whose campaign name contains 'Data Share' and who accessed any page starting with '/home', which page did they most commonly visit next, and what is the maximum time (in seconds) they spent on the '/home' page before moving on?",
+    "external_knowledge": "google_analytics_sample.ga_sessions.md"
+  },
+  "bq004": {
+    "db_name": "ga360",
+    "question": "In July 2017, among all visitors who bought any YouTube-related product, which distinct product—excluding those containing ‘YouTube’ in the product name—had the highest total quantity purchased?",
+    "external_knowledge": "google_analytics_sample.ga_sessions.md"
+  },
+  "sf_bq033": {
+    "db_name": "PATENTS",
+    "question": "How many U.S. publications related to IoT (where the abstract includes the phrase 'internet of things') were filed each month from 2008 to 2022, including months with no filings?",
+    "external_knowledge": null
+  },
+  "sf_bq029": {
+    "db_name": "PATENTS",
+    "question": "Get the average number of inventors per patent and the total count of patent publications in Canada (CA) for each 5-year period from 1960 to 2020, based on publication dates. Only include patents that have at least one inventor listed, and group results by 5-year intervals (1960-1964, 1965-1969, etc.).",
+    "external_knowledge": null
+  },
+  "sf_bq215": {
+    "db_name": "PATENTS",
+    "question": "Which US patent (with a B2 kind code and a grant date between 2015 and 2018) has the highest originality score calculated as 1 - (the sum of squared occurrences of distinct 4-digit IPC codes in its backward citations divided by the square of the total occurrences of these 4-digit IPC codes)?",
+    "external_knowledge": "patents_info.md"
+  },
+  "sf_bq127": {
+    "db_name": "PATENTS_GOOGLE",
+    "question": "For each publication family whose earliest publication was first published in January 2015, please provide the earliest publication date, the distinct publication numbers, their country codes, the distinct CPC and IPC codes, distinct families (namely, the ids) that cite and are cited by this publication family. Please present all lists as comma-separated values, sorted alphabetically",
+    "external_knowledge": null
+  },
+  "sf_bq207": {
+    "db_name": "PATENTS_USPTO",
+    "question": "Could you provide the earliest publication numbers, corresponding application numbers, claim numbers, and word counts for the top 100 independent patent claims, based on the highest word count, retrieved from claims stats within uspto_oce_claims (filtered by ind_flg='1'), matched with their publication numbers from uspto_oce_claims match, and further joined with patents publications to ensure only the earliest publication for each application is included, ordered by descending word count, and limited to the top 100 results?",
+    "external_knowledge": null
+  },
+  "sf_bq246": {
+    "db_name": "PATENTSVIEW",
+    "question": "Retrieve U.S. patents with the number of forward citations within the first 3 years after the patent application date (i.e., patents citing the current patent within 3 years). Only include patents with both backward citations within 1 year before the application date and forward citations within 1 year after the application date. The query should focus on specific CPC categories, sort results by backward citations in descending order, and return the patent with the most backward citations, limiting to one result.",
+    "external_knowledge": null
+  },
+  "sf_bq036": {
+    "db_name": "GITHUB_REPOS",
+    "question": "What was the average number of GitHub commits made per month in 2016 for repositories containing Python code?",
+    "external_knowledge": null
+  },
+  "sf_bq182": {
+    "db_name": "GITHUB_REPOS_DATE",
+    "question": "Which primary programming languages, determined by the highest number of bytes in each repository, had at least 100 PullRequestEvents on January 18, 2023 across all their repositories?",
+    "external_knowledge": null
+  },
+  "sf_bq251": {
+    "db_name": "PYPI",
+    "question": "I want to know the GitHub project URLs for the top 3 most downloaded PyPI packages based on download count. First, extract PyPI package metadata including name, version, and project URLs. Filter these URLs to only include those that link to GitHub repositories. Use a regular expression to clean the GitHub URLs by removing unnecessary parts like 'issues', 'pull', 'blob', and 'tree' paths, keeping only the main repository URL. For packages with multiple versions, use only the most recent version based on upload time. Join this data with download metrics to determine the most downloaded packages. Return only the cleaned GitHub repository URLs (without quotation marks) for the top 3 packages by total download count, ensuring that only packages with valid GitHub URLs are included in the results.",
+    "external_knowledge": null
+  },
+  "bq172": {
+    "db_name": "cms_data",
+    "question": "For the drug with the highest total number of prescriptions in New York State during 2014, could you list the top five states with the highest total claim counts for this drug? Please also include their total claim counts and total drug costs. ",
+    "external_knowledge": null
+  },
+  "bq357": {
+    "db_name": "noaa_data",
+    "question": "What are the latitude and longitude coordinates and dates between 2005 and 2015 with the top 5 highest daily average wind speeds, excluding records with missing wind speed values? Using data from tables start with prefix \"icoads_core\".",
+    "external_knowledge": null
+  },
+  "bq394": {
+    "db_name": "noaa_data",
+    "question": "What are the top 3 months between 2010 and 2014 with the smallest sum of absolute differences between the average air temperature, wet bulb temperature, dew point temperature, and sea surface temperature, including respective years and sum of differences? Please present the year and month in numerical format.",
+    "external_knowledge": null
+  },
+  "sf_bq117": {
+    "db_name": "NOAA_DATA",
+    "question": "What is the total number of severe storm events that occurred in the most affected month over the past 15 years according to NOAA records, considering only the top 100 storm events with the highest property damage?",
+    "external_knowledge": null
+  },
+  "sf_bq071": {
+    "db_name": "NOAA_DATA_PLUS",
+    "question": "Can you provide the count of hurricanes and a list of hurricane names (sorted alphabetically and separated by commas) for each city and its associated zip code, where the hurricanes fall within the boundaries of the zip codes? Please exclude any unnamed hurricanes, and sort the results by the count of hurricanes in descending order. The output should include the following columns: city, zip code, state, count of hurricanes, and the list of hurricanes.",
+    "external_knowledge": "functions_st_within.md"
+  },
+  "sf_bq426": {
+    "db_name": "NEW_YORK_CITIBIKE_1",
+    "question": "What user type recorded the highest average temperature for trips starting and ending in New York City's zip code 10019 during 2018? Include average precipitation, wind speed, and temperature for that user type based on weather data from the New York Central Park station.",
+    "external_knowledge": "functions_st_within.md"
+  },
+  "bq392": {
+    "db_name": "noaa_gsod",
+    "question": "What are the top 3 dates in October 2009 with the highest average temperature for station number 723758, in the format YYYY-MM-DD?",
+    "external_knowledge": null
+  },
+  "sf_bq291": {
+    "db_name": "NOAA_GLOBAL_FORECAST_SYSTEM",
+    "question": "Can you provide a daily weather summary for July 2019 within a 5 km radius of latitude 26.75 and longitude 51.5? I need the maximum, minimum, and average temperatures; total precipitation; average cloud cover between 10 AM and 5 PM; total snowfall (when average temperature is below 32°F); and total rainfall (when average temperature is 32°F or above) for each forecast date. The data should correspond to forecasts created in July 2019 for the following day.",
+    "external_knowledge": "functions_st_within.md"
+  },
+  "bq048": {
+    "db_name": "new_york_noaa",
+    "question": "Which complaint types with more than 3000 total requests from 2011 to 2020 show the strongest positive and negative Pearson correlations with the daily average wind speed measured at station 744860 (JFK Airport), based on daily complaint proportions (the ratio of type-specific complaints to total daily complaints)? Please provide the complaint types and their correlation coefficients, rounded to four decimal places.",
+    "external_knowledge": null
+  },
+  "bq293": {
+    "db_name": "new_york_geo",
+    "question": "I want to analyze New York City yellow taxi trip data specifically for January 1, 2015, using the bigquery-public-data.new_york.tlc_yellow_trips_2015 dataset. I need to join this with the geo_us_boundaries.zip_codes table to map each trip to its respective NYC zip code based on the pickup coordinates. The analysis should create a complete hour-by-hour breakdown for all zip codes by cross-joining distinct zip codes with distinct hours, including hours with zero trips. For each zip code and hour combination, calculate the total number of trips and the following time-based metrics: count of trips from 1 hour ago, 1 day (24 hours) ago, 7 days (168 hours) ago, and 14 days (336 hours) ago. Additionally, compute the 14-day and 21-day moving averages and standard deviations of trip counts, excluding the current hour. Only include trips with valid latitude and longitude coordinates. The final results should be sorted by the highest trip counts, showing only the top 5 groups with the most trips.",
+    "external_knowledge": "functions_st_contains.md"
+  },
+  "sf_bq073": {
+    "db_name": "CENSUS_BUREAU_ACS_2",
+    "question": "Using data on ZIP-level median income differences between 2015 and 2018, along with the 2017 ACS employment figures, list each state in descending order of total vulnerable workers, where “vulnerable” is defined as 38% of wholesale trade employees and 41% of manufacturing employees in 2017. Your results should include the state name, the number of vulnerable wholesale trade workers, the number of vulnerable manufacturing workers, and the combined total of these vulnerable workers.",
+    "external_knowledge": null
+  },
+  "sf_bq250": {
+    "db_name": "GEO_OPENSTREETMAP_WORLDPOP",
+    "question": "Based on the most recent 1km population grid data in Singapore before January 2023, using ST_CONVEXHULL to aggregate all population grid centroids into a bounding region and ST_INTERSECTS to identify hospitals from OpenStreetMap’s planet layer (layer_code in (2110, 2120)) that fall within this region, then calculating the distance from each grid cell to its nearest hospital, what is the total population of the grid cell that is farthest from any hospital?",
+    "external_knowledge": "OpenStreetMap_data_in_layered_GIS_format.md"
+  },
+  "sf_bq080": {
+    "db_name": "CRYPTO",
+    "question": "Using only the Ethereum traces table, can you provide a daily cumulative count of smart contracts created by external users (where trace_address is null) versus contracts created by other contracts (where trace_address is not null) between August 30, 2018, and September 30, 2018? Ensure results include every date in this range, even if no new contracts were created, and show strictly increasing cumulative totals.",
+    "external_knowledge": null
+  },
+  "sf_bq092": {
+    "db_name": "CRYPTO",
+    "question": "In April 2023, what are the highest and lowest balances across all Dash addresses when calculating the net balance for each address using double-entry bookkeeping (where inputs are treated as debits/negative values and outputs as credits/positive values)? Consider all transactions filtered by block_timestamp_month='2023-04-01', and when an address appears as an array in the data, concatenate the array elements into a comma-separated string. For each address and type combination, sum all the values to determine the balance.",
+    "external_knowledge": null
+  },
+  "sf_bq184": {
+    "db_name": "CRYPTO",
+    "question": "Using only the traces, can you calculate daily cumulative counts of smart contracts created by external addresses (where the trace_address is NULL) versus those created by other contracts (where the trace_address is NOT NULL) for each date from 2017-01-01 through 2021-12-31, ensuring that all dates in this range are included even if no new contracts were created on some days, and showing monotonically increasing cumulative totals for both categories?",
+    "external_knowledge": null
+  },
+  "sf_bq068": {
+    "db_name": "CRYPTO",
+    "question": "Using double-entry bookkeeping principles by treating transaction inputs as debits (negative values) and outputs as credits (positive values) for all Bitcoin Cash transactions between 2014-03-01 and 2014-04-01, how can we calculate the maximum and minimum final balances grouped by address type from these transactions?",
+    "external_knowledge": null
+  },
+  "sf_bq037": {
+    "db_name": "HUMAN_GENOME_VARIANTS",
+    "question": "About the refined human genetic variations collected in phase 3 on 2015-02-20, I want to know the minimum and maximum start positions as well as the proportions of these two respectively for reference bases 'AT' and 'TA'.",
+    "external_knowledge": null
+  },
+  "bq051": {
+    "db_name": "new_york_ghcn",
+    "question": "Calculate the average daily number of Citibike trips in New York City during 2016, categorizing days as rainy if the total precipitation exceeds 5 millimeters (obtained by dividing the raw precipitation value by 10), and non-rainy otherwise. Use data from the nearest GHCN station located within 50 km of (40.7128, -74.0060) that has valid, unflagged measurements, then compare the resulting average Citibike trips on rainy days versus non-rainy days.",
+    "external_knowledge": null
+  },
+  "bq053": {
+    "db_name": "new_york",
+    "question": "Calculate the change in the number of living trees of each fall color in New York City from 1995 to 2015 by computing, for each tree species, the difference between the number of trees not marked as dead in 1995 and the number of trees alive in 2015, matching species by the uppercase form of their scientific names from the tree_species table. Then, group the species by their fall color and sum these differences to determine the total change in the number of trees for each fall color.",
+    "external_knowledge": null
+  },
+  "bq202": {
+    "db_name": "new_york_plus",
+    "question": "For the station that had the highest number of Citibike trips starting there in 2018, which numeric day of the week and which hour of the day had the greatest number of trips based on the start time of those trips?",
+    "external_knowledge": null
+  },
+  "bq186": {
+    "db_name": "san_francisco",
+    "question": "Please find, for each year-month combination (in the format YYYYMM) derived from the start date of bike share trips in San Francisco, the first trip duration in minutes, the last trip duration in minutes, the highest trip duration in minutes, and the lowest trip duration in minutes, where ‘first’ and ‘last’ are determined by the chronological order of the trip start date, then group your results by this year-month and sort them by the same year-month key.",
+    "external_knowledge": null
+  },
+  "bq059": {
+    "db_name": "san_francisco_plus",
+    "question": "What is the highest average speed (rounded to 1 decimal, in metric m/s) for bike trips in Berkeley with trip distance greater than 1000 meters?",
+    "external_knowledge": null
+  },
+  "sf_bq294": {
+    "db_name": "SAN_FRANCISCO_PLUS",
+    "question": "Could you provide the details of the top 5 longest bike share trips that started between July 1, 2017, and December 31, 2017, including the trip ID, duration in seconds, start date, start station name, route (derived from start station name to end station name), bike number, subscriber type, member's birth year, the member's current age (calculated using the current year), an age classification based on whether the member is younger than 40, between 40 and 60, or older than 60, the member's gender, and the name of the region of the start station? Please exclude any trips where the start station name, member's birth year, or member's gender is not specified.",
+    "external_knowledge": "trip_info.md"
+  },
+  "sf_bq333": {
+    "db_name": "THELOOK_ECOMMERCE",
+    "question": "Which three browsers have the shortest average session duration—calculated by the difference in seconds between the earliest and latest timestamps for each user’s session—while only including browsers that have more than 10 total sessions, and what are their respective average session durations?",
+    "external_knowledge": null
+  },
+  "sf_bq190": {
+    "db_name": "THELOOK_ECOMMERCE",
+    "question": "Determine the number of users who are the youngest and oldest for each gender (male and female) separately, among those who signed up between January 1, 2019, and April 30, 2022. For each gender, identify the minimum and maximum ages within this date range, and count how many users fall into these respective age groups.",
+    "external_knowledge": null
+  },
+  "sf_bq265": {
+    "db_name": "THELOOK_ECOMMERCE",
+    "question": "Can you list the email addresses of the top 10 users who registered in 2019 and made purchases in 2019, ranking them by their highest average order value, where average order value is calculated by multiplying the number of items in each order by the sale price, summing this total across all orders for each user, and then dividing by the total number of orders?",
+    "external_knowledge": null
+  },
+  "sf_bq020": {
+    "db_name": "GENOMICS_CANNABIS",
+    "question": "What is the name of the reference sequence with the highest variant density in the given cannabis genome dataset?",
+    "external_knowledge": null
+  },
+  "bq115": {
+    "db_name": "census_bureau_international",
+    "question": "Which country has the highest percentage of population under the age of 25 in 2017?",
+    "external_knowledge": null
+  },
+  "bq030": {
+    "db_name": "covid19_open_data",
+    "question": "As of May 10, 2020, among all countries that had more than 50,000 confirmed COVID-19 cases, which three countries had the highest recovery rates based on the total number of recovered cases relative to their total confirmed cases, and what were their respective recovery rates expressed as percentages?",
+    "external_knowledge": null
+  },
+  "bq086": {
+    "db_name": "covid19_open_world_bank",
+    "question": "You need to calculate the percentage of each country's population that had been confirmed with COVID-19 by June 30, 2020. The population data for 2018 can be found in the World Bank dataset, and the cumulative COVID-19 confirmed cases data is available in the COVID-19 Open Data dataset. Calculate the percentage of each country's population, that was cumulatively confirmed to have COVID-19",
+    "external_knowledge": null
+  },
+  "bq085": {
+    "db_name": "covid19_jhu_world_bank",
+    "question": "Could you provide, for the United States, France, China, Italy, Spain, Germany, and Iran, the total number of confirmed COVID-19 cases as of April 20, 2020, along with the number of cases per 100,000 people based on their total 2020 populations calculated by summing all relevant population entries from the World Bank data",
+    "external_knowledge": null
+  },
+  "bq130": {
+    "db_name": "covid19_nyt",
+    "question": "Analyze daily new COVID-19 case counts from March to May 2020, identifying the top five states by daily increases. Please compile a ranking based on how often each state appears in these daily top fives. Then, examine the state that ranks fourth overall and identify its top five counties based on their frequency of appearing in the daily top five new case counts.",
+    "external_knowledge": null
+  },
+  "bq087": {
+    "db_name": "covid19_symptom_search",
+    "question": "Please calculate the overall percentage change in the average weekly search frequency for the symptom 'Anosmia' across the five New York City counties—Bronx County, Queens County, Kings County, New York County, and Richmond County—by comparing the combined data from January 1, 2019, through December 31, 2019, with the combined data from January 1, 2020, through December 31, 2020.",
+    "external_knowledge": null
+  },
+  "bq089": {
+    "db_name": "covid19_usa",
+    "question": "Given the latest population estimates from the 2018 five-year American Community Survey, what is the number of vaccine sites per 1000 people for counties in California?",
+    "external_knowledge": null
+  },
+  "bq137": {
+    "db_name": "census_bureau_usa",
+    "question": "Please find all zip code areas located within 10 kilometers of the coordinates (-122.3321, 47.6062) by joining the 2010 census population data (summing only male and female populations with no age constraints) and the zip code area information, and return each area’s polygon, land and water area in meters, latitude and longitude, state code, state name, city, county, and total population.",
+    "external_knowledge": "functions_st_dwithin.md"
+  },
+  "bq061": {
+    "db_name": "census_bureau_acs_1",
+    "question": "Which census tract has witnessed the largest increase in median income between 2015 and 2018 in California? Tell me the tract code.",
+    "external_knowledge": null
+  },
+  "bq427": {
+    "db_name": "ncaa_basketball",
+    "question": "Could you determine, for each shot type, the average x and y coordinates (adjusted to ensure consistency regarding the left or right basket), the average number of shot attempts, and the average number of successful shots, considering only shots taken before March 15, 2018, excluding those with null shot types or coordinates, ensuring the shots are on the correct side of the court based on the team's basket.",
+    "external_knowledge": "basketball.md"
+  },
+  "bq144": {
+    "db_name": "ncaa_insights",
+    "question": "Create a dataset by combining NCAA men's basketball tournament game outcomes from the 2014 season onwards, including both the historical tournament games and the 2018 tournament results, with the corresponding pace and efficiency performance metrics for each team and their opponents from the feature_engineering data. The dataset should include the season, game outcome labels (win or loss), team and opponent seeds, school names, pace and efficiency rankings, statistical values, and the differences between the team's and the opponent's metrics to enable a comprehensive analysis of team and opponent dynamics.",
+    "external_knowledge": "NCAA_Basketball_Tournament_SQL_Query_Variable_Guide.md"
+  },
+  "bq113": {
+    "db_name": "bls",
+    "question": "Which county in Utah experienced the greatest percentage increase in construction employment from 2000 to 2018, calculated by averaging the employment levels during the third month of each quarter in those years? What is the corresponding percentage increase?",
+    "external_knowledge": null
+  },
+  "bq076": {
+    "db_name": "chicago",
+    "question": "What is the highest number of motor vehicle theft incidents that occurred in any single month during 2016?",
+    "external_knowledge": null
+  },
+  "bq109": {
+    "db_name": "open_targets_genetics_1",
+    "question": "Find the average, variance, max-min difference, and the QTL source(right study) of the maximum log2(h4/h3) for data where right gene id is \"ENSG00000169174\", h4 > 0.8, h3 < 0.02, reported trait includes \"lesterol levels\", right biological feature is \"IPSC\", and the variant is '1_55029009_C_T'.",
+    "external_knowledge": null
+  },
+  "sf_bq325": {
+    "db_name": "OPEN_TARGETS_GENETICS_2",
+    "question": "Please identify the top 10 genes with the strongest associations across all studies by first selecting, for each gene within each study, the variant with the lowest p-value, and then ranking all such gene–variant pairs to return the 10 genes with the smallest p-values overall.",
+    "external_knowledge": null
+  },
+  "bq220": {
+    "db_name": "usfs_fia",
+    "question": "Based on the condition, plot_tree, and population tables in bigquery-public-data.usfs_fia, for the evaluation_type set to 'EXPCURR' and condition_status_code equal to 1, which states had the largest average subplot size and the largest average macroplot size, respectively, for each of the years 2015, 2016, and 2017? Please include the type of plot (subplot or macroplot), the specific year, the state, and the corresponding average size in your results.",
+    "external_knowledge": "subplot_macroplot_size.md"
+  },
+  "bq096": {
+    "db_name": "gbif",
+    "question": "Determine which year had the earliest date after January on which more than 10 sightings of Sterna paradisaea were recorded north of 40 degrees latitude. For each year, find the first day after January with over 10 sightings of this species in that region, and identify the year whose earliest such date is the earliest among all years.",
+    "external_knowledge": null
+  },
+  "sf_bq276": {
+    "db_name": "NOAA_PORTS",
+    "question": "Can you provide a comprehensive list of all ports in region number 6585 that lie within U.S. state boundaries and have been affected by named storms in the North Atlantic basin with wind speeds of at least 35 knots and a Saffir-Simpson classification of at least minimal tropical storm strength, including for each port its name, the state name, the distinct years in which storms occurred, the total count of distinct storms, the distinct storm names, the average storm category, the average wind speed, and the respective geometries for both the port and the tropical storm areas?",
+    "external_knowledge": "persistent_udfs_routines.md"
+  },
+  "bq278": {
+    "db_name": "sunroof_solar",
+    "question": "Please provide a detailed comparison of the solar potential for each state, distinguishing between postal code and census tract levels. For each state, include the total number of buildings available for solar installations, the average percentage of Google Maps area covered by Project Sunroof, the average percentage of that coverage which is suitable for solar, the total potential panel count, the total kilowatt capacity, the energy generation potential, the carbon dioxide offset, the current number of buildings with solar panels, and the gap in potential installations calculated by adjusting the total qualified buildings with the coverage and suitability percentages and subtracting the current installations.",
+    "external_knowledge": null
+  },
+  "bq103": {
+    "db_name": "gnomAD",
+    "question": "Generate summary statistics on genetic variants in the region between positions 55039447 and 55064852 on chromosome 1. This includes the number of variants, the total allele count, the total number of alleles, and distinct gene symbols (using Variant Effect Predictor, VEP, for gene annotation). Additionally, compute the density of mutations by dividing the length of the region by the number of variants.  Using data from the gnomAD v3 version.",
+    "external_knowledge": null
+  },
+  "sf_bq411": {
+    "db_name": "GOOGLE_TRENDS",
+    "question": "Please retrieve the top three Google Trends search terms (ranks 1, 2, and 3) from top_terms for each weekday (Monday through Friday) between September 1, 2024, and September 14, 2024, grouped by the refresh_date column and ordered in descending order of refresh_date.",
+    "external_knowledge": null
+  },
+  "bq105": {
+    "db_name": "nhtsa_traffic_fatalities_plus",
+    "question": "According to the 2015 and 2016 accident and driver distraction, and excluding cases where the driver’s distraction status is recorded as 'Not Distracted,' 'Unknown if Distracted,' or 'Not Reported,' how many traffic accidents per 100,000 people were caused by driver distraction in each U.S. state for those two years, based on 2010 census population data, and which five states each year had the highest rates?",
+    "external_knowledge": null
+  },
+  "bq396": {
+    "db_name": "nhtsa_traffic_fatalities",
+    "question": "Which top 3 states had the largest differences in the number of traffic accidents between rainy and clear weather during weekends in 2016? Please also provide the respective differences for each state.",
+    "external_knowledge": null
+  },
+  "bq395": {
+    "db_name": "sdoh",
+    "question": "Calculate the percentage change in the total number of unsheltered homeless people from 2015 to 2018 for each state by summing the counts over all Continuums of Care (CoCs) within each state. Then, determine the national average of these state percentage changes. Identify the five states whose percentage change is closest to this national average percentage change. Please provide the state abbreviations.",
+    "external_knowledge": null
+  },
+  "bq116": {
+    "db_name": "sec_quarterly_financials",
+    "question": "Which U.S. state reported the highest total annual revenue in billions of dollars during fiscal year 2016, considering companies that provided four quarters of data and reported measure tags in ('Revenues','SalesRevenueNet','SalesRevenueGoodsNet'), excluding any entries where the state field (stprba) is null or empty?",
+    "external_knowledge": null
+  },
+  "sf_bq015": {
+    "db_name": "STACKOVERFLOW_PLUS",
+    "question": "Identify and rank the top 10 tags from Stack Overflow questions that were referenced in Hacker News comments on or after 2014 by counting how many times each question was mentioned, then splitting the questions’ tag strings by the '|' delimiter, grouping by tag",
+    "external_knowledge": null
+  },
+  "sf_bq307": {
+    "db_name": "STACKOVERFLOW",
+    "question": "Find the top 10 gold badges that users most commonly earn as their first gold badge on Stack Overflow. For each of these badges, display the badge name, the number of users who earned it as their first gold badge, and the average number of days from the user's account creation date to the date they earned the badge, calculated in days without any adjustments for date formats.",
+    "external_knowledge": null
+  },
+  "bq200": {
+    "db_name": "mlb",
+    "question": "Using data from both the regular season and the post-season, identify the pitcher who achieved the highest non-zero pitch speed for each team by confirming whether the pitcher’s ID appears in the relevant home or away player lists for that game, then retrieve that pitcher’s full name along with the maximum valid pitch speed they achieved while playing for that specific team.",
+    "external_knowledge": null
+  },
+  "sf_bq460": {
+    "db_name": "WORD_VECTORS_US",
+    "question": "Please process the articles from the 'nature' dataset by first tokenizing the body text into words and removing stopwords. For each remaining word, retrieve its word vector from the glove_vectors table and its frequency from the word_frequencies table, then divide each word vector by the 0.4th power of the word's frequency to weight it. Sum the weighted vectors to obtain an aggregate vector for each article, normalize this aggregate vector to unit length, and then compute the cosine similarity scores between these normalized vectors. Finally, return the IDs, dates, titles, and cosine similarity scores of the top 10 articles most similar to the article with the ID '8a78ef2d-d5f7-4d2d-9b47-5adb25cbd373'.",
+    "external_knowledge": "tokenize_func.md"
+  },
+  "bq389": {
+    "db_name": "epa_historical_air_quality",
+    "question": "Please calculate the monthly average levels of PM10, PM2.5 FRM, PM2.5 non-FRM, volatile organic emissions, SO2 (scaled by a factor of 10), and Lead (scaled by a factor of 100) air pollutants in California for the year 2020.",
+    "external_knowledge": null
+  },
+  "sf_bq417": {
+    "db_name": "IDC",
+    "question": "Please provide identification details, study and series information, storage location, and total size in MB for the medical images belonging to male patients who are exactly 18 years old based on the numeric portion of the PatientAge field, where the BodyPartExamined is set to 'MEDIASTINUM' and the study date is strictly after September 1, 2014.",
+    "external_knowledge": "IDC_data_model.md"
+  },
+  "sf_bq219": {
+    "db_name": "IOWA_LIQUOR_SALES",
+    "question": "In the Iowa Liquor Sales dataset, starting from January 1, 2022 through the last fully completed month, which two liquor categories, each contributing an average of at least 1% to the monthly sales volume over at least 24 months of available data, have the lowest Pearson correlation coefficient when comparing their monthly percentages of total liquor sales across those months, and what are their names?",
+    "external_knowledge": null
+  },
+  "bq199": {
+    "db_name": "iowa_liquor_sales",
+    "question": "Identify the top 10 liquor categories in Iowa in 2021 by calculating, for each category, the average of the per-liter retail prices across all sales transactions in that category during 2021. For these top categories, provide their average per-liter retail prices calculated in the same manner for the years 2019, 2020, and 2021.",
+    "external_knowledge": null
+  },
+  "bq049": {
+    "db_name": "iowa_liquor_sales_plus",
+    "question": "Please show the monthly per capita Bourbon Whiskey sales during 2022 in Dubuque County for the zip code that ranks third in total Bourbon Whiskey sales, using only the population aged 21 and older.",
+    "external_knowledge": null
+  },
+  "bq360": {
+    "db_name": "nppes",
+    "question": "Among healthcare providers whose practice location is in Mountain View, CA, and who have a specified specialization in the field healthcare provider taxonomy, identify the top 10 most common specializations based on the count of distinct NPIs. Then determine which of those top 10 has a count of distinct NPIs closest to the average count across those 10 specializations.",
+    "external_knowledge": null
+  },
+  "bq286": {
+    "db_name": "usa_names",
+    "question": "Can you tell me the name of the most popular female baby in Wyoming for the year 2021, based on the proportion of female babies given that name compared to the total number of female babies given the same name across all states?",
+    "external_knowledge": null
+  },
+  "bq143": {
+    "db_name": "CPTAC_PDC",
+    "question": "Use CPTAC proteomics and RNAseq data for Clear Cell Renal Cell Carcinoma to select 'Primary Tumor' and 'Solid Tissue Normal' samples. Join the datasets on sample submitter IDs and gene symbols. Calculate the correlation between protein abundance (log2 ratio) and gene expression levels (log-transformed+1 FPKM) for each gene and sample type. Filter out correlations with an absolute value greater than 0.5, and compute the average correlation for each sample type.",
+    "external_knowledge": null
+  },
+  "sf_bq176": {
+    "db_name": "TCGA_MITELMAN",
+    "question": "Identify the case barcodes from the TCGA-LAML study with the highest weighted average copy number in cytoband 15q11 on chromosome 15, using segment data and cytoband overlaps from TCGA's genomic and Mitelman databases.",
+    "external_knowledge": null
+  },
+  "sf_bq141": {
+    "db_name": "TCGA_HG38_DATA_V0",
+    "question": "Using the TCGA-KIRP dataset, select patients from the 'TCGA_bioclin_v0.Clinical' table who have a non-null clinical_stage and a disease_code of 'KIRP.' Retrieve their gene expression data from the 'TCGA_hg38_data_v0.RNAseq_Gene_Expression' table for the genes 'MT-CO3,' 'MT-CO1,' and 'MT-CO2,' and randomly split the patients into a training set (90%) and a test set (10%) based on their case_barcode via the FARM_FINGERPRINT method. For each clinical stage in the training set, calculate the average HTSeq__FPKM_UQ expression of the three genes. For each patient in the test set, compute the Euclidean distance between the patient’s expression values and the stage-specific averages, and assign that patient to the clinical stage whose average is closest. Finally, output the case_barcode and the predicted clinical stage.",
+    "external_knowledge": null
+  },
+  "bq161": {
+    "db_name": "pancancer_atlas_2",
+    "question": "Calculate the net difference between the number of pancreatic adenocarcinoma (PAAD) patients in TCGA's dataset who are confirmed to have mutations in both KRAS and TP53 genes, and those without mutations in either gene. Utilize patient clinical and follow-up data alongside genomic mutation details from TCGA’s cancer genomics database, focusing specifically on PAAD studies where the mutations have passed quality filters.",
+    "external_knowledge": null
+  },
+  "bq162": {
+    "db_name": "HTAN_1",
+    "question": "Based on the 5th revision (r5) of the HTAN data, list the imaging assay types available at the HTAN WUSTL center that have Level2 data and any associated higher-level data (Level3, Level4) derived from them through 'entityId' relationships in the 'id_provenance_r5' table; exclude any records where the 'Component' is NULL or contains 'Auxiliary' or 'OtherAssay'; for each imaging assay type, provide the available data levels (Level2, Level3, Level4), and do not include Level1 data or Electron Microscopy assay types.",
+    "external_knowledge": null
+  },
+  "sf_bq163": {
+    "db_name": "HTAN_2",
+    "question": "Which 20 genes in the HTAN scRNAseq MSK-SCLC combined samples dataset show the greatest difference in average X_value expression between female and male epithelial cells specifically in cluster 41 of 74-year-old human stage patients? Please calculate the difference by subtracting male average X_value from female average X_value for each gene",
+    "external_knowledge": null
+  },
+  "bq111": {
+    "db_name": "mitelman",
+    "question": "Could you compute, by chromosome, the Pearson correlation between the frequency of copy number aberrations (including amplifications, gains, losses, and deletions) from the Mitelman database for cases with morph = 3111 and topo = 0401, and those computed from TCGA data, returning correlation coefficients and corresponding p-values for each aberration type, ensuring only results with at least five matching records are shown.",
+    "external_knowledge": "Correlations_between_Mitelman_and_TCGA_datasets.md"
+  },
+  "sf_bq452": {
+    "db_name": "_1000_GENOMES",
+    "question": "Identify variants on chromosome 12 and, for each variant, calculate the chi-squared score using allele counts in cases and controls, where cases are individuals from the 'EAS' super population and controls are individuals from all other super populations. Apply Yates's correction for continuity in the chi-squared calculation, ensuring that the expected counts for each allele in both groups are at least 5. Return the start position, end position, and chi-squared score of the top variants where the chi-squared score is no less than 29.71679.",
+    "external_knowledge": null
+  },
+  "bq279": {
+    "db_name": "austin",
+    "question": "Can you provide the number of distinct active and closed bike share stations for each year 2013 and 2014?",
+    "external_knowledge": null
+  },
+  "sf_bq283": {
+    "db_name": "AUSTIN",
+    "question": "Among all stations that are currently active, identify those that rank in the top 15 (including ties) based on the total number of trips that start at each station. For each of these stations, return the station ID, the total number of starting trips, the percentage of those trips out of the overall starting trips from active stations, and the average trip duration in minutes. Order the results by the station’s rank.",
+    "external_knowledge": null
+  },
+  "bq413": {
+    "db_name": "dimensions_ai_covid19",
+    "question": "Retrieve the venue titles of publications that have a `date_inserted` from the year 2021 onwards and are associated with a grid whose address city is 'Qianjiang'. For each publication, prioritize the venue title by selecting the journal title first if it exists; if not, then the proceedings title; if that's also unavailable, then the book title; and finally, if none of those are available, the book series title.",
+    "external_knowledge": null
+  },
+  "bq430": {
+    "db_name": "ebi_chembl",
+    "question": "Find pairs of different molecules tested in the same assay and standard type, where both have 10–15 heavy atoms, fewer than 5 activities in that assay, fewer than 2 duplicate activities, non-null standard values, and pChEMBL values over 10. For each pair, report the maximum heavy atom count, the latest publication date (calculated based on the document's rank within the same journal and year, and map it to a synthetic month and day), the highest document ID, classify the change in standard values as 'increase', 'decrease', or 'no-change' based on their values and relations, and generate UUIDs from their activity IDs and canonical SMILES.",
+    "external_knowledge": "chembl.md"
+  },
+  "bq094": {
+    "db_name": "fec",
+    "question": "Please provide a list of all 2016 committees that supported at least one candidate and received a total amount of individual contributions between $0 and $200 (inclusive of more than $0 and less than $200) where these small-dollar contributions sum to more than $0 overall. For each qualifying committee, include its name, the number of unique candidates it supported, the candidates’ names in alphabetical order (separated by commas), and the total sum of these small-dollar donations received by the committee.",
+    "external_knowledge": null
+  },
+  "bq432": {
+    "db_name": "fda",
+    "question": "Please provide the food events data where both \\\"date_created\\\" and \\\"date_started\\\" are between January 1 and January 31, 2015, apply the following data cleansing steps: split reactions and outcomes fields into arrays by commas, handle special numeric patterns in the products_brand_name field (where a digit is followed by comma and another digit) by preserving those numeric patterns while replacing other \", \" with \" -- \", replace \", \" with \" -- \" in products_industry_code, products_role, and products_industry_name fields, and calculate industry_code_length and brand_name_length as the array lengths after splitting. ",
+    "external_knowledge": "Food_Event_Cleansing_Logic.md"
+  },
+  "sf_bq423": {
+    "db_name": "GOOGLE_ADS",
+    "question": "Between January 1, 2023, and January 1, 2024, which image-type advertisement on the topic of Health, published by a verified advertiser located in Cyprus, was shown in Croatia, has times_shown_availability_date as NULL (meaning the times shown data is available), utilized demographic information, geo-location targeting, contextual signals, customer lists, and topics of interest without any of these selection methods being unused, and additionally had its first shown date strictly after January 1, 2023, and last shown date strictly before January 1, 2024? Among such ads, provide the page URL of the one with the highest upper bound of times shown.",
+    "external_knowledge": null
+  },
+  "bq418": {
+    "db_name": "targetome_reactome",
+    "question": "Determine which three lowest-level Reactome pathways (with TAS evidence) have the highest chi-squared statistics, considering only Homo sapiens targets associated with sorafenib under the conditions that the median assay value is ≤ 100 and both low and high assay values are ≤ 100 or null. For each of these three pathways, how many of these targets and non-targets lie within the pathway and outside it?",
+    "external_knowledge": null
+  },
+  "bq457": {
+    "db_name": "libraries_io",
+    "question": "Get details of repositories that use specific feature toggle libraries. For each repository, include the full name with owner, hosting platform type, size in bytes, primary programming language, fork source name (if any), last update timestamp, the artifact and library names of the feature toggle used, and the library's programming languages. Include repositories that depend on the specified feature toggle libraries, defined by their artifact names, library names, platforms, and languages.",
+    "external_knowledge": "feature_toggle_libraries.md"
+  },
+  "bq232": {
+    "db_name": "london",
+    "question": "Could you provide the total number of 'Other Theft' incidents within the 'Theft and Handling' category for each year in the Westminster borough?",
+    "external_knowledge": null
+  },
+  "bq230": {
+    "db_name": "usda_nass_agriculture",
+    "question": "Using the crops dataset, find the total 2022 production figures, measured in bushels, for corn from the 'FIELD CROPS' category and mushrooms from the 'HORTICULTURE' group for each U.S. state. Only include data rows where 'statisticcat_desc' is 'PRODUCTION', 'agg_level_desc' is 'STATE', 'value' is not null, and ensure that for corn the 'unit_desc' is 'BU'. Combine both results so that each state’s 2022 corn and mushroom totals are presented.",
+    "external_knowledge": null
+  },
+  "sf_bq160": {
+    "db_name": "META_KAGGLE",
+    "question": "Please provide the creation date, title, parent forum title, reply count, distinct user replies count, total upvotes, and total views for the earliest five forum topics that belong to any sub-forum under the parent forum titled \"General\". The reply count should be calculated as the total number of messages associated with each topic, and the distinct user replies count should be the number of unique users who have posted messages in the topic. The upvotes should be calculated as the total number of upvotes on all messages within each topic. If any values are missing or None, please treat them as zero",
+    "external_knowledge": null
+  },
+  "sf_bq372": {
+    "db_name": "WIDE_WORLD_IMPORTERS",
+    "question": "Among all orders that do not appear in the invoice table, for each customer category calculate the maximum lost order value, then determine which customer category’s maximum lost order value is closest to the overall average of these maximum lost order values across all categories?",
+    "external_knowledge": null
+  },
+  "bq393": {
+    "db_name": "hacker_news",
+    "question": "I want to identify users who had activity followed by inactivity. Specifically, find the user ID and their corresponding month number (counting from their first activity month) for the user with the highest month number who became inactive (no activity recorded) after their last recorded activity month. For this analysis, only consider data up until September 10, 2024, and ensure the month number represents the count of months since the user's first activity. The user should have at least one month where they were expected to be active (within their activity span) but actually had no records.",
+    "external_knowledge": null
+  },
+  "bq403": {
+    "db_name": "irs_990",
+    "question": "Which three years in 2012-2017 have the smallest absolute difference between median revenue and median functional expenses for organizations filing IRS 990 forms? Please output three years and respective differences.",
+    "external_knowledge": null
+  },
+  "sf_bq072": {
+    "db_name": "DEATH",
+    "question": "Please provide, for each age from 12 through 18 (inclusive), the total number of deaths and the number of deaths among individuals identified as Black (based on race descriptions containing the word ‘black’), specifically for deaths associated with ICD-10 codes whose descriptions include the word ‘vehicle’ and for deaths associated with ICD-10 codes whose descriptions include the word ‘firearm.’ Use the EntityAxisConditions table to determine which ICD-10 codes were involved in each death, rather than joining ICD-10 code information directly on the death records.",
+    "external_knowledge": null
+  },
+  "ga021": {
+    "db_name": "firebase",
+    "question": "What is the retention rate for users two weeks after their initial quickplay event, calculated separately for each quickplay event type, within the period from July 2, 2018, to July 16, 2018? Please focus on users who started a session (session_start) during this period.",
+    "external_knowledge": "retention_rate.md"
+  },
+  "local004": {
+    "db_name": "E_commerce",
+    "question": "Could you tell me the number of orders, average payment per order and customer lifespan in weeks of the 3 custumers with the highest average payment per order, where the lifespan is calculated by subtracting the earliest purchase date from the latest purchase date in days, dividing by seven, and if the result is less than seven days, setting it to 1.0?",
+    "external_knowledge": null
+  },
+  "local007": {
+    "db_name": "Baseball",
+    "question": "Could you help me calculate the average single career span value in years for all baseball players? Please precise the result as a float number. First, calculate the difference in years, months, and days between the debut and final game dates. For each player, the career span is computed as the sum of the absolute number of years, plus the absolute number of months divided by 12, plus the absolute number of days divided by 365. Round each part to two decimal places before summing. Finally, average the career spans and round the result to a float number.",
+    "external_knowledge": null
+  },
+  "local018": {
+    "db_name": "California_Traffic_Collision",
+    "question": "For the primary collision factor violation category that was the most common cause of traffic accidents in 2021, how many percentage points did its share of annual road incidents in 2021 decrease compared to its share in 2011?",
+    "external_knowledge": null
+  },
+  "local259": {
+    "db_name": "IPL",
+    "question": "For each player, list their ID, name, their most frequent role across all matches, batting hand, bowling skill, total runs scored, total matches played, total times they were dismissed, batting average (total runs divided by total dismissals), highest score in a single match, the number of matches in which they scored at least 30 runs, at least 50 runs, and at least 100 runs, total balls faced in their career, strike rate (total runs divided by total balls faced, multiplied by 100), total wickets taken, economy rate (average runs conceded per over), and their best bowling performance in a single match (most wickets taken in a match, formatted as \"wickets taken-runs given\", where the best performance is the one with the most wickets, and if tied, the fewest runs conceded). Ignore the extra runs data.",
+    "external_knowledge": "baseball_game_special_words_definition.md"
+  },
+  "local229": {
+    "db_name": "IPL",
+    "question": "Find the IDs of players who scored the highest number of partnership runs for each match. The output should include the IDs of two players, each with their individual scores and the total partnership score. For each pair, the player with the higher individual score should be listed as player 1, and the player with the lower score as player 2. In cases where both players have the same score, the player with the higher ID should be player 1, and the player with the lower ID should be player 2. There can be multiple rows for a single match.",
+    "external_knowledge": null
+  },
+  "local031": {
+    "db_name": "Brazilian_E_Commerce",
+    "question": "What is the highest monthly delivered orders volume in the year with the lowest annual delivered orders volume among 2016, 2017, and 2018?",
+    "external_knowledge": null
+  },
+  "local038": {
+    "db_name": "Pagila",
+    "question": "Could you help me determine which actor starred most frequently in English-language children's category films that were rated either G or PG, had a running time of 120 minutes or less, and were released between 2000 and 2010? Please provide the actor's full name.",
+    "external_knowledge": null
+  },
+  "local049": {
+    "db_name": "modern_data",
+    "question": "Can you help me calculate the average number of new unicorn companies per year in the top industry from 2019 to 2021?",
+    "external_knowledge": null
+  },
+  "local196": {
+    "db_name": "SQLITE_SAKILA",
+    "question": "For each rating category of the first movie rented by customers—where the first movie is identified based on the earliest payment date per customer—please provide the average total amount spent per customer and the average number of subsequent rentals (calculated as the total number of rentals minus one) for customers whose first rented movie falls into that rating category.",
+    "external_knowledge": null
+  },
+  "local253": {
+    "db_name": "education_business",
+    "question": "Using a Salary Dataset where the salary values need to be cleaned by removing non-numeric characters and converting them to a numeric type, write a detailed SQL query that identifies the top 5 companies by average salary in each of Mumbai, Pune, New Delhi, and Hyderabad, then compares each company’s average salary in those cities to the overall national average salary. The final result should display four columns: Location, Company Name, Average Salary in State, and Average Salary in Country, listing only the top 5 companies in each of the specified locations.",
+    "external_knowledge": null
+  },
+  "local050": {
+    "db_name": "complex_oracle",
+    "question": "What is the median of the average monthly projected sales in USD for France in 2021, calculated by using the monthly sales data from 2019 and 2020 (filtered by promo_total_id=1 and channel_total_id=1), applying the growth rate from 2019 to 2020 to project 2021, converting to USD based on the currency table, and then determining the monthly averages before finding their median?",
+    "external_knowledge": "projection_calculation.md"
+  },
+  "local064": {
+    "db_name": "bank_sales_trading",
+    "question": "For each customer and each month of 2020, first calculate the month-end balance by adding all deposit amounts and subtracting all withdrawal amounts that occurred during that specific month. Then determine which month in 2020 has the highest count of customers with a positive month-end balance and which month has the lowest count. For each of these two months, compute the average month-end balance across all customers and provide the difference between these two averages",
+    "external_knowledge": null
+  },
+  "local074": {
+    "db_name": "bank_sales_trading",
+    "question": "Please generate a summary of the closing balances at the end of each month for each customer transactions, show the monthly changes and monthly cumulative bank account balances. Ensure that even if a customer has no account activity in a given month, the balance for that month is still included in the output.",
+    "external_knowledge": null
+  },
+  "local085": {
+    "db_name": "northwind",
+    "question": "Among employees who have more than 50 total orders, which three have the highest percentage of late orders, where an order is considered late if the shipped date is on or after its required date? Please list each employee's ID, the number of late orders, and the corresponding late-order percentage.",
+    "external_knowledge": null
+  },
+  "local098": {
+    "db_name": "DB_IMDB",
+    "question": "From the first year each actor appeared in a film to the last, how many actors in the database never had a gap longer than three consecutive years without at least one new movie appearance, meaning there is no four-year span anywhere in their active career without at least a single film credit?",
+    "external_knowledge": null
+  },
+  "local130": {
+    "db_name": "school_scheduling",
+    "question": "Could you provide a list of last names for all students who have completed English courses (where completion is defined as having a ClassStatus of 2), along with their quintile ranks based on their individual grades in those courses? The quintile should be determined by calculating how many students have grades greater than or equal to each student's grade, then dividing this ranking by the total number of students who completed English courses. The quintiles should be labeled as \"First\" (top 20%), \"Second\" (top 21-40%), \"Third\" (top 41-60%), \"Fourth\" (top 61-80%), and \"Fifth\" (bottom 20%). Please sort the results from highest performing quintile to lowest (First to Fifth).",
+    "external_knowledge": null
+  },
+  "local141": {
+    "db_name": "AdventureWorks",
+    "question": "How did each salesperson's annual total sales compare to their annual sales quota? Provide the difference between their total sales and the quota for each year, organized by salesperson and year.",
+    "external_knowledge": null
+  },
+  "local152": {
+    "db_name": "imdb_movies",
+    "question": "Can you provide the top 9 directors by movie count, including their ID, name, number of movies, average inter-movie duration (rounded to the nearest integer), average rating (rounded to 2 decimals), total votes, minimum and maximum ratings, and total movie duration? Sort the output first by movie count in descending order and then by total movie duration in descending order.",
+    "external_knowledge": null
+  },
+  "local244": {
+    "db_name": "music",
+    "question": "Calculate the duration of each track, classify them as short, medium, or long, output the minimum and maximum time for each kind (in minutes) and the total revenue for each category, group by the category.",
+    "external_knowledge": "music_length_type.md"
+  },
+  "local272": {
+    "db_name": "oracle_sql",
+    "question": "For order 423, identify the product IDs, aisles, and positions from which to pick the exact quantities needed for each order line, ensuring that the total picked quantity for each product matches the cumulative quantities ordered without exceeding the available inventory in warehouse 1. Calculate the quantities to be picked from each location by prioritizing inventory with earlier purchased dates and smaller quantities, and ensure that picking respects the sequence and cumulative quantities of the order lines for products with multiple entries.",
+    "external_knowledge": null
+  },
+  "sf001": {
+    "db_name": "GLOBAL_WEATHER__CLIMATE_DATA_FOR_BI",
+    "question": "Assuming today is April 1, 2024, I would like to know the daily snowfall amounts greater than 6 inches for each U.S. postal code during the week ending after the first two full weeks of the previous year. Show the postal code, date, and snowfall amount.",
+    "external_knowledge": null
+  },
+  "sf003": {
+    "db_name": "GLOBAL_GOVERNMENT",
+    "question": "For each year from 2015 to 2020, which Census Zip Code Tabulation Area had the second-highest annual population growth rate? Include only areas with a population estimate of at least 25,000 people in that year (based on 5-Year American Community Survey estimates). For each year, provide the zip code, state abbreviation, and the annual growth rate percentage.",
+    "external_knowledge": null
+  },
+  "sf044": {
+    "db_name": "FINANCE__ECONOMICS",
+    "question": "What was the percentage change in post-market close prices for the Magnificent 7 tech companies from January 1 to June 30, 2024?",
+    "external_knowledge": null
+  },
+  "sf037": {
+    "db_name": "US_REAL_ESTATE",
+    "question": "How can we find the shortest straight-line distance in miles between each 'The Home Depot' store and its nearest 'Lowe's Home Improvement' location? Using the US_REAL_ESTATE.CYBERSYN database, join the point_of_interest_index table with point_of_interest_addresses_relationships and us_addresses tables to get geographic coordinates. For each 'The Home Depot' location (identified by its poi_id), calculate its distance to all 'Lowe's Home Improvement' stores using ST_DISTANCE and ST_MAKEPOINT functions, convert the distance from meters to miles (dividing by 1609), and return only the record with the minimum distance for each 'The Home Depot' store using QUALIFY with ROW_NUMBER().",
+    "external_knowledge": null
+  },
+  "sf012": {
+    "db_name": "WEATHER__ENVIRONMENT",
+    "question": "Using data from the FEMA National Flood Insurance Program Claim Index, for each year from 2010 through 2019, what were the total building damage amounts and total contents damage amounts reported under the National Flood Insurance Program for the NFIP community named 'City Of New York,' grouped by each year of loss?",
+    "external_knowledge": null
+  },
+  "sf029": {
+    "db_name": "AMAZON_VENDOR_ANALYTICS__SAMPLE_DATASET",
+    "question": "Generate a daily detailed sales report for each product under the 'Manufacturing' distributor view, covering the 30 days leading up to February 6, 2022, by joining the sales, traffic, inventory, and net PPM data on date, ASIN, program, period, and distributor_view. The report must include total ordered units, ordered revenue, average selling price, glance views, conversion rate, shipped units, shipped revenue, average net PPM, average procurable product OOS, total on-hand units and value, net received units and value, open purchase order quantities, unfilled customer ordered units, and average vendor confirmation rate, receive fill rate, sell-through rate, and vendor lead time.",
+    "external_knowledge": null
+  },
+  "sf013": {
+    "db_name": "NETHERLANDS_OPEN_MAP_DATA",
+    "question": "Compare the total road lengths in Amsterdam and Rotterdam by creating a side-by-side analysis of both cities. For each combination of road class and subclass, calculate the total length of roads (in meters) specifically for QUADKEY segments '12020210' and '12020211'. Present the results with columns for class, subclass, Amsterdam's road lengths, and Rotterdam's road lengths.",
+    "external_knowledge": null
+  },
+  "sf011": {
+    "db_name": "CENSUS_GALAXY__ZIP_CODE_TO_BLOCK_GROUP_SAMPLE",
+    "question": "Determine the population distribution within each block group relative to its census tract in New York State using 2021 ACS data. Include block group ID, census value, state county tract ID, total tract population, and the population ratio of each block group.",
+    "external_knowledge": null
+  },
+  "sf014": {
+    "db_name": "CENSUS_GALAXY__AIML_MODEL_DATA_ENRICHMENT_SAMPLE",
+    "question": "What is the New York State ZIP code with the highest number of commuters traveling over one hour, according to 2021 ACS data? Include the zip code, the total commuters, state benchmark for this duration, and state population.",
+    "external_knowledge": null
+  }
+}

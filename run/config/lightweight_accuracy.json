@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "features": {
+    "contract_handoff": true,
+    "focused_retrieval": true,
+    "exact_schema_lookup": true,
+    "real_rbp_graph": true,
+    "adaptive_completion": true,
+    "adaptive_candidates": true,
+    "semantic_validation": true,
+    "contract_selection": true,
+    "question_result_report": true
+  },
+  "retrieval": {
+    "pool_columns": 40,
+    "max_tables": 5,
+    "max_columns_per_table": 6,
+    "max_prompt_columns": 30,
+    "exact_lookup_first": true,
+    "max_value_hints": 3,
+    "max_sample_values": 3,
+    "max_sample_value_chars": 80,
+    "max_expansions": 1,
+    "easy_margin": 0.12,
+    "medium_margin": 0.05
+  },
+  "completion": {
+    "easy_max_turns": 1,
+    "medium_max_turns": 2,
+    "hard_max_turns": 4,
+    "max_drafts": 2,
+    "max_preview_rows": 5
+  },
+  "generation": {
+    "easy_candidates": 1,
+    "medium_candidates": 2,
+    "hard_candidates": 3,
+    "max_output_tokens": 4096
+  },
+  "revision": {
+    "max_semantic_repairs": 1,
+    "max_transient_retries": 3
+  },
+  "selection": {
+    "contract_weight": 0.45,
+    "result_weight": 0.20,
+    "evidence_weight": 0.15,
+    "schema_weight": 0.10,
+    "consistency_weight": 0.05,
+    "simplicity_weight": 0.05,
+    "tie_break_margin": 0.03
+  },
+  "logging": {
+    "max_preview_rows": 5,
+    "max_preview_columns": 10,
+    "write_question_json": true,
+    "write_jsonl": true,
+    "write_csv": true,
+    "write_markdown": true
+  }
+}
+

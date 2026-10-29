@@ -1,0 +1,197 @@
+{
+  "ga013": {
+    "db_name": "ga4",
+    "question": "I want to know all the pages visited by user 1402138.5184246691 on January 2, 2021. Please show the names of these pages and adjust the names to PDP or PLP where necessary.",
+    "external_knowledge": "ga4_page_category.md"
+  },
+  "sf_bq225": {
+    "db_name": "GITHUB_REPOS",
+    "question": "From the GitHub repository files in 'github_repos.sample_files' joined with 'github_repos.sample_contents', which 10 programming languages occur most frequently (based on recognized file extensions) in files that have non-empty content, ordered by their file counts in descending order?",
+    "external_knowledge": "lang_and_ext.md"
+  },
+  "sf_bq375": {
+    "db_name": "GITHUB_REPOS",
+    "question": "Determine which file type among Python (.py), C (.c), Jupyter Notebook (.ipynb), Java (.java), and JavaScript (.js) in the GitHub codebase has the most files with a directory depth greater than 10, and provide the file count.",
+    "external_knowledge": null
+  },
+  "sf_bq017": {
+    "db_name": "GEO_OPENSTREETMAP",
+    "question": "What are the five longest types of highways within the multipolygon boundary of Denmark (as defined by Wikidata ID 'Q35') by total length, analyzed through planet features?",
+    "external_knowledge": "functions_st_dwithin.md"
+  },
+  "sf_bq056": {
+    "db_name": "GEO_OPENSTREETMAP_BOUNDARIES",
+    "question": "How many different pairs of roads classified as motorway, trunk, primary, secondary, or residential in California overlap each other without sharing nodes and do not have a bridge tag, where these roads are tagged with 'highway', analyzed through planet ways",
+    "external_knowledge": "functions_st_intersects.md"
+  },
+  "sf_bq187": {
+    "db_name": "ETHEREUM_BLOCKCHAIN",
+    "question": "Calculate the total circulating supply of 'BNB' tokens (in units divided by 10^18) by summing balances of all non-zero addresses, where each address’s balance equals its total received BNB minus sent BNB. Exclude transactions involving the zero address (0x000...) for both senders and receivers.",
+    "external_knowledge": null
+  },
+  "bq034": {
+    "db_name": "ghcn_d",
+    "question": "I want to know the IDs, names of weather stations within a 50 km straight-line distance from the center of Chicago (41.8319°N, 87.6847°W)",
+    "external_knowledge": null
+  },
+  "bq075": {
+    "db_name": "google_dei",
+    "question": "Could you provide a combined 2021 report comparing racial (Asian, Black, Hispanic/Latinx, White) and gender (U.S. Women, U.S. Men) distributions across Google’s overall workforce hiring, Google’s overall workforce representation, and the BLS data specifically for the technology sectors defined as Internet publishing and broadcasting and web search portals or Computer systems design and related services?",
+    "external_knowledge": null
+  },
+  "sf_bq416": {
+    "db_name": "GOOG_BLOCKCHAIN",
+    "question": "Could you retrieve the top three largest USDT transfers on the TRON blockchain by listing the block numbers, source addresses, destination addresses (in TronLink format), and transfer amounts, using the USDT contract address '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c' and the transfer event signature '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', dividing the raw transfer value by 1,000,000 to convert it into the final USDT amount, and then ordering the results by the largest transferred amounts first?",
+    "external_knowledge": "blockchain_data_transformations.md"
+  },
+  "sf_bq078": {
+    "db_name": "OPEN_TARGETS_PLATFORM_2",
+    "question": "Retrieve the approved symbol of target genes with the highest overall score that are associated with the disease 'EFO_0000676' from the data source 'IMPC'.",
+    "external_knowledge": null
+  },
+  "bq090": {
+    "db_name": "CYMBAL_INVESTMENTS",
+    "question": "How much higher the average intrinsic value is for trades using the feeling-lucky strategy compared to those using the momentum strategy under long-side trades?",
+    "external_knowledge": null
+  },
+  "bq277": {
+    "db_name": "noaa_ports",
+    "question": "Which single port, listed under region number '6585', is located within a U.S. state boundary and appears most frequently inside the geographic areas of named tropical storms with wind speeds of at least 35 knots in the North Atlantic basin, excluding those labeled 'NOT_NAMED'?",
+    "external_knowledge": "persistent_udfs_routines.md"
+  },
+  "bq114": {
+    "db_name": "openaq",
+    "question": "Which three cities have the largest difference between their 1990 EPA PM2.5 measurements (using units_of_measure = 'Micrograms/cubic meter (LC)' and parameter_name = 'Acceptable PM2.5 AQI & Speciation Mass') and their 2020 OpenAQ PM2.5 measurements (where pollutant = 'pm25' based on the year extracted from the timestamp), with both datasets matched by latitude and longitude rounded to two decimals, and the difference ordered from greatest to least?",
+    "external_knowledge": null
+  },
+  "bq302": {
+    "db_name": "stackoverflow",
+    "question": "What is the monthly proportion of Stack Overflow questions tagged with 'python' in the year 2022?",
+    "external_knowledge": null
+  },
+  "bq391": {
+    "db_name": "fhir_synthea",
+    "question": "Among living patients whose last names begin with \"A\" and who each have exactly one distinct condition, which eight conditions have the highest number of different active medications prescribed to any single patient, and what are their corresponding codes?",
+    "external_knowledge": null
+  },
+  "bq126": {
+    "db_name": "the_met",
+    "question": "What are the titles, artist names, mediums, and original image URLs of objects with 'Photograph' in their names from the 'Photographs' department, created not by an unknown artist, with an object end date of 1839 or earlier?",
+    "external_knowledge": null
+  },
+  "bq204": {
+    "db_name": "eclipse_megamovie",
+    "question": "Find the user with the highest total clicks across all records from all available photo collections.",
+    "external_knowledge": null
+  },
+  "sf_bq345": {
+    "db_name": "IDC",
+    "question": "How large are the DICOM image files with SEG or RTSTRUCT modalities and the SOP Class UID \"1.2.840.10008.5.1.4.1.1.66.4\", when grouped by collection, study, and series IDs, if they have no references to other series, images, or sources? Can you also provide a viewer URL formatted as \"https://viewer.imaging.datacommons.cancer.gov/viewer/\" followed by the study ID, and list these sizes in kilobytes, sorted from largest to smallest?",
+    "external_knowledge": null
+  },
+  "sf_bq147": {
+    "db_name": "TCGA",
+    "question": "Can you identify the TCGA breast cancer cases from the RNA sequencing hg38 r35` where the protein_coding gene and the project TCGA-BRCA, and which have RNA sequencing samples of multiple tissue types—including \"Solid Tissue Normal\"—within the same case?",
+    "external_knowledge": null
+  },
+  "sf_bq150": {
+    "db_name": "TCGA_HG19_DATA_V0",
+    "question": "Assess whether different genetic variants affect the log10-transformed TP53 expression levels in TCGA-BRCA samples using sequencing and mutation data. Provide the total number of samples, the number of mutation types, the mean square between groups, the mean square within groups, and the F-statistic.",
+    "external_knowledge": "TCGA_F_Score.md"
+  },
+  "bq046": {
+    "db_name": "TCGA_bioclin_v0",
+    "question": "Find case barcodes and their corresponding GDC file URLs for female patients aged 30 or younger diagnosed with breast cancer (BRCA) in TCGA database. The query should first identify patients from the Annotations table where entity_type is \"Patient\" and either category is \"History of unacceptable prior treatment related to a prior/other malignancy\" or classification is \"Redaction\". Also identify patients from the Clinical table with disease_code \"BRCA\", age_at_diagnosis less than or equal to 30, and gender \"FEMALE\". Perform a FULL JOIN between these two sets, but only keep patients where both categoryName and classificationName are NULL in the final result. Use GDC metadata from archive release 14 (specifically rel14_caseData, rel14_fileData_current, and rel14_GDCfileID_to_GCSurl_NEW tables) to get the corresponding file URLs. ",
+    "external_knowledge": null
+  },
+  "sf_bq158": {
+    "db_name": "PANCANCER_ATLAS_1",
+    "question": "Which top five histological types of breast cancer (BRCA) in the PanCancer Atlas exhibit the highest percentage of CDH1 gene mutations?",
+    "external_knowledge": null
+  },
+  "bq284": {
+    "db_name": "bbc",
+    "question": "Can you provide a breakdown of the total number of articles into different categories and the percentage of those articles that mention \"education\" within each category from the BBC News?",
+    "external_knowledge": null
+  },
+  "bq424": {
+    "db_name": "world_bank",
+    "question": "List the top 10 countries with respect to the total amount of long-term external debt in descending order, excluding those without a specified region.",
+    "external_knowledge": null
+  },
+  "bq229": {
+    "db_name": "open_images",
+    "question": "Using the bigquery-public-data.open_images dataset, can you provide a count of how many distinct image URLs are categorized as 'cat' (where the image has label '/m/01yrx' with confidence=1) and how many distinct image URLs are categorized as 'other' (meaning they have no cat label '/m/01yrx' at all)?",
+    "external_knowledge": null
+  },
+  "bq402": {
+    "db_name": "ecommerce",
+    "question": "Calculate the conversion rate from unique visitors to purchasers by using data exclusively from the `web_analytics` table in the `data-to-insights.ecommerce` dataset. A visitor is defined as a unique `fullVisitorId` present in the table, while a purchaser is a visitor who has at least one transaction recorded (`totals.transactions` is not null). The conversion rate is computed by dividing the number of unique purchasers by the total number of unique visitors. Additionally, calculate the average number of transactions per purchaser, considering only those visitors who have made at least one transaction.",
+    "external_knowledge": null
+  },
+  "local019": {
+    "db_name": "WWE",
+    "question": "For the NXT title that had the shortest match (excluding titles with \"title change\"), what were the names of the two wrestlers involved?",
+    "external_knowledge": null
+  },
+  "local202": {
+    "db_name": "city_legislation",
+    "question": "For alien data, how many of the top 10 states by alien population have a higher percentage of friendly aliens than hostile aliens, with an average alien age exceeding 200?",
+    "external_knowledge": null
+  },
+  "local168": {
+    "db_name": "city_legislation",
+    "question": "Among job postings that specifically have the Data Analyst, require a non-null annual average salary, and are remote, what is the overall average salary when considering only the top three most frequently demanded skills for these positions?",
+    "external_knowledge": null
+  },
+  "local284": {
+    "db_name": "bank_sales_trading",
+    "question": "For veg whsle data, can you generate a summary of our items' loss rates? Include the average loss rate, and also break down the count of items that are below, above, and within one standard deviation from this average.",
+    "external_knowledge": null
+  },
+  "local128": {
+    "db_name": "BowlingLeague",
+    "question": "List the bowlers (including their ID, first name, and last name), match number, game number, handicap score, tournament date, and location for only those bowlers who have won games with a handicap score of 190 or less at all three venues: Thunderbird Lanes, Totem Lanes, and Bolero Lanes. Only include the specific game records where they won with a handicap score of 190 or less at these three locations.",
+    "external_knowledge": null
+  },
+  "local131": {
+    "db_name": "EntertainmentAgency",
+    "question": "Could you list each musical style with the number of times it appears as a 1st, 2nd, or 3rd preference in a single row per style?",
+    "external_knowledge": null
+  },
+  "local212": {
+    "db_name": "delivery_center",
+    "question": "Can you find 5 delivery drivers with the highest average number of daily deliveries?",
+    "external_knowledge": null
+  },
+  "local264": {
+    "db_name": "stacking",
+    "question": "Which model category (L1_model) appears the most frequently across all steps and versions when comparing traditional models to the Stack model, and what is the total count of its occurrences?",
+    "external_knowledge": null
+  },
+  "local286": {
+    "db_name": "electronic_sales",
+    "question": "Prepare a comprehensive performance report on our sellers, focusing on total sales, average item price, average review scores, and packing times. Ensure that the report includes only those sellers who have sold a quantity of more than 100 products and highlight the product category names in English with the highest sales volume.",
+    "external_knowledge": null
+  },
+  "local358": {
+    "db_name": "log",
+    "question": "How many users are there in each age category (20s, 30s, 40s, 50s, and others)?",
+    "external_knowledge": null
+  },
+  "sf018": {
+    "db_name": "BRAZE_USER_EVENT_DEMO_DATASET",
+    "question": "Examine user engagement with push notifications within a specified one-hour window on June 1, 2023.",
+    "external_knowledge": "PushNotificationAnalysis.md"
+  },
+  "sf040": {
+    "db_name": "US_ADDRESSES__POI",
+    "question": "Find the top 10 northernmost addresses in Florida's largest zip code area. What are their address numbers, street names, and types?",
+    "external_knowledge": null
+  },
+  "sf041": {
+    "db_name": "YES_ENERGY__SAMPLE_DATA",
+    "question": "Produce a report for ERCOT on October 1, 2022, that combines hourly data on day-ahead and real-time prices from node ID 10000697078, load forecasts (datatypeid 19060) and actual loads, plus wind (forecast datatypeid 9285, actual datatypeid 16) and solar (forecast datatypeid 662, actual datatypeid 650) generation forecasts and actuals from object ID 10000712973. This report should include time zone alignments, peak classifications, and net load calculations, providing insights into daily operational dynamics and efficiency.",
+    "external_knowledge": "ERCOT_Daily_Market_Dynamics_Report.md"
+  }
+}

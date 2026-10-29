@@ -16,6 +16,7 @@ from google.cloud import bigquery
 import snowflake.connector
 
 from config import *
+from artifact_store import atomic_write_json, atomic_write_text
 
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
@@ -62,7 +63,8 @@ def get_least_used_credential():
     return selected_credential
 
 def query_sqlite(db_name, sql):
-    conn = sqlite3.connect(f"resource/databases/spider2-localdb/{db_name}.sqlite")
+    sqlite_db_paths = json.loads(os.environ.get("SLAYQL_SQLITE_DB_PATHS", "{}"))
+    conn = sqlite3.connect(sqlite_db_paths.get(db_name) or f"resource/databases/spider2-localdb/{db_name}.sqlite")
     try:
         df = pd.read_sql_query(sql, conn)
         if df.empty:
@@ -176,13 +178,15 @@ def thread_safe_sql_execution(instance_id, sql, db_name):
 class SQLReviser:
     def __init__(self):
         self.client = OpenAI(
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            base_url=os.environ.get("OPENAI_BASE_URL"),
+            api_key=os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY"),
+            base_url=os.environ.get("OPENAI_BASE_URL") or "https://openrouter.ai/api/v1",
+            # Per-request timeout in seconds; 600 is the OpenAI SDK default.
+            timeout=float(os.environ.get("SLAYQL_API_TIMEOUT", "600")),
         )
         self.model=os.environ.get("MODEL_NAME")
         self.loader = DataLoader()
 
-    def revise(self, instance_id, info, schema, sql, execution):
+    def revise(self, instance_id, info, schema, sql, execution, candidate_id=None):
         question = info["question"]
         db_name = info["db_name"]
 
@@ -209,18 +213,39 @@ class SQLReviser:
         messages = [{"role": "user", "content": prompt}]
 
         for attempt in range(Config.REVISE_NUM_ATTEMPTS):
+            model_output = ""
             while True:
                 try:
+                    request_started = time.monotonic()
                     response = self.client.chat.completions.create(
                         model=self.model,
                         messages=messages,
+                    )
+                    from usage_accounting import record_response_usage
+                    record_response_usage(
+                        response,
+                        stage="sql_revision",
+                        instance_id=instance_id,
+                        candidate_id=candidate_id,
+                        attempt=attempt + 1,
+                        latency_ms=(time.monotonic() - request_started) * 1000,
                     )
                     reasoning_content = getattr(response.choices[0].message, 'reasoning_content', "")
                     model_output = response.choices[0].message.content
                     if model_output:
                         break
+                    break
                 except Exception as e:
+                    from usage_accounting import record_response_usage
+                    record_response_usage(
+                        None, stage="sql_revision", instance_id=instance_id,
+                        candidate_id=candidate_id, attempt=attempt + 1,
+                    )
                     print(f"empty output: {e}  ID: {instance_id}")
+                    break
+
+            if not model_output:
+                continue
             
             messages.append({"role": "assistant", "content": model_output})
             import re
@@ -279,19 +304,18 @@ def run_task(reviser, data, schema_dir, log_path, task, instance_id, cid):
     sql = open(sql_path).read()
     execution = open(err_path).read()
 
-    new_sql, df, exec_status, messages = reviser.revise(instance_id, data[instance_id], schema, sql, execution)
+    new_sql, df, exec_status, messages = reviser.revise(
+        instance_id, data[instance_id], schema, sql, execution, candidate_id=cid
+    )
     out_dir = f"{log_path}/sql_revise/{task}_sql_{cid}"
     out_dir_me = f"{log_path}/sql_revise/{task}_messages_{cid}"
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(out_dir_me, exist_ok=True)
     
-    with open(f"{out_dir_me}/{instance_id}.json", "w", encoding="utf-8") as f:
-        json.dump(messages, f, ensure_ascii=False, indent=2)
-    
-    open(f"{out_dir}/{instance_id}.sql", "w").write(new_sql)
+    atomic_write_json(f"{out_dir_me}/{instance_id}.json", messages)
+    atomic_write_text(f"{out_dir}/{instance_id}.sql", new_sql)
     if exec_status == "error" or exec_status == "empty":
-        with open(f"{out_dir}/{instance_id}.txt", "w", encoding="utf-8") as f:
-            f.write(df)
+        atomic_write_text(f"{out_dir}/{instance_id}.txt", str(df))
     elif exec_status == "success":
         df.to_csv(f"{out_dir}/{instance_id}.csv", index=False)
 

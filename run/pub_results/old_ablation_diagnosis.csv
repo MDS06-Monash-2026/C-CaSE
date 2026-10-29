@@ -1,0 +1,6 @@
+variant,folder,exists,reported_correct,reported_denominator,selection_records,all_candidates_failed,selection_statuses,schema_prompts,revision_ran,failed_share,verdict
+full (reference),log_subset_diverse_20_evaluation_slayql_ccase,True,72,163,178,79,"{""all_failed"": 79, ""success"": 99}",178,True,0.4438202247191011,ran; denominator differs from reference
+no_itee,ablation1_no_itee,True,78,168,178,10,"{""success"": 168, ""all_failed"": 10}",178,True,0.056179775280898875,ran; denominator differs from reference
+no_rbp,ablation1_no_rbp,True,4,178,356,356,"{""all_failed"": 356}",178,False,1.0,pipeline failure: do not report as a component effect
+no_bm25,ablation1_no_bm25,True,3,178,178,178,"{""all_failed"": 178}",178,False,1.0,pipeline failure: do not report as a component effect
+no_qoc,ablation1_no_qoc,True,33,100,316,150,"{""success"": 166, ""all_failed"": 150}",178,True,0.47468354430379744,pipeline failure: do not report as a component effect

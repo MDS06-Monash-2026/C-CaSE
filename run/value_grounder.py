@@ -1,7 +1,10 @@
 import os
 import re
 import pickle
+from pathlib import Path
 from rank_bm25 import BM25Okapi
+
+from artifact_store import atomic_write_json
 
 # ---------------------------------------------------------------------------
 # SLAYQL Value Grounder — Enhanced BM25 Grounding
@@ -223,6 +226,9 @@ def get_value_hints(
     indices_dir: str = "bm25_indices",
     threshold: float = DEFAULT_THRESHOLD,
     max_hints: int = MAX_HINTS_PER_PROMPT,
+    normalized: bool = False,
+    trace_id: str = None,
+    trace_dir: str = None,
 ) -> str:
     """
     Match user query literals to actual database cell values via BM25.
@@ -252,6 +258,15 @@ def get_value_hints(
     """
     index_path = os.path.join(indices_dir, f"{db_id}_bm25.pkl")
     if not os.path.exists(index_path):
+        if trace_dir and trace_id:
+            _write_trace(trace_dir, trace_id, {
+                "db_id": db_id,
+                "status": "index_missing",
+                "index_path": index_path,
+                "threshold": threshold,
+                "normalized": normalized,
+                "matches": [],
+            })
         # No index for this DB — silently skip (BQ/Snowflake may not have one).
         return ""
 
@@ -264,10 +279,17 @@ def get_value_hints(
 
     # Extract filtered literals from the query.
     literals = extract_literals(query)
+    strict_grounding = os.environ.get("SLAYQL_BM25_STRICT") == "1"
     if not literals:
+        if trace_dir and trace_id:
+            _write_trace(trace_dir, trace_id, {
+                "db_id": db_id, "status": "no_literals", "index_path": index_path,
+                "threshold": threshold, "normalized": normalized, "matches": [],
+            })
         return ""
 
     hints = []
+    matches = []
 
     for literal in literals:
         tokenized_literal = literal.split()
@@ -282,25 +304,70 @@ def get_value_hints(
             range(len(scores)), key=lambda i: scores[i]
         )
         best_score = float(scores[best_idx])
+        normalized_score = max(best_score, 0.0) / (max(best_score, 0.0) + 5.0)
         matched_value = corpus_strings[best_idx]
         col_path = mapping[best_idx]
 
         # Exact-match check (case-insensitive): always include if exact.
         is_exact = literal.lower() == matched_value.lower()
 
-        if is_exact or best_score > threshold:
+        comparison_score = normalized_score if normalized else best_score
+        # A short token contained in a longer literal is usually a BM25
+        # artifact (for example, "Marina" inside "Marina Bay Street
+        # Circuit"). v1.4 admits exact values or substantially stronger
+        # matches, while preserving the v1.1/v1.2 threshold behavior by
+        # default.
+        is_subphrase = strict_grounding and any(
+            literal.lower() != other.lower()
+            and literal.lower() in other.lower()
+            for other in literals
+        )
+        admitted = is_exact or (
+            not is_subphrase and comparison_score >= threshold * (1.5 if strict_grounding else 1.0)
+        )
+        matches.append({
+            "literal": literal,
+            "matched_value": matched_value,
+            "column": col_path,
+            "raw_score": best_score,
+            "normalized_score": normalized_score,
+            "threshold": threshold,
+            "threshold_scale": "normalized" if normalized else "raw",
+            "exact_match": is_exact,
+            "strict_grounding": strict_grounding,
+            "subphrase_rejected": is_subphrase,
+            "admitted": admitted,
+        })
+
+        entered_prompt = admitted and len(hints) < max_hints
+        matches[-1]["entered_prompt"] = entered_prompt
+        if entered_prompt:
             hints.append(
                 f"[Value Hint: '{literal}' → '{matched_value}' in column '{col_path}' "
                 f"(score={best_score:.2f}{'  EXACT MATCH' if is_exact else ''})]"
             )
 
-        # Stop once we have reached the per-prompt cap.
-        if len(hints) >= max_hints:
-            break
+    if trace_dir and trace_id:
+        _write_trace(trace_dir, trace_id, {
+            "db_id": db_id,
+            "status": "complete",
+            "index_path": index_path,
+            "threshold": threshold,
+            "normalized": normalized,
+            "strict_grounding": strict_grounding,
+            "max_hints": max_hints,
+            "matches": matches,
+            "admitted_count": len(hints),
+        })
 
     if hints:
         return "\n[VALUE HINTS — use these to verify column/value existence]\n" + "\n".join(hints) + "\n"
     return ""
+
+
+def _write_trace(trace_dir: str, trace_id: str, payload: dict) -> None:
+    safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", trace_id)
+    atomic_write_json(str(Path(trace_dir) / f"{safe_name}.json"), payload)
 
 
 # ---------------------------------------------------------------------------

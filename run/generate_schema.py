@@ -3,6 +3,7 @@ import json
 from tqdm import tqdm
 import re
 import argparse
+from artifact_store import atomic_write_text
 
 def extract_description(description_text):
     lines = description_text.strip().split("\n")
@@ -363,8 +364,7 @@ def generate_schema_prompt(log_path: str, is_initial: bool = False, data_file="s
 
             schema_prompt += "\n" + "-" * 50 + "\n\n"
         if is_initial:
-            with open(f"{log_path}/schema_prompts/{instance_id}.txt", "w", encoding="utf-8") as f:
-                f.write(schema_prompt)
+            atomic_write_text(f"{log_path}/schema_prompts/{instance_id}.txt", schema_prompt)
         else:
             external_text = ""
 
@@ -384,8 +384,7 @@ def generate_schema_prompt(log_path: str, is_initial: bool = False, data_file="s
                         print(f"[Warning] External knowledge file not found: {ek_path}")
 
             full_prompt = schema_prompt + external_text
-            with open(f"{log_path}/final_schema_prompts/{instance_id}.txt", "w", encoding="utf-8") as f:
-                f.write(full_prompt)
+            atomic_write_text(f"{log_path}/final_schema_prompts/{instance_id}.txt", full_prompt)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -1,0 +1,17 @@
+{
+  "bq011": {
+    "db_name": "ga4",
+    "question": "How many distinct pseudo users had positive engagement time  in the 7-day period ending on January 7, 2021 at 23:59:59, but had no positive engagement time in the 2-day period ending on the same date (January 7, 2021 at 23:59:59) ?",
+    "external_knowledge": "ga4_obfuscated_sample_ecommerce.events.md"
+  },
+  "sf_bq029": {
+    "db_name": "PATENTS",
+    "question": "Get the average number of inventors per patent and the total count of patent publications in Canada (CA) for each 5-year period from 1960 to 2020, based on publication dates. Only include patents that have at least one inventor listed, and group results by 5-year intervals (1960-1964, 1965-1969, etc.).",
+    "external_knowledge": null
+  },
+  "local002": {
+    "db_name": "E_commerce",
+    "question": "Can you calculate the 5-day symmetric moving average of predicted toy sales for December 5 to 8, 2018, using daily sales data from January 1, 2017, to August 29, 2018, with a simple linear regression model? Finally provide the sum of those four 5-day moving averages?",
+    "external_knowledge": null
+  }
+}

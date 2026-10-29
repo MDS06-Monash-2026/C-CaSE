@@ -16,12 +16,19 @@ import snowflake.connector
 import pandas as pd
 import shutil
 import argparse
+import time
 from dotenv import load_dotenv
+from artifact_store import atomic_write_json, atomic_write_text
 
 load_dotenv()
 
 model = os.environ.get("MODEL_NAME")
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), base_url=os.environ.get("OPENAI_BASE_URL"))
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY"),
+    base_url=os.environ.get("OPENAI_BASE_URL") or "https://openrouter.ai/api/v1",
+    # Per-request timeout in seconds; 600 is the OpenAI SDK default.
+    timeout=float(os.environ.get("SLAYQL_API_TIMEOUT", "600")),
+)
 bigquery_credential_paths = glob.glob(os.path.join("bigquery_credentials", "**", "*.json"), recursive=True)
 sqlite_lock = threading.Lock()
 credential_usage_count = {}
@@ -147,7 +154,8 @@ def sql_execution(instance_id, sql, db_name):
             cursor.close()
             conn.close()
     elif instance_id.startswith("local"):
-        db_path = f"resource/databases/spider2-localdb/{db_name}.sqlite"
+        sqlite_paths = json.loads(os.environ.get("SLAYQL_SQLITE_PATHS", "{}"))
+        db_path = sqlite_paths.get(instance_id) or f"resource/databases/spider2-localdb/{db_name}.sqlite"
         conn = sqlite3.connect(db_path)
         try:
             df = pd.read_sql_query(sql, conn)
@@ -285,12 +293,29 @@ def process_instance_batch(batch_instances, log_path, data_file="spider2_data.js
         # ------------------------------------------------------------------
         # Inject BM25 Value Hints into the user message if available.
         # Imported here to avoid circular dependency at module level.
+        #
+        # ABLATION FLAG: ABLATION_NO_BM25=1 disables value hints entirely,
+        # isolating the contribution of BM25 grounding to EX accuracy.
         # ------------------------------------------------------------------
-        try:
-            from value_grounder import get_value_hints
-            value_hints_text = get_value_hints(question, db_name)
-        except Exception:
+        no_bm25 = os.environ.get("ABLATION_NO_BM25", "0") == "1"
+        if no_bm25:
+            print(f"[ABLATION] BM25 grounding disabled for {instance_id}.")
             value_hints_text = ""
+        else:
+            try:
+                from value_grounder import get_value_hints
+                value_hints_text = get_value_hints(
+                    question,
+                    db_name,
+                    indices_dir=os.environ.get("SLAYQL_BM25_DIR", "bm25_indices"),
+                    threshold=float(os.environ.get("SLAYQL_BM25_THRESHOLD", "5.0")),
+                    normalized=os.environ.get("SLAYQL_BM25_NORMALIZED", "0") == "1",
+                    max_hints=int(os.environ.get("SLAYQL_VALUE_HINT_CAP", "3")),
+                    trace_id=f"{instance_id}_completion",
+                    trace_dir=os.environ.get("SLAYQL_BM25_TRACE_DIR"),
+                )
+            except Exception:
+                value_hints_text = ""
 
         # Append value hints to the initial user message if we found any.
         initial_user_content = USER_INPUT.format(
@@ -315,9 +340,22 @@ def process_instance_batch(batch_instances, log_path, data_file="spider2_data.js
             if is_finished or is_error:
                 break
 
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
+            request_started = time.monotonic()
+            from usage_accounting import record_response_usage
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                )
+            except Exception:
+                record_response_usage(
+                    None, stage="schema_completion", instance_id=instance_id,
+                    attempt=i + 1, latency_ms=(time.monotonic() - request_started) * 1000,
+                )
+                raise
+            record_response_usage(
+                response, stage="schema_completion", instance_id=instance_id,
+                attempt=i + 1, latency_ms=(time.monotonic() - request_started) * 1000,
             )
             model_output = response.choices[0].message.content
             if model_output is None:
@@ -431,17 +469,10 @@ def process_instance_batch(batch_instances, log_path, data_file="spider2_data.js
             print(f"Error occurred for instance {instance_id}. Skipping...")
             continue
 
-        with open(os.path.join(model_output_path, instance_id) + '.txt', "w", encoding="utf-8") as f:
-            f.write(all_model_output)
-            
-        with open(os.path.join(tool_calls_path, instance_id) + '.json', "w", encoding="utf-8") as f:
-            json.dump(all_calls, f, ensure_ascii=False, indent=2)
-
-        with open(os.path.join(input_path, instance_id) + '.txt', "w", encoding="utf-8") as f:
-            f.write(all_inputs)
-
-        with open(os.path.join(candidates_path, instance_id) + '.json', "w", encoding="utf-8") as f:
-            json.dump(each_candidates, f, ensure_ascii=False, indent=2)
+        atomic_write_text(os.path.join(model_output_path, instance_id) + '.txt', all_model_output)
+        atomic_write_json(os.path.join(tool_calls_path, instance_id) + '.json', all_calls)
+        atomic_write_text(os.path.join(input_path, instance_id) + '.txt', all_inputs)
+        atomic_write_json(os.path.join(candidates_path, instance_id) + '.json', each_candidates)
 
 
 def complete_schema(log_path, num_threads=3, data_file="spider2_data.json"):
@@ -528,7 +559,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--log_path', type=str, default="log_v3_topn100")
     parser.add_argument('--data_file', type=str, default="spider2_data.json")
+
+    # -----------------------------------------------------------------------
+    # Ablation study flag
+    # --no_bm25: disable BM25 value hint injection (Ablation Study 1)
+    # -----------------------------------------------------------------------
+    parser.add_argument('--no_bm25', action='store_true',
+                        help="[Ablation 1] Disable BM25 value grounding hints.")
     args = parser.parse_args()
+
+    # Wire flag into environment for sub-processes
+    if args.no_bm25:
+        os.environ["ABLATION_NO_BM25"] = "1"
+
     print("Starting schema completion...")
-    complete_schema(args.log_path, num_threads=3, data_file=args.data_file)
+    # Parallel completion processes; only affects speed (default 3 as before).
+    num_threads = max(1, int(os.environ.get("SLAYQL_COMPLETION_PROCESSES", "3")))
+    complete_schema(args.log_path, num_threads=num_threads, data_file=args.data_file)
     print("Schema completion finished.")
