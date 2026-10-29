@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-export OPENAI_API_KEY=""
-export OPENAI_BASE_URL=""
-export MODEL_NAME=""
+if [ -f ".env" ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
 
 LOG_PATH=log_v3_topn100
 TOP_N=100

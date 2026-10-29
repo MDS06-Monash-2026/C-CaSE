@@ -9,6 +9,9 @@ from config import *
 from tqdm import tqdm
 import concurrent.futures
 import threading
+import time
+
+from artifact_store import atomic_write_json, atomic_write_text
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,7 +22,20 @@ def parse_args():
     parser.add_argument("--workers", type=int, default=32)
     parser.add_argument("--task", default="r1_lite")
     parser.add_argument("--data_file", type=str, default="spider2_data.json")
+    parser.add_argument("--vote_retries", type=int, default=3)
     return parser.parse_args()
+
+
+def selection_is_complete(instance_id, args):
+    base_dir = f"{args.log_path}/sql_selection/final/{instance_id}"
+    return os.path.exists(os.path.join(base_dir, "selected.sql")) and any(
+        os.path.exists(os.path.join(base_dir, name))
+        for name in ("result.csv", "error.txt")
+    )
+
+
+def selection_checkpoint_path(instance_id, args):
+    return f"{args.log_path}/sql_selection/completed/{instance_id}.json"
 
 def read_sql(path):
     try:
@@ -180,14 +196,29 @@ def model_vote(instance_id, tied_clusters, args, schema, question):
         prompt = prompt.replace("{re1}", str(a['df'].iloc[:min(len(a['df']), args.max_rows)])[:args.max_chars])
         prompt = prompt.replace("{re2}", str(b['df'].iloc[:min(len(b['df']), args.max_rows)])[:args.max_chars])
 
-        resp = client.chat.completions.create(
-            model= model,
-            messages=[{"role": "user", "content": prompt}]
-        )
+        content = None
+        for attempt in range(1, args.vote_retries + 1):
+            try:
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                content = resp.choices[0].message.content
+                break
+            except Exception as exc:
+                print(
+                    f"[WARN] {instance_id}: model vote pair ({a['cid']}, {b['cid']}) "
+                    f"failed on attempt {attempt}/{args.vote_retries}: "
+                    f"{type(exc).__name__}: {exc}"
+                )
+                if attempt < args.vote_retries:
+                    time.sleep(min(2 ** (attempt - 1), 4))
 
-        content = resp.choices[0].message.content
         if content is None:
-            print(f"Warning: model returned None content for pair ({a['cid']}, {b['cid']}), skipping vote.")
+            print(
+                f"[WARN] {instance_id}: no usable vote for pair "
+                f"({a['cid']}, {b['cid']}); deterministic fallback remains available."
+            )
             continue
         out = content.lower()
         if "sql1" in out:
@@ -195,8 +226,11 @@ def model_vote(instance_id, tied_clusters, args, schema, question):
         elif "sql2" in out:
             scores[b["cid"]] += 1
 
-    best = max(scores.items(), key=lambda x: x[1])[0]
-    return next(c for c in candidates if c["cid"] == best)
+    best = max(scores.items(), key=lambda item: (item[1], -item[0]))[0]
+    selected = next(c for c in candidates if c["cid"] == best)
+    if not any(scores.values()):
+        selected["selection_fallback"] = "model_vote_unavailable"
+    return selected
 
 def dump_final_selection(instance_id, selected, args):
     base_dir = f"{args.log_path}/sql_selection/final/{instance_id}"
@@ -206,21 +240,30 @@ def dump_final_selection(instance_id, selected, args):
     if not sql_text:
         print(f"[WARN] {instance_id}: selected SQL is None/empty — writing empty file")
 
-    with open(os.path.join(base_dir, "selected.sql"), "w", encoding="utf-8") as f:
-        f.write(sql_text)
+    atomic_write_text(os.path.join(base_dir, "selected.sql"), sql_text)
 
     if selected.get("status") == "success" and selected.get("df") is not None:
-        selected["df"].to_csv(
-            os.path.join(base_dir, "result.csv"),
-            index=False,
-            encoding="utf-8"
-        )
+        result_path = os.path.join(base_dir, "result.csv")
+        temporary_path = result_path + ".tmp"
+        selected["df"].to_csv(temporary_path, index=False, encoding="utf-8")
+        os.replace(temporary_path, result_path)
     else:
-        with open(os.path.join(base_dir, "error.txt"), "w", encoding="utf-8") as f:
-            f.write(selected.get("error") or "Unknown execution error")
+        atomic_write_text(
+            os.path.join(base_dir, "error.txt"),
+            selected.get("error") or "Unknown execution error",
+        )
 
 def process_instance(name, args, lock):
     instance_id = name.replace(".txt", "")
+    if selection_is_complete(instance_id, args):
+        checkpoint = selection_checkpoint_path(instance_id, args)
+        if not os.path.exists(checkpoint):
+            atomic_write_json(
+                checkpoint,
+                {"instance_id": instance_id, "status": "complete", "recovered": True},
+            )
+        return "skipped"
+
     candidates = build_candidates(instance_id, args)
     clusters = cluster_by_execution(candidates)
     if not clusters:
@@ -242,7 +285,19 @@ def process_instance(name, args, lock):
             dump_final_selection(instance_id, fallback, args)
         else:
             print(f"[WARN] {instance_id}: no SQL file found for any candidate — skipping dump")
-        return
+        if fallback.get("sql") is not None:
+            atomic_write_json(
+                selection_checkpoint_path(instance_id, args),
+                {
+                    "instance_id": instance_id,
+                    "candidate": fallback["cid"],
+                    "status": "complete",
+                    "selection_status": fallback["status"],
+                    "fallback": "all_failed",
+                },
+            )
+            return "complete"
+        return "incomplete"
 
     selected = select_by_consistency(clusters)
 
@@ -263,20 +318,86 @@ def process_instance(name, args, lock):
             }) + "\n")
 
     dump_final_selection(instance_id, selected, args)
+    atomic_write_json(
+        selection_checkpoint_path(instance_id, args),
+        {
+            "instance_id": instance_id,
+            "candidate": selected["cid"],
+            "status": "complete",
+            "selection_status": selected["status"],
+            "fallback": selected.get("selection_fallback"),
+        },
+    )
+    return "complete"
         
 def main():
     args = parse_args()
     os.makedirs(f"{args.log_path}/sql_selection", exist_ok=True)
 
-    instance_ids = os.listdir(f"{args.log_path}/final_schema_prompts")
+    instance_ids = [
+        name
+        for name in os.listdir(f"{args.log_path}/final_schema_prompts")
+        if name.endswith(".txt")
+    ]
     lock = threading.Lock()
+    pending = [
+        name
+        for name in instance_ids
+        if not selection_is_complete(name[:-4], args)
+    ]
+    for name in instance_ids:
+        instance_id = name[:-4]
+        if selection_is_complete(instance_id, args):
+            checkpoint = selection_checkpoint_path(instance_id, args)
+            if not os.path.exists(checkpoint):
+                atomic_write_json(
+                    checkpoint,
+                    {"instance_id": instance_id, "status": "complete", "recovered": True},
+                )
+    skipped = len(instance_ids) - len(pending)
+    print(
+        f"Selection resume: {skipped} complete, {len(pending)} pending, "
+        f"{len(instance_ids)} total"
+    )
+    if not pending:
+        print("All selection instances are already complete.")
+        return
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-        futures = [executor.submit(process_instance, name, args, lock) for name in instance_ids]
-        with tqdm(total=len(instance_ids), desc="Processing instances") as pbar:
+        futures = {
+            executor.submit(process_instance, name, args, lock): name
+            for name in pending
+        }
+        failures = []
+        with tqdm(total=len(pending), desc="Processing pending instances") as pbar:
             for future in concurrent.futures.as_completed(futures):
-                future.result()  # To raise any exceptions
+                name = futures[future]
+                try:
+                    future.result()
+                except Exception as exc:
+                    instance_id = name[:-4]
+                    failures.append((instance_id, exc))
+                    failure_record = {
+                        "instance_id": instance_id,
+                        "error_type": type(exc).__name__,
+                        "error": str(exc)[:2000],
+                    }
+                    with lock:
+                        with open(
+                            f"{args.log_path}/sql_selection/failures.jsonl",
+                            "a",
+                            encoding="utf-8",
+                        ) as handle:
+                            handle.write(json.dumps(failure_record) + "\n")
+                    print(f"[ERROR] {instance_id}: {type(exc).__name__}: {exc}")
                 pbar.update(1)
+
+    if failures:
+        failed_ids = ", ".join(instance_id for instance_id, _ in failures)
+        raise RuntimeError(
+            f"Selection failed for {len(failures)} instance(s): {failed_ids}. "
+            "Completed instances were checkpointed and will be skipped on rerun."
+        )
         
 if __name__ == "__main__":
     main()

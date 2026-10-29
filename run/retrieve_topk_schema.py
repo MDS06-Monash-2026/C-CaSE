@@ -4,87 +4,12 @@ import multiprocessing as mp
 from tqdm import tqdm
 import faiss
 import numpy as np
+from artifact_store import load_config, write_instance_artifact
+from relationship_metadata import build_relationship_metadata
 from sentence_transformers import SentenceTransformer
 from utils import *
 import argparse
-import networkx as nx
-import math
-
-# Global tuning constants
-ALPHA = 1.0
-BETA = 0.5
-
-import threading
-_GRAPH_CACHE = {}
-_GRAPH_LOCK = threading.Lock()
-
-def get_or_build_schema_graph(db_name, embed_path):
-    """
-    Builds an undirected schema graph G where nodes are tables and edges are 
-    formal or inferred primary-foreign key relationships.
-    """
-    with _GRAPH_LOCK:
-        cache_key = f"{db_name}"
-        if cache_key in _GRAPH_CACHE:
-            return _GRAPH_CACHE[cache_key]
-            
-        import re
-        G = nx.Graph()
-        metadata_path = os.path.join(embed_path, db_name, "metadata.json")
-        with open(metadata_path, "r", encoding="utf-8") as f:
-            metadata_mapping = json.load(f)
-            
-        # Step 1: Register all unique tables as graph vertices
-        # Sanitize wildcard tables (e.g., ga_sessions_20170701 -> ga_sessions_*)
-        tables = set(re.sub(r'_\d+$', '_*', meta["table"]) for meta in metadata_mapping)
-        for t in tables:
-            G.add_node(t)
-            
-        # Step 2: Build inferred and explicit structural relationships
-        table_columns = {}
-        for meta in metadata_mapping:
-            t = re.sub(r'_\d+$', '_*', meta["table"])
-            c = meta["column"].lower()
-            if t not in table_columns:
-                table_columns[t] = set()
-            table_columns[t].add(c)
-            
-        # Find overlapping columns with structural implications across tables
-        table_list = list(tables)
-        for i in range(len(table_list)):
-            for j in range(i + 1, len(table_list)):
-                t1, t2 = table_list[i], table_list[j]
-                shared_cols = table_columns[t1].intersection(table_columns[t2])
-                # Connect if they share index, identification, or key codes
-                if any("id" in col or "name" in col or "code" in col for col in shared_cols):
-                    G.add_edge(t1, t2)
-                    
-        _GRAPH_CACHE[cache_key] = G
-        return G
-
-def compute_graph_penalized_score(sim_score, candidate_table, active_tables, G):
-    """
-    Applies Dijkstra shortest-path penalties to the raw semantic similarity score.
-    """
-    if not active_tables:
-        return sim_score
-        
-    min_hop = float('inf')
-    for active_t in active_tables:
-        try:
-            hop_distance = nx.shortest_path_length(G, source=candidate_table, target=active_t)
-            if hop_distance < min_hop:
-                min_hop = hop_distance
-        except (nx.NetworkXNoPath, nx.NodeNotFound):
-            continue
-            
-    if min_hop == float('inf'):
-        # Assign an unreachable topological penalty boundary
-        return -100.0 
-        
-    # Score(c) = alpha * Sim(q,c) - beta * min Dijkstra(tc, t)
-    return (ALPHA * sim_score) - (BETA * min_hop)
-
+from artifact_store import atomic_write_json
 
 from rbp_graph import propagate_relevance
 from it_ee import calculate_retrieval_entropy, determine_budget
@@ -155,7 +80,7 @@ def find_with_name(column_name: str, table_name: str, db_name: str, embed_path: 
         return result
 
 def _retrieve_with_device_filtered(question: str, db_name: str, embed_path: str, 
-                                 excluded_indices: set, top_k: int = 5, device: str = "cuda:0", active_tables=None):
+                                 excluded_indices: set, top_k: int = 5, device: str = "cuda:0"):
     from model_manager import model_manager
     index_path = os.path.join(embed_path, db_name, "index.faiss")
     index = faiss.read_index(index_path)
@@ -167,34 +92,17 @@ def _retrieve_with_device_filtered(question: str, db_name: str, embed_path: str,
     distances, indices = index.search(question_embedding.reshape(1, -1), len(metadata_mapping))
     filtered_results = []
     
-    use_graph_nav = os.environ.get("USE_GRAPH_NAV") == "TRUE"
-    if use_graph_nav and active_tables:
-        G = get_or_build_schema_graph(db_name, embed_path)
-    
-    all_candidates = []
     for i in range(len(indices[0])):
         idx = int(indices[0][i])
         if 0 <= idx < len(metadata_mapping) and idx not in excluded_indices:
             metadata = metadata_mapping[idx]
-            sim_score = float(distances[0][i])
-            
-            if use_graph_nav and active_tables:
-                final_score = compute_graph_penalized_score(sim_score, metadata["table"], active_tables, G)
-            else:
-                final_score = sim_score
-                
-            all_candidates.append({
+            filtered_results.append({
                 "index": idx,
-                "distance": final_score,
+                "distance": float(distances[0][i]),
                 "metadata": metadata
             })
-            
-    if use_graph_nav and active_tables:
-        # Sort descending because score = alpha * sim - beta * penalty implies higher is better.
-        all_candidates.sort(key=lambda x: x["distance"], reverse=True)
-        filtered_results = all_candidates[:top_k]
-    else:
-        filtered_results = all_candidates[:top_k]
+            if len(filtered_results) >= top_k:
+                break
     
     return filtered_results, len(metadata_mapping)
 
@@ -248,7 +156,7 @@ def save_instance_status(instance_id: str, status_dir: str, status_data: dict):
 
 
 def get_next_k_results(instance_id: str, question: str, db_name: str, embed_path: str, 
-                      top_k: int, cache_dir: str, status_dir: str, device: str, active_tables=None):
+                      top_k: int, cache_dir: str, status_dir: str, device: str):
     cache = load_instance_cache(instance_id, cache_dir)
     status = load_instance_status(instance_id, status_dir)
     
@@ -264,8 +172,7 @@ def get_next_k_results(instance_id: str, question: str, db_name: str, embed_path
         embed_path=embed_path,
         excluded_indices=used_indices,
         top_k=top_k,
-        device=device,
-        active_tables=active_tables
+        device=device
     )
     
     if status.get("total_available", 0) == 0:
@@ -299,6 +206,81 @@ def get_next_k_results(instance_id: str, question: str, db_name: str, embed_path
         return results, metadata_mapping, ""
 
 
+def _focus_retrieval_results(results, config):
+    """Keep a compact, table-balanced schema context for downstream stages."""
+    limits = dict(config["retrieval"])
+    if os.environ.get("SLAYQL_RESEARCH_VERSION") in {"1.5", "1.6", "1.7"}:
+        # v1.4's focus had sub-perfect table recall and generated candidates
+        # often omitted gold tables. Preserve alternatives for v1.5 paths.
+        limits.update({"max_tables": 8, "max_columns_per_table": 12, "max_columns_total": 72})
+    max_tables = int(limits.get("max_tables", 5))
+    max_columns_per_table = int(limits.get("max_columns_per_table", 6))
+    max_columns_total = int(limits.get("max_columns_total", limits.get("max_prompt_columns", 30)))
+
+    def score_of(result):
+        if result.get("propagated_score") is not None:
+            return float(result["propagated_score"])
+        if result.get("score") is not None:
+            return float(result["score"])
+        if result.get("similarity") is not None:
+            return float(result["similarity"])
+        if result.get("distance") is not None:
+            return 1.0 / (1.0 + max(0.0, float(result["distance"])))
+        return 0.0
+
+    table_scores = {}
+    for result in results:
+        metadata = result.get("metadata", {})
+        table = result.get("table") or result.get("table_name") or metadata.get("table")
+        if not table:
+            continue
+        score = score_of(result)
+        table_scores[table] = max(table_scores.get(table, float("-inf")), score)
+
+    selected_tables = {
+        table
+        for table, _ in sorted(table_scores.items(), key=lambda item: item[1], reverse=True)[
+            : max_tables
+        ]
+    }
+    per_table = {table: 0 for table in selected_tables}
+    focused = []
+    for result in sorted(
+        results,
+        key=score_of,
+        reverse=True,
+    ):
+        metadata = result.get("metadata", {})
+        table = result.get("table") or result.get("table_name") or metadata.get("table")
+        if table not in selected_tables:
+            continue
+        if per_table[table] >= max_columns_per_table:
+            continue
+        focused.append(result)
+        per_table[table] += 1
+        if len(focused) >= max_columns_total:
+            break
+    return focused
+
+
+def _choose_operating_mode(question, results, relationship_metadata, config):
+    tables = {
+        result.get("table") or result.get("table_name")
+        for result in results
+        if result.get("table") or result.get("table_name")
+    }
+    normalized = f" {question.lower()} "
+    structural_terms = (
+        " join ", " each ", " per ", " except ", " versus ", " compared ",
+        " highest ", " lowest ", " top ", " rank ", " before ", " after ",
+    )
+    graph_missing = len(tables) > 1 and not relationship_metadata.get("edges")
+    hard = graph_missing or len(tables) >= 4 or any(term in normalized for term in structural_terms)
+    medium = len(tables) > 1 or len(question.split()) > 22
+    mode = "hard" if hard else "medium" if medium else "easy"
+    return mode, int(config["completion"]["turns_by_mode"][mode])
+
+
 def process_batch_with_device(batch_items, device_id, top_k, log_dir):
     print(f"process {os.getpid()} - GPU {device_id}: loading model...")
     try:
@@ -321,11 +303,7 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
     
     device = f"cuda:{device_id}"
     
-    import time
-    pbar = tqdm(batch_items.items(), desc=f"GPU {device_id}")
-    for instance_id, item in pbar:
-        tqdm.write(f"[{time.strftime('%H:%M:%S')}] [PID {os.getpid()}] Processing instance {instance_id}...")
-        pbar.set_description(f"GPU {device_id} - {instance_id}")
+    for instance_id, item in tqdm(batch_items.items(), desc=f"GPU {device_id} - 进程 {os.getpid()}"):
         question = item["question"]
         db_name = item["db_name"]
 
@@ -409,6 +387,13 @@ def process_batch_with_device(batch_items, device_id, top_k, log_dir):
             res["propagated_score"] = S_propagated.get(col_path, 0.0)
 
         results = sorted(results, key=lambda x: x["propagated_score"], reverse=True)
+
+        # v1.4 keeps the candidate pool table-balanced after graph propagation.
+        # The completion agent can still request more schema evidence when the
+        # bounded pool is insufficient, so this is a precision pass, not a hard
+        # database restriction.
+        if os.environ.get("SLAYQL_RESEARCH_VERSION") in {"1.4", "1.5", "1.6", "1.7"}:
+            results = _focus_retrieval_results(results, load_config())
 
         if no_itee:
             # w/o IT-EE: always allocate the full 10-turn budget (never exits early)
@@ -546,8 +531,7 @@ def retrieve(log_dir: str, top_n: int = 50, data_file="spider2_data.json"):
                 all_candidates[instance_id] = batch_result[instance_id]
                 break
 
-    with open(os.path.join(f"{log_dir}", "initial_candidates.json"), "w", encoding="utf-8") as f:
-        json.dump(all_candidates, f, ensure_ascii=False, indent=2)
+    atomic_write_json(os.path.join(log_dir, "initial_candidates.json"), all_candidates)
         
     print(f"Retrieval completed, results saved to {log_dir}/")
     print(f"Cache saved to {log_dir}/cache/")

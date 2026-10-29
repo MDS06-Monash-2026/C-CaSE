@@ -7,3 +7,7 @@ pandas
 google-cloud-bigquery
 db-dtypes
 func_timeout
+python-dotenv
+rank-bm25
+sqlglot
+tiktoken

@@ -30,3 +30,6 @@ run/bm25_indices
 
 run/ablation1_*/
 *.log
+
+# Local virtual environment
+.venv/

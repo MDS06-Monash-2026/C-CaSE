@@ -5,6 +5,10 @@ import glob
 import pickle
 from rank_bm25 import BM25Okapi
 
+
+def index_dir():
+    return os.environ.get("SLAYQL_BM25_DIR", "bm25_indices")
+
 def extract_and_build(corpus, mapping, db_id):
     if corpus:
         bm25 = BM25Okapi(corpus)
@@ -13,11 +17,11 @@ def extract_and_build(corpus, mapping, db_id):
             'mapping': mapping,
             'corpus_strings': [' '.join(c) for c in corpus]
         }
-        with open(os.path.join("bm25_indices", f"{db_id}_bm25.pkl"), "wb") as f:
+        with open(os.path.join(index_dir(), f"{db_id}_bm25.pkl"), "wb") as f:
             pickle.dump(index_data, f)
         print(f"Successfully built index for {db_id}")
     else:
-        with open(os.path.join("bm25_indices", f"{db_id}_empty.txt"), "w") as f:
+        with open(os.path.join(index_dir(), f"{db_id}_empty.txt"), "w") as f:
             f.write("empty")
         print(f"No textual values extracted for {db_id}")
 
@@ -114,7 +118,7 @@ def build_snowflake(db_name, sf_conn):
 
 
 def build_all_indices(data_file="subset_diverse_20_evaluation.json"):
-    os.makedirs("bm25_indices", exist_ok=True)
+    os.makedirs(index_dir(), exist_ok=True)
     with open(data_file, "r", encoding="utf-8") as f:
         data = json.load(f)
         
@@ -135,7 +139,7 @@ def build_all_indices(data_file="subset_diverse_20_evaluation.json"):
     
     # Process SQLite
     for db_name in sorted(list(sqlite_dbs)):
-        if os.path.exists(os.path.join("bm25_indices", f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join("bm25_indices", f"{db_name}_empty.txt")):
+        if os.path.exists(os.path.join(index_dir(), f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join(index_dir(), f"{db_name}_empty.txt")):
             print(f"Skipping {db_name}, already built.")
             continue
         db_path = os.path.join("resource", "databases", "spider2-localdb", f"{db_name}.sqlite")
@@ -151,7 +155,7 @@ def build_all_indices(data_file="subset_diverse_20_evaluation.json"):
             try:
                 bq_client = bigquery.Client()
                 for db_name in sorted(list(bq_dbs)):
-                    if os.path.exists(os.path.join("bm25_indices", f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join("bm25_indices", f"{db_name}_empty.txt")):
+                    if os.path.exists(os.path.join(index_dir(), f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join(index_dir(), f"{db_name}_empty.txt")):
                         print(f"Skipping {db_name}, already built.")
                         continue
                     build_bigquery(db_name, bq_client)
@@ -168,7 +172,7 @@ def build_all_indices(data_file="subset_diverse_20_evaluation.json"):
                 sf_creds = json.load(f)
             sf_conn = snowflake.connector.connect(**sf_creds)
             for db_name in sorted(list(sf_dbs)):
-                if os.path.exists(os.path.join("bm25_indices", f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join("bm25_indices", f"{db_name}_empty.txt")):
+                if os.path.exists(os.path.join(index_dir(), f"{db_name}_bm25.pkl")) or os.path.exists(os.path.join(index_dir(), f"{db_name}_empty.txt")):
                     print(f"Skipping {db_name}, already built.")
                     continue
                 build_snowflake(db_name, sf_conn)

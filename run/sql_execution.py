@@ -145,7 +145,8 @@ def execute(sql_query, id, db, candidate_idx, log_path, task):
         snowflake_query_data(sql_query, is_save, id, candidate_idx, log_path, task)
         
     elif id.startswith('local'):
-        local_path = f'resource/databases/spider2-localdb/{db}.sqlite'
+        sqlite_paths = json.loads(os.environ.get("SLAYQL_SQLITE_PATHS", "{}"))
+        local_path = sqlite_paths.get(id) or f'resource/databases/spider2-localdb/{db}.sqlite'
         try:
             func_timeout(10 * 60, query_database_pandas,
                          args=(local_path, is_save, sql_query, id, candidate_idx, log_path, task))

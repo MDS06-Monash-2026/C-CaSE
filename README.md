@@ -17,7 +17,7 @@ This repository is modified and extended by **Kian Lok Chin (Monash University M
 > 1. **Pre-processed Embeddings:** You do **not** need to re-run document generation or embedding creation. Use pre-processed `embeddings/` and `documents/` folders inside `run/`.
 > 2. **Credentials:** Credentials are required for both the AutoLink agent and the Evaluation suite (`run/bigquery_credentials/`, `run/snowflake_credential/`, and `evaluation_suite/`).
 > 3. **Local Databases:** SQLite evaluation requires local `.sqlite` databases stored in `run/resource/databases/spider2-localdb`.
-> 4. **API Configuration:** Configure `OPENAI_API_KEY`, `MODEL_NAME`, and `OPENAI_BASE_URL` in `run/.env`.
+> 4. **API Configuration:** Put `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `MODEL_NAME` in `run/.env`. The pipeline uses the OpenAI Python client, so an OpenAI-compatible host works without code changes. For Together, use `OPENAI_BASE_URL=https://api.together.ai/v1` and that host's model id. Do not commit `run/.env`.
 
 ---
 
@@ -67,6 +67,24 @@ The local artifacts support the SlayQL-Lite headline result of **40.45% EX (72/1
 | **`v1.0.0-slayql-lite`** | annotated release tag | `02599b2` | **SlayQL-Lite Release Snapshot**: release target for the SlayQL-Lite architecture. | Actual annotated tag target. |
 | **post-release SlayQL-Lite** | `slayql-lite` history | `251c7bb` | **Production & Automation**: resilient batch retry engine, failed-task tracking, ablation scripts, and handoff docs. | Post-release commit, not the release tag target. |
 | **`slayql-lite`** | branch tip | `ba00dc2` | **Documentation Manuscript**: expanded README and project evolution manuscript. | Merged into `main` by `2b1719f`. |
+| **`v1.9.0`** | annotated release tag on `main` | `slayql-1` research suite | **SlayQL v1.9 adaptive schema research suite**: BIRD dev pipeline, publication runner, and result tables. Local run `bird_dev_v19_full` scored **904/1534 (58.93% EX)** with 5 candidates. | `run/research_summary.json` in that run; summary tables under `run/pub_results/`. |
+
+---
+
+## Running SlayQL v1.9 on BIRD dev
+
+From the repository root, with `run/.env` filled in and the BIRD dev files under `dev/dev_20240627`:
+
+```powershell
+cd C:\path\to\C-CaSE
+$env:SLAYQL_NONINTERACTIVE = "1"
+powershell -ExecutionPolicy Bypass -File .\run\run_research_suite_v19.ps1 `
+  -Command run -Dataset bird -Split dev -Mode full `
+  -BirdRoot "C:\path\to\C-CaSE\dev\dev_20240627" `
+  -RunId bird_dev_v19_full -SkipSubsetGate
+```
+
+`SLAYQL_NONINTERACTIVE=1` skips the BIRD directory prompt. The same run id resumes from checkpoints. Publication smoke and full variant runners are `run/pub_setup.ps1` and `run/pub_run_all.ps1`.
 
 ---
 

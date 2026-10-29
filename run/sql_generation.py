@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import time
 import random
 import threading
@@ -10,6 +11,9 @@ from openai import OpenAI
 from config import *
 from tqdm import tqdm
 from dotenv import load_dotenv
+from artifact_store import atomic_write_json, atomic_write_text
+from candidate_router import build_route_hypotheses, render_routed_schema, route_for_candidate
+from prompt_learning import load_prompt
 
 load_dotenv()
 
@@ -26,6 +30,222 @@ class TaskGenerationError(Exception):
         self.candidate_idx = candidate_idx
         self.reason = reason
         super().__init__(f"{instance_id} (candidate {candidate_idx}): {reason}")
+
+
+def candidate_guidance(candidate_idx: int) -> str:
+    """Give same-budget candidates distinct reasoning priorities to reduce correlated errors."""
+    version = os.environ.get("SLAYQL_RESEARCH_VERSION")
+    if version == "1.9":
+        roles = (
+            "Build the query from the explicit output slots first, then connect their source tables using the smallest supported relation path.",
+            "Audit every requested output column against the assigned schema route; keep physical columns separate even when the question uses a logical phrase such as full name.",
+            "Use the full-schema recall fallback and semantic contract. Resolve ambiguous identifiers from observed values and return the exact requested grain.",
+            "Test join cardinality and filter scope before aggregation. Use EXISTS or pre-aggregation only when it preserves the requested row semantics.",
+            "Act as an adversarial contract reviewer: check output arity, relation endpoints, literals, grouping, ordering, and tie semantics before emitting SQL.",
+        )
+        return (
+            "\n\n[SLAYQL_V19_CANDIDATE_ROLE]\n"
+            f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+            "v1.9 uses an adaptive schema view. The semantic contract and database observations are authoritative. "
+            "Never hide a required output-bearing table, concatenate separate requested fields, or expose join/filter helper fields."
+        )
+    if version == "1.8":
+        roles = (
+            "Use the measured primary relation route and make the answer-plan grain explicit before writing SQL.",
+            "Independently test the measured alternative join route; preserve predicates on the table where the question defines them.",
+            "Use the full-schema recall fallback plus the answer plan. Resolve ambiguous fields from observed values and return only requested columns.",
+            "Audit aggregation grain and join fan-out. Prefer pre-aggregation or EXISTS when the measured route shows many-to-many risk.",
+            "Act as an adversarial plan reviewer: challenge table choice, join direction, literal boundaries, grouping, ordering, and tie semantics.",
+        )
+        return (
+            "\n\n[SLAYQL_V18_CANDIDATE_ROLE]\n"
+            f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+            "The v1.8 answer plan, semantic contract, and database observations constrain this candidate. "
+            "Do not expose helper fields or invent DISTINCT, deduplication, latest-row logic, grouping, or formula substitutions."
+        )
+    if version == "1.7":
+        roles = (
+            "Apply the retrieved training structures only after re-grounding every identifier; implement the primary relation route literally.",
+            "Independently validate the alternative relation route, join direction, filter scope, and evidence formula.",
+            "Use the full-schema recall fallback plus training structures, but return only the explicitly requested projection.",
+            "Challenge aggregation grain, predicate placement, set behavior, ranking direction, and tie semantics on the counterfactual route.",
+            "Audit all relation endpoints, evidence literals, formula operations, and requested output fields without copying another candidate.",
+        )
+        return (
+            "\n\n[SLAYQL_V17_CANDIDATE_ROLE]\n"
+            f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+            "The semantic contract and current database evidence are authoritative. Training examples teach reusable structure only. "
+            "Do not add identity/helper fields, DISTINCT, latest-row logic, deduplication, grouping, or formula substitutions unless requested."
+        )
+    if version == "1.6":
+        roles = (
+            "Use the assigned primary relation route and implement the evidence formula literally.",
+            "Use the assigned alternative route; verify its join keys without drifting back to the primary route.",
+            "Use the full-schema recall fallback, but choose the smallest supported path and minimal requested projection.",
+            "Use the assigned counterfactual route and check aggregation grain, grouping, ordering, and set behavior.",
+            "Audit the assigned route against evidence literals, formula operations, and exact requested output fields.",
+        )
+        return (
+            "\n\n[SLAYQL_V16_CANDIDATE_ROLE]\n"
+            f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+            "The semantic contract is authoritative. Do not substitute a more plausible metric, add DISTINCT, "
+            "invent latest-row logic, deduplicate rows, or expose helper columns unless explicitly requested."
+        )
+    if version == "1.5":
+        roles = (
+            "Lock the requested output columns and row grain, then build the most direct evidence-grounded query.",
+            "Use the relational DDL view. Trace a complete join path, including bridge tables, and verify every join key.",
+            "Plan in execution order: row source, joins, filters, aggregation, then projection/order/limit. Preserve literal operators exactly.",
+            "Construct a counterfactual relation path. Challenge the most obvious table or metric and use a genuinely different valid path when one exists.",
+            "Act as an adversarial semantic reviewer. Reject unrequested DISTINCT, deduplication, latest-row logic, concatenation, and output columns.",
+        )
+        return (
+            "\n\n[SLAYQL_V15_CANDIDATE_ROLE]\n"
+            f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+            "This candidate must independently map every requested output to a schema field. "
+            "Database evidence is authoritative; a merely plausible business interpretation is not."
+        )
+    roles = (
+        "Build the most direct schema-grounded query. Verify the requested output grain before writing SQL.",
+        "Trace the complete relationship path first. Verify every join key and avoid accidental row multiplication.",
+        "Validate filters, literals, dates, NULL behavior, and DISTINCT semantics against the observed database evidence.",
+        "Use an independent CTE or aggregation formulation and check grouping, ranking, ordering, and limits.",
+        "Act as an adversarial semantic reviewer before finalizing: look for plausible-but-wrong tables, joins, and metrics.",
+    )
+    marker = (
+        "SLAYQL_V14_CANDIDATE_ROLE" if version == "1.4" else
+        "SLAYQL_V13_CANDIDATE_ROLE" if version == "1.3" else
+        "SLAYQL_V12_CANDIDATE_ROLE"
+    )
+    version_checklist = (
+        " Before final SQL, explicitly reconcile the requested entity, output columns, and ordinal/ranking semantics."
+        if version in {"1.3", "1.4"} else ""
+    )
+    if version == "1.4":
+        version_checklist += (
+            " Treat the question plan and linked join endpoints as constraints; do not use a merely similar table or value."
+        )
+    return (
+        f"\n\n[{marker}]\n"
+        f"Candidate {candidate_idx}: {roles[candidate_idx % len(roles)]}\n"
+        "This is an independent candidate. Do not copy a presumed answer; use the schema, interaction evidence, and tool results."
+        + version_checklist
+    )
+
+
+def relational_schema_view(evidence: Dict, schema_tables: Optional[List[str]] = None) -> str:
+    """Build a bounded DDL-style view that emphasizes alternative join paths."""
+    closure = evidence.get("relational_closure", {}) if isinstance(evidence, dict) else {}
+    table_order = [link.get("table") for link in evidence.get("value_links", []) if link.get("table")]
+    table_order.extend(closure.get("seed_tables", []))
+    table_order.extend(schema_tables or [])
+    table_order.extend(closure.get("tables", []))
+    table_order.extend(
+        entry.get("table") for entry in evidence.get("lexical_matches", []) if entry.get("table")
+    )
+    table_order = list(dict.fromkeys(str(table) for table in table_order if table))[:8]
+    selected_table_keys = {table.lower().split(".")[-1] for table in table_order}
+    edge_candidates = list(closure.get("edges", [])) + list(evidence.get("relationship_catalog", []))
+    edges = []
+    seen_edges = set()
+    for edge in edge_candidates:
+        edge_key = (
+            str(edge.get("from_table", "")).lower(), str(edge.get("from_column", "")).lower(),
+            str(edge.get("to_table", "")).lower(), str(edge.get("to_column", "")).lower(),
+        )
+        endpoints = {edge_key[0].split(".")[-1], edge_key[2].split(".")[-1]}
+        if not endpoints.issubset(selected_table_keys) or edge_key in seen_edges:
+            continue
+        seen_edges.add(edge_key)
+        edges.append(edge)
+        if len(edges) >= 16:
+            break
+    tables = {
+        str(table.get("name", "")).lower().split(".")[-1]: table
+        for table in evidence.get("tables", []) if isinstance(table, dict) and table.get("name")
+    }
+    linked_columns: Dict[str, set] = {}
+    for entry in evidence.get("lexical_matches", []):
+        table, column = entry.get("table"), entry.get("column")
+        if table and column:
+            linked_columns.setdefault(str(table).lower().split(".")[-1], set()).add(str(column).lower())
+    for edge in edges:
+        for table_key, column_key in (("from_table", "from_column"), ("to_table", "to_column")):
+            table, column = edge.get(table_key), edge.get(column_key)
+            if table and column:
+                linked_columns.setdefault(str(table).lower().split(".")[-1], set()).add(str(column).lower())
+
+    lines = [
+        "-- SLAYQL_V15_RELATIONAL_DDL_VIEW --",
+        "-- Complementary view: reason over these relation paths, then verify against the full schema above.",
+    ]
+    for requested_table in table_order:
+        table_key = requested_table.lower().split(".")[-1]
+        table = tables.get(table_key)
+        if not table:
+            continue
+        columns = table.get("columns", [])
+        normalized = []
+        for column in columns:
+            if isinstance(column, dict):
+                normalized.append((str(column.get("name", "")), str(column.get("type", "UNKNOWN")), bool(column.get("primary_key"))))
+            else:
+                normalized.append((str(column), "UNKNOWN", False))
+        priorities = linked_columns.get(table_key, set())
+        normalized.sort(key=lambda item: (item[0].lower() not in priorities, not item[2]))
+        definitions = [
+            f"  {name} {column_type or 'UNKNOWN'}" + (" PRIMARY KEY" if primary_key else "")
+            for name, column_type, primary_key in normalized[:12] if name
+        ]
+        if definitions:
+            lines.extend([f"CREATE TABLE {table.get('name')} (", ",\n".join(definitions), ");"])
+    if edges:
+        lines.append("-- RELATIONSHIPS")
+        lines.extend(
+            f"-- {edge.get('from_table')}.{edge.get('from_column')} = "
+            f"{edge.get('to_table')}.{edge.get('to_column')}"
+            for edge in edges[:16]
+        )
+    return "\n".join(lines)[:7000]
+
+
+def _candidate_schema_view(schema: str, instance_id: str, candidate_idx: int) -> str:
+    if os.environ.get("SLAYQL_RESEARCH_VERSION") in {"1.6", "1.7", "1.8", "1.9"}:
+        run_root = os.environ.get("SLAYQL_RUN_ROOT")
+        if not run_root:
+            return schema
+        try:
+            evidence_path = os.path.join(run_root, "interaction", f"{instance_id}.json")
+            with open(evidence_path, "r", encoding="utf-8") as handle:
+                evidence = json.load(handle)
+            plan = build_route_hypotheses(schema, evidence)
+            route = route_for_candidate(plan, candidate_idx)
+            trace = {
+                "schema_version": "1.0", "instance_id": instance_id,
+                "candidate_id": candidate_idx, "selected_route": route,
+                "route_plan": plan,
+            }
+            atomic_write_json(
+                os.path.join(run_root, "candidate_routes", f"{instance_id}_{candidate_idx}.json"),
+                trace,
+            )
+            return render_routed_schema(schema, route, candidate_idx)
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            return schema
+    if os.environ.get("SLAYQL_RESEARCH_VERSION") != "1.5" or candidate_idx % 5 not in {1, 3}:
+        return schema
+    run_root = os.environ.get("SLAYQL_RUN_ROOT")
+    if not run_root:
+        return schema
+    try:
+        evidence_path = os.path.join(run_root, "interaction", f"{instance_id}.json")
+        with open(evidence_path, "r", encoding="utf-8") as handle:
+            evidence = json.load(handle)
+        schema_tables = re.findall(r"^###Table full name:\s*(.*?)\s*$", schema, re.MULTILINE)
+        view = relational_schema_view(evidence, schema_tables=schema_tables)
+        return schema.rstrip() + "\n\n" + view + "\n" if view else schema
+    except (OSError, ValueError, TypeError):
+        return schema
 
 
 class DataLoader:
@@ -51,11 +271,51 @@ def retry_delay(attempt: int) -> float:
     return base + random.uniform(0, 1)
 
 
+def _apply_v17_generation_contract(prompt: str) -> str:
+    """Remove two legacy output rules that contradict the v1.6+ contract."""
+    prompt = prompt.replace(
+        "When asked something without stating name or id, return both of them. e.g. Which products ...? The answer should include product_name and product_id.",
+        "Return identity fields such as name or id only when the question explicitly requests them or dataset evidence defines them as the requested logical output.",
+    )
+    prompt = prompt.replace(
+        "Make sure that the query content of the sql definitely includes what needs to be involved in the question, the execution result can be more than what is required by the question, but it must not be less.",
+        "The execution result must contain exactly the requested answer fields. Join keys, filters, ordering expressions, and helper calculations may be used internally but must not be exposed unless requested.",
+    )
+    return prompt
+
+
+def _apply_v18_generation_contract(prompt: str) -> str:
+    """Add the measured-plan and fan-out guardrails used by v1.8."""
+    return prompt + (
+        "\n\n[SLAYQL_V18_ANSWER_PLAN_RULES]\n"
+        "Before finalizing SQL, reconcile the natural-language output grain with the measured answer plan. "
+        "Use measured join cardinalities to avoid accidental row multiplication. For a many-to-many or high-fanout "
+        "route, pre-aggregate or use EXISTS when that preserves the requested semantics. Keep filters on the correct "
+        "entity, honor all explicit boundaries and literals, and expose only requested output columns. "
+        "The answer plan is evidence for validation, not permission to change the question."
+    )
+
+
+def _apply_v19_generation_contract(prompt: str) -> str:
+    """Add hard output-slot and adaptive-schema guardrails for v1.9."""
+    return prompt + (
+        "\n\n[SLAYQL_V19_PROJECTION_AND_SCHEMA_RULES]\n"
+        "Treat the semantic contract's physical output columns as mandatory slots. If a logical phrase expands to "
+        "multiple physical columns (for example, full name -> forename and surname), project each requested "
+        "expression separately; do not concatenate, replace, or omit them unless the question explicitly asks for "
+        "one combined value. Before writing SQL, verify that every output-bearing table and join endpoint appears in "
+        "the current schema view. Use the full-schema fallback or a supported bridge when the assigned route cannot "
+        "satisfy all slots. Keep helper fields internal and emit one executable query only."
+    )
+
+
 class SQLGenerator:
     def __init__(self):
         self.client = OpenAI(
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            base_url=os.environ.get("OPENAI_BASE_URL"),
+            api_key=os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY"),
+            base_url=os.environ.get("OPENAI_BASE_URL") or "https://openrouter.ai/api/v1",
+            # Per-request timeout in seconds; 600 is the OpenAI SDK default.
+            timeout=float(os.environ.get("SLAYQL_API_TIMEOUT", "600")),
         )
         self.loader = DataLoader()
         self.model = os.environ.get("MODEL_NAME")
@@ -65,6 +325,7 @@ class SQLGenerator:
         instance_id: str,
         info: Dict,
         schema: str,
+        candidate_idx: int,
         no_qoc: bool = False,
         max_retries: int = Config.MAX_RETRIES,
     ) -> Dict:
@@ -87,6 +348,33 @@ class SQLGenerator:
         prompt = prompt.replace("{QUESTION}", question)
         prompt = prompt.replace("{SQL_DIALECT_OPTIMIZATION}", sql_type)
         prompt = prompt.replace("{SQL_TYPE}", dialect)
+        version = os.environ.get("SLAYQL_RESEARCH_VERSION")
+        if version == "1.9":
+            prompt = _apply_v17_generation_contract(prompt)
+            prompt = _apply_v18_generation_contract(prompt)
+            prompt = _apply_v19_generation_contract(prompt)
+            run_root = os.environ.get("SLAYQL_RUN_ROOT")
+            if run_root and candidate_idx % 5 in {0, 2}:
+                demonstrations = load_prompt(run_root, instance_id)
+                if demonstrations:
+                    prompt += "\n\n" + demonstrations
+        elif version == "1.8":
+            prompt = _apply_v17_generation_contract(prompt)
+            prompt = _apply_v18_generation_contract(prompt)
+            run_root = os.environ.get("SLAYQL_RUN_ROOT")
+            if run_root and candidate_idx % 5 in {0, 2}:
+                demonstrations = load_prompt(run_root, instance_id)
+                if demonstrations:
+                    prompt += "\n\n" + demonstrations
+        elif version == "1.7":
+            prompt = _apply_v17_generation_contract(prompt)
+            run_root = os.environ.get("SLAYQL_RUN_ROOT")
+            if run_root and candidate_idx % 5 in {0, 2}:
+                demonstrations = load_prompt(run_root, instance_id)
+                if demonstrations:
+                    prompt += "\n\n" + demonstrations
+        if version in {"1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9"}:
+            prompt += candidate_guidance(candidate_idx)
 
         if no_qoc:
             prompt = prompt.replace(
@@ -98,10 +386,21 @@ class SQLGenerator:
         last_error = "unknown error"
 
         for attempt in range(1, max_retries + 1):
+            response = None
             try:
+                request_started = time.monotonic()
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
+                )
+                from usage_accounting import record_response_usage
+                record_response_usage(
+                    response,
+                    stage="sql_generation",
+                    instance_id=instance_id,
+                    candidate_id=candidate_idx,
+                    attempt=attempt,
+                    latency_ms=(time.monotonic() - request_started) * 1000,
                 )
                 message = response.choices[0].message
                 reasoning_content = getattr(message, "reasoning_content", "") or ""
@@ -116,6 +415,12 @@ class SQLGenerator:
                 }
 
             except Exception as e:
+                if response is None:
+                    from usage_accounting import record_response_usage
+                    record_response_usage(
+                        None, stage="sql_generation", instance_id=instance_id,
+                        candidate_id=candidate_idx, attempt=attempt,
+                    )
                 last_error = str(e)
                 if attempt >= max_retries:
                     break
@@ -136,6 +441,18 @@ def collect_tasks(
     num_candidates: int,
     only: Optional[List[Tuple[str, int]]] = None,
 ) -> List[Tuple[str, int]]:
+    if os.environ.get("SLAYQL_RESEARCH_VERSION") in {"1.6", "1.7", "1.8", "1.9"} and only is None:
+        # Route traces are deterministic checkpoint artifacts. Rebuild them
+        # without a model call before deciding which SQL tasks remain.
+        for filename in sorted(name for name in os.listdir(schema_dir) if name.endswith(".txt")):
+            instance_id = filename[:-4]
+            try:
+                with open(os.path.join(schema_dir, filename), "r", encoding="utf-8") as handle:
+                    schema = handle.read()
+                for candidate_idx in range(num_candidates):
+                    _candidate_schema_view(schema, instance_id, candidate_idx)
+            except OSError:
+                continue
     if only is not None:
         pending = []
         for iid, cid in only:
@@ -169,6 +486,7 @@ def run_task(
         schema_path = f"{schema_dir}/{instance_id}.txt"
         with open(schema_path, "r", encoding="utf-8") as f:
             schema = f.read()
+        schema = _candidate_schema_view(schema, instance_id, candidate_idx)
 
         no_bm25 = os.environ.get("ABLATION_NO_BM25", "0") == "1"
         no_qoc = os.environ.get("ABLATION_NO_QOC", "0") == "1"
@@ -180,7 +498,14 @@ def run_task(
             question = data[instance_id].get("question", "")
             try:
                 value_hints_block = get_value_hints(
-                    query=question, db_id=db_name, indices_dir="bm25_indices"
+                    query=question,
+                    db_id=db_name,
+                    indices_dir=os.environ.get("SLAYQL_BM25_DIR", "bm25_indices"),
+                    threshold=float(os.environ.get("SLAYQL_BM25_THRESHOLD", "5.0")),
+                    normalized=os.environ.get("SLAYQL_BM25_NORMALIZED", "0") == "1",
+                    max_hints=int(os.environ.get("SLAYQL_VALUE_HINT_CAP", "3")),
+                    trace_id=f"{instance_id}_generation_{candidate_idx}",
+                    trace_dir=os.environ.get("SLAYQL_BM25_TRACE_DIR"),
                 )
                 if value_hints_block:
                     schema += f"\n{value_hints_block}\n"
@@ -191,6 +516,7 @@ def run_task(
             instance_id,
             data[instance_id],
             schema,
+            candidate_idx,
             no_qoc=no_qoc,
             max_retries=max_retries,
         )
@@ -198,19 +524,14 @@ def run_task(
         os.makedirs(f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}", exist_ok=True)
         os.makedirs(f"{log_path}/sql_gen/{task}_reasoning_{candidate_idx}", exist_ok=True)
 
-        with open(
+        atomic_write_text(
             f"{log_path}/sql_gen/{task}_sql_generation_{candidate_idx}/{instance_id}.txt",
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(result["output"])
-
-        with open(
+            result["output"],
+        )
+        atomic_write_text(
             f"{log_path}/sql_gen/{task}_reasoning_{candidate_idx}/{instance_id}.txt",
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(result.get("think") or "")
+            result.get("think") or "",
+        )
 
         return None
 
@@ -275,8 +596,7 @@ def run_batch(
 
 def save_failed_tasks(log_path: str, failed: List[Dict]) -> str:
     path = os.path.join(log_path, "sql_gen_failed_tasks.json")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(failed, f, indent=2, ensure_ascii=False)
+    atomic_write_json(path, failed)
     return path
 
 
@@ -313,8 +633,7 @@ def sql_clean(log_path: str, task: str, candidate_idx: int):
             else:
                 sql = content.strip()
 
-        with open(f"{out_dir}/{iid}.sql", "w", encoding="utf-8") as f:
-            f.write(sql)
+        atomic_write_text(f"{out_dir}/{iid}.sql", sql)
 
 
 def main():

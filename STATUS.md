@@ -1,5 +1,7 @@
 # C-CaSE / SlayQL — Project Status (Handoff)
 
+**v1.9 release:** the adaptive-schema research suite is on `main` as tag `v1.9.0`. A local BIRD dev full run (`bird_dev_v19_full`) finished at **904/1534 (58.93% EX)**. Configure the model in `run/.env`; see README for the non-interactive v1.9 command.
+
 **Last updated:** 2026-07-23  
 **Branch:** `slayql-1`  
 **Repo:** https://github.com/MDS06-Monash-2026/C-CaSE  

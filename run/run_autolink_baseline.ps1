@@ -13,6 +13,8 @@
 Set-StrictMode -Off
 $ErrorActionPreference = "Stop"
 
+$env:PYTHONPATH = "."
+
 # ---------------------------------------------------------------------------
 # Load .env
 # ---------------------------------------------------------------------------
@@ -56,11 +58,11 @@ New-Item -ItemType Directory -Force -Path $BASELINE_LOG | Out-Null
 # ---------------------------------------------------------------------------
 # Stage 1: Dense Schema Retrieval (NO RBP, NO IT-EE)
 # ---------------------------------------------------------------------------
-Write-Host "=== [1/12] Running Dense Retrieval (AutoLink - no RBP/IT-EE) ==="
-python "$BASELINE_DIR/retrieve_topk_schema.py" `
-    --log_path $BASELINE_LOG `
-    --top_n $TOP_N `
-    --data_file $DATA_FILE
+Write-Host "=== [1/12] Skipped Dense Retrieval (using cached log_v3_topn100) ==="
+# python "$BASELINE_DIR/retrieve_topk_schema.py" `
+#     --log_path $BASELINE_LOG `
+#     --top_n $TOP_N `
+#     --data_file $DATA_FILE
 
 # ---------------------------------------------------------------------------
 # Stage 2: Inject instance IDs
@@ -144,7 +146,8 @@ python sql_selection.py `
     --log_path $BASELINE_LOG `
     --num_candidates $NUM_CANDIDATES `
     --workers 32 `
-    --task $TASK
+    --task $TASK `
+    --data_file $DATA_FILE
 
 # ---------------------------------------------------------------------------
 # Stage 11: Evaluate both models

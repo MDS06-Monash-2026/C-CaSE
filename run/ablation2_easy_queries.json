@@ -1,0 +1,47 @@
+{
+  "sf_bq289": {
+    "db_name": "GEO_OPENSTREETMAP_CENSUS_PLACES",
+    "question": "Can you find the shortest distance between any two amenities (either a library, place of worship, or community center) located within Philadelphia, analyzed through pennsylvania table and planet features points?",
+    "external_knowledge": "functions_st_contains.md"
+  },
+  "sf_bq062": {
+    "db_name": "DEPS_DEV_V1",
+    "question": "What is the most frequently used license by packages in each system?",
+    "external_knowledge": null
+  },
+  "sf_bq350": {
+    "db_name": "OPEN_TARGETS_PLATFORM_1",
+    "question": "For the detailed molecule data, Please display the drug id, drug type and withdrawal status for approved drugs with a black box warning and known drug type among 'Keytruda', 'Vioxx', 'Premarin', and 'Humira'",
+    "external_knowledge": null
+  },
+  "bq310": {
+    "db_name": "stackoverflow",
+    "question": "What is the title of the most viewed \"how\" question related to Android development on StackOverflow, across specified tags such as 'android-layout', 'android-activity', 'android-intent', and others",
+    "external_knowledge": null
+  },
+  "sf_bq346": {
+    "db_name": "IDC",
+    "question": "In publicly accessible DICOM data where the Modality is 'SEG' and the SOPClassUID is '1.2.840.10008.5.1.4.1.1.66.4', and each segmentation references its original SOPInstanceUID, which five segmentation categories (by 'SegmentedPropertyCategory.CodeMeaning') occur most frequently?",
+    "external_knowledge": null
+  },
+  "local009": {
+    "db_name": "Airlines",
+    "question": "What is the distance of the longest route where Abakan is either the departure or destination city (in kilometers)?",
+    "external_knowledge": "haversine_formula.md"
+  },
+  "local054": {
+    "db_name": "chinook",
+    "question": "Could you tell me the first names of customers who spent less than $1 on albums by the best-selling artist, along with the amounts they spent?",
+    "external_knowledge": null
+  },
+  "local221": {
+    "db_name": "EU_soccer",
+    "question": "Tell me top10 teams with the most wins across the league",
+    "external_knowledge": null
+  },
+  "local356": {
+    "db_name": "f1",
+    "question": "Provide the full names of drivers who have been overtaken on track more times than they have overtaken others on track during race laps, excluding position changes due to pit stops (both at pit entry and exit), retirements, or position changes that occurred during the first lap of a race (considered as start movements).",
+    "external_knowledge": null
+  }
+}
